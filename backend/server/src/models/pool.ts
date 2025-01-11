@@ -3,6 +3,7 @@ import { User } from "./user";
 
 class Pool {
     private connectionPool: Map<string, Party> = new Map();
+    private users: User[] = [];
     private static instance: Pool;
 
     private constructor() {
@@ -16,14 +17,34 @@ class Pool {
         return Pool.instance;
     }
 
-    register(partyID: string, party: Party): void {
+    registerUser(user: User): void {
+        this.users.push(user);
+    }
+
+    userExistsByID(userID: string): User | null {
+        const user = this.users.find(user => user.userID === userID)
+        if (user) {
+            return user;
+        }
+        return null;
+    }
+    
+    userExistsByName(username: string): User | null {
+        const user = this.users.find(user => user.username === username)
+        if (user) {
+            return user;
+        }
+        return null;
+    }
+
+    registerParty(partyID: string, party: Party): void {
         if (this.connectionPool.has(partyID)) {
             throw new Error("Cannot create party. Already exists");
         }
         this.connectionPool.set(partyID, party);
     }
 
-    remove(partyID: string): void {
+    removeParty(partyID: string): void {
         this.connectionPool.delete(partyID);
     }
 
@@ -49,18 +70,20 @@ class Pool {
         setInterval(() => {
             this.connectionPool.forEach((party) => {
                 if (party.connected.length === 0 && this.hasElapsedCheck(party.lastEmpty, 30)) {
-                    this.remove(party.partyID);
+                    this.removeParty(party.partyID);
                     console.log(`Party ${party.partyID} was deleted for inactivity`)
                 }
             });
         }, 3000);
     }
 
-    broadcast(message: string): void {
+    broadcastAllParties(message: string): void {
         this.connectionPool.forEach((party) => {
             party.connected.forEach((user) => {
-                if (user.ws.readyState === user.ws.OPEN) {
-                    user.ws.send(message);
+                if (user.ws) {
+                    if (user.ws.readyState === user.ws.OPEN) {
+                        user.ws.send(message);
+                    }
                 }
             });
         });
@@ -72,6 +95,7 @@ class Pool {
             party.addUser(user)
             return {connected: true};
         } else {
+            console.log(`Did not find partyID: ${partyID} to connect ${user.userID} to`)
             return {connected: false, error: `Party of ID ${partyID} does not exist`}
         }
     }

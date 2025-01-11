@@ -17,12 +17,12 @@ class Party {
     }
 
     removeUser(userID: string): void {
-        this.connected = this.connected.filter(user => user.userID != userID);
+        this.connected = this.connected.filter(user => user.userID !== userID);
         this.checkUpdateEmpty()
     }
 
     userExists(userID: string): boolean {
-        return this.connected.some(user => user.userID == userID)
+        return this.connected.some(user => user.userID === userID)
     }
 
     getUser(userID: string): User | null {
@@ -38,14 +38,22 @@ class Party {
 
     broadcast(message: string, senderID: string): void {
         this.connected.forEach((user) => {
-            if (user.ws.readyState === WebSocket.OPEN) {
-                if (user.userID !== senderID) {
-                    user.ws.send(`[${senderID}]: ${message}`);
-                } else {
-                    user.ws.send(`[YOU]: ${message}`);
+            if (user.ws) {
+                if (user.ws.readyState === WebSocket.OPEN) {
+                    if (user.userID !== senderID) {
+                        user.ws.send(`[${senderID}]: ${message}`);
+                    } else {
+                        user.ws.send(`[YOU]: ${message}`);
+                    }
                 }
             }
         });
+    }
+
+    toJSON() {
+        return {
+            connected: this.connected,
+        }
     }
 }
 

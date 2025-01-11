@@ -3,4 +3,9 @@ interface CreatePartyRequest {
     userID: string;
 }
 
-export { CreatePartyRequest }
+interface AccessUserRequest {
+    username: string;
+    password: string;
+}
+
+export { CreatePartyRequest, AccessUserRequest }

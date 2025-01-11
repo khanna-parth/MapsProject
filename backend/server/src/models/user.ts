@@ -1,16 +1,24 @@
 import { WebSocket } from "ws";
 import { insertUser } from "../db/db";
+import { generateUniqueId } from "../util/util";
 
 class User {
     userID: string
-    ws: WebSocket
+    username: string
+    password: string
+    ws?: WebSocket
     long: number
     lat: number
-    constructor(userID: string, ws: WebSocket) {
-        this.userID = userID;
-        this.ws = ws;
+    constructor(username: string, password: string) {
+        this.userID = generateUniqueId();
+        this.username = username;
+        this.password = password;
         this.long = 0;
         this.lat = 0;
+    }
+
+    setConnection(ws: WebSocket) {
+        this.ws = ws;
     }
 
     disconnectConn(): boolean {
@@ -31,6 +39,15 @@ class User {
     syncDB(): void {
         console.log("User syncing DB")
         // insertUser(this);
+    }
+
+    toJSON() {
+        return {
+            username: this.username,
+            userID: this.userID,
+            long: this.long,
+            lat: this.lat,
+        };
     }
 }
 
