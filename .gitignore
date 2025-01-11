@@ -1,2 +1,7 @@
 *.env
 **/*.env
+go-server
+node_modules
+dist
+**/docker-compose.yml
+**/Dockerfile
