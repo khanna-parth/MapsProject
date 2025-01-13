@@ -1,10 +1,12 @@
+const ROUTES = {
+    CREATE_USER: "/auth/create",
+    LOGIN_USER: "/auth/login",
+    ADD_FRIEND: "/social/add",
+    REMOVE_FRIEND: "/social/remove",
+    GET_FRIENDS: "/social/list",
+    CREATE_PARTY: "/party/create",
+    JOIN_PARTY: "/party/join",
+    PARTY_STATUS: "/party/status",
+};
 
-const CREATE_USER_ROUTE = "/auth/create";
-const LOGIN_USER_ROUTE = "/auth/login"
-
-const CREATE_PARTY_ROUTE = "/party/create";
-const JOIN_PARTY_ROUTE = "/party/join";
-
-const PARTY_STATUS_ROUTE = "/party/status"
-
-export { CREATE_USER_ROUTE, LOGIN_USER_ROUTE, CREATE_PARTY_ROUTE, JOIN_PARTY_ROUTE, PARTY_STATUS_ROUTE };
+export default ROUTES;

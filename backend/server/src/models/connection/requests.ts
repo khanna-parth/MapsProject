@@ -8,4 +8,13 @@ interface AccessUserRequest {
     password: string;
 }
 
-export { CreatePartyRequest, AccessUserRequest }
+interface AddFriendsRequest {
+    username: string;
+    friendUsername: string;
+}
+
+interface GetFriendsRequest {
+    username: string;
+}
+
+export { CreatePartyRequest, AccessUserRequest, AddFriendsRequest, GetFriendsRequest }

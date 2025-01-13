@@ -2,17 +2,18 @@ import axios from 'axios';
 import express, { Request, Response } from 'express';
 import { createParty, getParty  } from './handlers/party';
 import { setupWebSocket } from './handlers/ws';
-import { CreatePartyRequest, AccessUserRequest } from './models/connection/requests';
-import { CREATE_USER_ROUTE, LOGIN_USER_ROUTE, CREATE_PARTY_ROUTE, PARTY_STATUS_ROUTE } from './routes/routes';
+import ROUTES from './routes/routes';
 import { createUser, loginUser } from './handlers/auth';
-import { pool } from './models/pool';
+import { connectDB } from './db/client';
+import { addFriend, getFriends, removeFriend } from './handlers/social';
+import { AccessUserRequest, AddFriendsRequest, CreatePartyRequest } from './models/connection/requests';
 
 const app = express();
 
 app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
-app.post(CREATE_USER_ROUTE, async (req: Request, res: Response) => {
+app.post(ROUTES.CREATE_USER, async (req: Request, res: Response) => {
     const { username, password }: AccessUserRequest = req.body;
 
     const result = await createUser(username, password);
@@ -23,7 +24,7 @@ app.post(CREATE_USER_ROUTE, async (req: Request, res: Response) => {
     }
 })
 
-app.get(LOGIN_USER_ROUTE, async (req: Request, res: Response) => {
+app.get(ROUTES.LOGIN_USER, async (req: Request, res: Response) => {
     const { username, password }: AccessUserRequest = req.body;
 
     const result = await loginUser(username, password);
@@ -35,7 +36,7 @@ app.get(LOGIN_USER_ROUTE, async (req: Request, res: Response) => {
 })
 
 
-app.post(CREATE_PARTY_ROUTE, (req: Request, res: Response) => {
+app.post(ROUTES.CREATE_PARTY, (req: Request, res: Response) => {
     const { partyID, userID }: CreatePartyRequest = req.body;
 
     const result = createParty(partyID, userID);
@@ -46,12 +47,45 @@ app.post(CREATE_PARTY_ROUTE, (req: Request, res: Response) => {
     }
 })
 
-app.get(PARTY_STATUS_ROUTE, (req: Request, res: Response) => {
+app.get(ROUTES.PARTY_STATUS, (req: Request, res: Response) => {
     const { partyID, userID }: CreatePartyRequest = req.body;
 
     const result = getParty(userID, partyID)
     if (result.party) {
         res.status(200).json(result.party)
+    } else {
+        res.status(result.code).json({'error': result.error})
+    }
+})
+
+app.post(ROUTES.ADD_FRIEND, async (req: Request, res: Response) => {
+    const { username, friendUsername }: AddFriendsRequest = req.body;
+
+    const result = await addFriend(username, friendUsername)
+    if (result.added) {
+        res.status(200).json()
+    } else {
+        res.status(result.code).json({'error': result.error})
+    }
+})
+
+app.post(ROUTES.REMOVE_FRIEND, async (req: Request, res: Response) => {
+    const { username, friendUsername }: AddFriendsRequest = req.body;
+
+    const result = await removeFriend(username, friendUsername)
+    if (result.removed) {
+        res.status(200).json()
+    } else {
+        res.status(result.code).json({'error': result.error})
+    }
+})
+
+app.post(ROUTES.GET_FRIENDS, async (req: Request, res: Response) => {
+    const { username }: AddFriendsRequest = req.body;
+
+    const result = await getFriends(username)
+    if (result.friends && result.friends !== null) {
+        res.status(200).json(result.friends.map(friend => friend.username))
     } else {
         res.status(result.code).json({'error': result.error})
     }
@@ -77,3 +111,4 @@ const server = app.listen(PORT, () => {
 });
 
 setupWebSocket(server);
+connectDB();

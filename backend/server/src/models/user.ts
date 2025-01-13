@@ -1,20 +1,50 @@
 import { WebSocket } from "ws";
-import { insertUser } from "../db/db";
-import { generateUniqueId } from "../util/util";
+import { Entity, PrimaryGeneratedColumn, Column, BaseEntity, ManyToMany, JoinTable } from 'typeorm';
+import 'reflect-metadata';
+import { v4 as uuidv4 } from 'uuid';
 
-class User {
-    userID: string
-    username: string
-    password: string
+
+@Entity()
+class User extends BaseEntity {
+    @PrimaryGeneratedColumn('uuid')
+    userID: string;
+
+    @Column()
+    username: string;
+
+    @Column()
+    password: string;
+
+    @Column('float')
+    long: number;
+
+    @Column('float')
+    lat: number;
+
     ws?: WebSocket
-    long: number
-    lat: number
-    constructor(username: string, password: string) {
-        this.userID = generateUniqueId();
-        this.username = username;
-        this.password = password;
+    sessionID?: string
+
+    @ManyToMany(() => User)
+    @JoinTable()
+    friends?: User[];
+
+    constructor() {
+        super();
+        this.userID = uuidv4();
+        this.username = ""
+        this.password = ""
         this.long = 0;
         this.lat = 0;
+    }
+
+    static CreateUser(username: string, password: string): User {
+        const user = new User();
+        user.username = username;
+        user.password = password;
+        user.sessionID = uuidv4();
+        user.friends = [];
+
+        return user;
     }
 
     setConnection(ws: WebSocket) {
@@ -36,9 +66,13 @@ class User {
         this.lat = lat;
     }
 
-    syncDB(): void {
-        console.log("User syncing DB")
-        // insertUser(this);
+    async syncDB(): Promise<void> {
+        try {
+          await this.save();
+          console.log('User saved:', this);
+        } catch (error) {
+          console.error('Error saving user:', error);
+        }
     }
 
     toJSON() {
@@ -47,6 +81,7 @@ class User {
             userID: this.userID,
             long: this.long,
             lat: this.lat,
+            friends: this.friends ? this.friends.map((friend) => friend.username) : [],
         };
     }
 }

@@ -1,23 +1,26 @@
 
-import { Client } from 'pg';
+import { User } from '../models/user';
+import 'reflect-metadata';
+import { DataSource } from 'typeorm';
 
-const client = new Client({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'postgres',
-    password: 'example',
-    port: 5432,
+export const db = new DataSource({
+  type: 'postgres',
+  host: 'localhost',
+  port: 5432,
+  username: 'postgres',
+  password: 'example',
+  database: 'postgres',
+  entities: [User],
+  synchronize: true,
+  logging: false,
 });
 
-async function connectToDatabase() {
+export async function connectDB() {
     try {
-        await client.connect();
-        console.log('Connected to PostgreSQL database');
-    } catch (err) {
-        console.error('Connection error', err);
+        await db.initialize();
+        console.log('Database connection established!');
+
+    } catch (error) {
+        console.error('Error during app initialization', error);
     }
 }
-
-connectToDatabase();
-
-export { client }

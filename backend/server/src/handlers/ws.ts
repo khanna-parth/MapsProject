@@ -3,8 +3,9 @@ import { User } from '../models/user.js';
 import { pool } from '../models/pool.js';
 import { IncomingMessage } from 'http';
 import { Server } from 'http';
-import { JOIN_PARTY_ROUTE } from '../routes/routes.js';
+import ROUTES from '../routes/routes.js';
 import { checkValidString, generateUniqueId } from '../util/util.js';
+import { UserDB } from '../db/dbuser.js';
 
 export function setupWebSocket(server: Server) {
     const wss = new WebSocketServer({ noServer: true });
@@ -34,11 +35,11 @@ export function setupWebSocket(server: Server) {
         });
     });
 
-    server.on('upgrade', (request: IncomingMessage, socket: any, head: Buffer) => {
+    server.on('upgrade', async (request: IncomingMessage, socket: any, head: Buffer) => {
         console.log(`Received upgrade request for: ${request.url}`);
         const { pathname, searchParams } = new URL(request.url || '', `http://${request.headers.host}`);
 
-        if (pathname === JOIN_PARTY_ROUTE) {
+        if (pathname === ROUTES.JOIN_PARTY) {
           const partyID = (request.headers['X-Party-ID'] || searchParams.get('partyID') || '').toString();
           const userID = (request.headers['X-User-ID'] || searchParams.get('userID') || '').toString(); 
           console.log(`PartyID received: ${partyID}`);
@@ -56,7 +57,7 @@ export function setupWebSocket(server: Server) {
             return;
           }
 
-          const validUser = pool.userExistsByID(userID)
+          const validUser = await UserDB.dbFindID(userID)
           if (!validUser) {
             console.log("/join request without valid userID")
             socket.destroy();
@@ -86,7 +87,7 @@ export function setupWebSocket(server: Server) {
               wss.emit('connection', ws, request);
 
               if (party) {
-                const user = pool.userExistsByID(userID);
+                const user = validUser;
                 if (user) {
                   user.setConnection(ws);
                   const connected = pool.connectUser(user, partyID)
@@ -107,7 +108,7 @@ export function setupWebSocket(server: Server) {
 
         } else {
             console.log('Path not recognized for WebSocket upgrade');
-            console.log(`USER ENTERED: ${pathname}. Expected: ${JOIN_PARTY_ROUTE}`)
+            console.log(`USER ENTERED: ${pathname}. Expected: ${ROUTES.JOIN_PARTY}`)
             socket.destroy();
         }
     });

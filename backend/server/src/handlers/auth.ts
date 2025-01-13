@@ -2,6 +2,9 @@ import bcrypt from 'bcryptjs';
 import { User } from '../models/user';
 import { pool } from '../models/pool';
 import { checkValidString } from '../util/util';
+// import { dbFindUsername } from '../db/dbuser';
+import { v4 as uuidv4 } from 'uuid';
+import { UserDB } from '../db/dbuser';
 
 let users: {username: string, password: string}[] = []
 
@@ -21,13 +24,16 @@ const createUser = async (username: string, password: string): Promise<AccessUse
         return {success: false, code: 400, error: "userID must be properly specified"}
     }
 
-    if (pool.userExistsByName(username)) {
+    const exists = await UserDB.dbFindUsername(username)
+    if (exists) {
         return { success: false, code: 400, error: "user already exists"}
     }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = new User(username, hashedPassword);
+    const user = User.CreateUser(username, hashedPassword);
     pool.registerUser(user);
+    user.syncDB();
     console.log(`Created user with id: ${user.userID}`)
 
     return { success: true, user: user, code: 201}
@@ -41,10 +47,10 @@ const loginUser = async (username: string, password: string): Promise<AccessUser
     if (!checkValidString(password)) {
         return { success: false, code: 400, error: "password must be provided"}
     }
-
-    const exists = pool.userExistsByName(username)
+    
+    const exists = await UserDB.dbFindUsername(username)
     if (!exists) {
-        return {success: false, code: 400, error: "Invalid user credentials provided"}
+        return { success: false, code: 400, error: "invalid credentials provided"}
     }
 
     const matchedPassword = await bcrypt.compare(password, exists.password)
@@ -54,7 +60,7 @@ const loginUser = async (username: string, password: string): Promise<AccessUser
         return { success: true, user: exists, code: 200}
     } else {
         console.log(`Unsuccessful sign in attempt from user account: ${username}`)
-        return { success: false, code: 400, error: "Invalid user credentials provided"}
+        return { success: false, code: 400, error: "invalid user credentials provided"}
     }
 }
 

@@ -5,3 +5,4 @@ node_modules
 dist
 **/docker-compose.yml
 **/Dockerfile
+bun-server

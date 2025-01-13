@@ -34,7 +34,7 @@ const getParty = (userID: string, partyID: string): {party?: Party, code: number
 
     const existingParty = pool.listPool().find(party => party.partyID === partyID);
     if (existingParty) {
-        console.log(existingParty);
+        // console.log(existingParty);
         if (!existingParty.userExists(userID)) {
             return {code: 403, error: `You do not have access to this party`}
         }
