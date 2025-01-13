@@ -52,6 +52,58 @@ Group /auth
                 Worse in user-security because it exposes which usernames are valid.
         
 
+Group: /social
+
+/social/add will be a POST request that will return a 200 OK response or a 400 error code. Response content is irrelevant but will be a simple message to state whether the request worked or not.
+    Request data:
+        string username: Username of account1
+        string friendUsername: Username of account2
+    Validation:
+        If the fields are empty, will return 400 Bad Request error code.
+        If the usernames do not map to a user, will return a 400 Bad Request error code
+    Task:
+        After ensuring the fields are valid, it goes into the Postgres database and adds a relational mapping to both users through a user_friends_table
+    Use:
+        For creating a friendship between two users
+    Note/BEHAVIOR:
+        Normal HTTP request
+        Must match usernames exactly
+        Will return no response if the friendship does not exist. (200 OK status code)
+        Will return a message notifying of existing friendship if it does exist (200 OK status code)
+
+/social/remove will be a POST request that will return a 200 OK response or a 400 error code. Response content is irrelevant but will be a simple message to state whether the request worked or not.
+    Request data:
+        string username: Username of account1
+        string friendUsername: Username of account2
+    Validation:
+        If the fields are empty, will return 400 Bad Request error code.
+        If the usernames do not map to a user, will return a 400 Bad Request error code
+    Task:
+        After ensuring the fields are valid, it goes into the Postgres database and removes the relational mapping to both users through a user_friends_table
+    Use:
+        For removing a friendship between two users
+    Note/BEHAVIOR:
+        Normal HTTP request
+        Must match usernames exactly
+        Will return no response if the friendship exists if used a singular time (200 OK status code)
+        Will return a message notifying that there is no existing friendship if used subsequent times (200 OK status code)
+
+/social/list will be a POST request that will return a 200 OK response or a 400 error code. Response content will be a list of usernames corresponding to the friends that the user has.
+    Request data:
+        string username: Username of account
+    Validation:
+        If the field is empty, will return 400 Bad Request error code.
+        If the username does not map to a user, will return a 400 Bad Request error code
+    Task:
+        After ensuring the field is valid, it fetch the user from the Postgres database, look through the user's relational mappings, and return all friends. Will only return the usernames of friends(privacy reasons)
+    Use:
+        For listing all friendships belonging to a user
+    Note/BEHAVIOR:
+        Normal HTTP request
+        Must match username exactly
+        Will return empty array if no friends exist
+        Friends are not explicitly sorted in any order
+
 
 Group: /party
 
@@ -93,7 +145,7 @@ Group: /party
 
 
 
-DONT USE:
+DISREGARD(READ Use):
 /party/status will be a POST request that will result in a 200 OK or a 400, 403, 404 error codes.
     Request data:
         string userID: userID retrieved from signup or login endpoints (not the same as username)
@@ -116,6 +168,6 @@ DONT USE:
     Task:
         After verifying the fields, it will get the current party object and return that object
     Use:
-        Originally designed to display other party member's coordinates but that will be done over WS. 
+        Originally designed to display other party member's coordinates but that will be done over WS(/party/join endpoint). 
     Note/BEHAVIOR:
         Will need provided userID to be currently connected to the party
