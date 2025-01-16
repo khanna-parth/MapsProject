@@ -1,5 +1,5 @@
-*.env
-**/*.env
+# *.env
+# **/*.env
 go-server
 node_modules
 dist
