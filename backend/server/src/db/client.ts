@@ -4,15 +4,15 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 
 export const db = new DataSource({
-  type: 'postgres',
-  host: 'localhost',
-  port: 5432,
-  username: 'postgres',
-  password: 'example',
-  database: 'postgres',
-  entities: [User],
-  synchronize: true,
-  logging: false,
+    type: 'postgres',
+    host: process.env.POSTGRES_HOST || 'localhost',
+    port: Number(process.env.DB_PORT) || 5432,
+    username: process.env.POSTGRES_USER || 'postgres',
+    password: process.env.POSTGRES_PASSWORD || 'postgres',
+    database: process.env.POSTGRES_DB || 'postgres',
+    entities: [User],
+    synchronize: true,
+    logging: false,
 });
 
 export async function connectDB() {

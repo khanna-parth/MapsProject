@@ -11,7 +11,7 @@ import { AccessUserRequest, AddFriendsRequest, CreatePartyRequest } from './mode
 const app = express();
 
 app.use(express.json());
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.SERVER_PORT || 3010;
 
 app.post(ROUTES.CREATE_USER, async (req: Request, res: Response) => {
     const { username, password }: AccessUserRequest = req.body;
