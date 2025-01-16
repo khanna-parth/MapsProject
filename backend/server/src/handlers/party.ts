@@ -2,6 +2,7 @@ import { pool } from "../models/pool";
 import { Party } from "../models/party";
 import { PartyCreationResult } from "../models/connection/responses";
 import { checkValidString } from "../util/util";
+import { User } from "../models/user";
 
 
 const createParty = (partyID: string, userID: string) : PartyCreationResult => {
@@ -23,7 +24,7 @@ const createParty = (partyID: string, userID: string) : PartyCreationResult => {
     }
 };
 
-const getParty = (userID: string, partyID: string): {party?: Party, code: number, error?: string} => {
+const getParty = (userID: string, partyID: string): {party?: PartyDisplay, code: number, error?: string} => {
     if (!checkValidString(partyID)) {
         return {code: 400, error: "partyID must be properly specified"}
     }
@@ -36,11 +37,29 @@ const getParty = (userID: string, partyID: string): {party?: Party, code: number
     if (existingParty) {
         // console.log(existingParty);
         if (!existingParty.userExists(userID)) {
-            return {code: 403, error: `You do not have access to this party`}
+            return {code: 403, error: `You do not have access to this party`};
         }
-        return {party: existingParty, code: 200};
+        const partyData = existingParty.connected.map(user => user.toJSONShallow());
+
+        const connectedUsers: Partial<User>[] = partyData.map(user => ({
+            ...user
+        }));
+
+        const partyDisplay: PartyDisplay = {
+            partyID: existingParty.partyID,
+            connected: connectedUsers,
+            lastEmpty: existingParty.lastEmpty
+        };
+
+        return {party: partyDisplay, code: 200};
     }
-    return {code: 404, error: 'Cannot access non-existent party.'}
+    return {code: 404, error: 'Cannot access non-existent party.'};
+}
+
+interface PartyDisplay {
+    partyID: string;
+    connected: Partial<User>[];
+    lastEmpty: number;
 }
 
 // If looking for /party/join go to ws.ts

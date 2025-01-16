@@ -1,9 +1,13 @@
 import { User } from "../models/user";
 import { db } from "./client";
+import {Mutex, Semaphore, withTimeout} from 'async-mutex';
 
 
 class SocialDB {
+    private static dbMutex = withTimeout(new Mutex(), 500);
+    
     static async addFriends(user: User, friendUser: User): Promise<{ added: boolean, code: number, error?: string }> {
+        const release = await this.dbMutex.acquire();
         try {
             const userWithFriends = await User.findOne({
                 where: { userID: user.userID },
@@ -30,10 +34,13 @@ class SocialDB {
         } catch (error) {
             console.log(`Error adding friends: ${error}`);
             return { added: false, code: 500, error: `Error: ${error}` };
+        } finally {
+            release();
         }
     }
 
     static async removeFriends(user: User, friend: User): Promise<{ removed: boolean, code: number, error?: string }> {
+        const release = await this.dbMutex.acquire();
         try {
             // Load the user's friends relationship
             const userWithFriends = await User.findOne({
@@ -69,6 +76,8 @@ class SocialDB {
         } catch (error) {
             console.log(`Error removing friends: ${error}`);
             return { removed: false, code: 500, error: `Error: ${error}` };
+        } finally {
+            release();
         }
     }
 

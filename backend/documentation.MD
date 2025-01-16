@@ -35,8 +35,10 @@ Group /auth
         {
             "username": "johndoe",
             "userID": "abcd0123",
-            "long": 0,
-            "lat": 0
+            "coordinates": {
+                "long": 0,
+                "lat": 0
+            }
         }
     Validation:
         If the fields are empty, will return 400 Bad Request error code

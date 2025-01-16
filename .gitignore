@@ -3,6 +3,6 @@
 go-server
 node_modules
 dist
-**/docker-compose.yml
-**/Dockerfile
+# **/docker-compose.yml
+# **/Dockerfile
 bun-server

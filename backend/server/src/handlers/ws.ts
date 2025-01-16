@@ -1,5 +1,4 @@
 import { WebSocketServer, WebSocket } from 'ws';
-import { User } from '../models/user.js';
 import { pool } from '../models/pool.js';
 import { IncomingMessage } from 'http';
 import { Server } from 'http';
@@ -19,10 +18,17 @@ export function setupWebSocket(server: Server) {
         ws.on('message', (message) => {
             const party = pool.partyExists(partyID);
             if (party) {
-                party.broadcast(message.toString(), userID);
+              const jsonMessage = {
+                userID,
+                content: message.toString(),
+                timestamp: new Date().toISOString(),
+              };
+              party.broadcast(JSON.stringify(jsonMessage), userID);
+                // party.broadcast(message.toString(), userID);
             } else {
-                ws.send("Error sending message");
-                ws.close();
+              const errorMessage = { error: "Error sending message" };
+              ws.send(JSON.stringify(errorMessage));
+              ws.close();
             }
         });
 

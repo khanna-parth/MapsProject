@@ -1,8 +1,8 @@
 import { User } from "./user"
-import { insertUser } from "../db/db"
 
 class Party {
     partyID: string
+    connectedPartially?: Partial<User>[]
     connected: User[]
     lastEmpty: number
     constructor(partyID: string) {
@@ -41,9 +41,11 @@ class Party {
             if (user.ws) {
                 if (user.ws.readyState === WebSocket.OPEN) {
                     if (user.userID !== senderID) {
-                        user.ws.send(`[${senderID}]: ${message}`);
+                        user.ws.send(message);
+                        // user.ws.send(`[${senderID}]: ${message}`);
                     } else {
-                        user.ws.send(`[YOU]: ${message}`);
+                        user.ws.send(message);
+                        // user.ws.send(`[YOU]: ${message}`);
                     }
                 }
             }
