@@ -3,15 +3,15 @@ FROM node:23
 
 WORKDIR /app
 
-COPY package.json ./
+COPY package*.json ./
+
+RUN mkdir node_modules
 
 ENV NODE_ENV=development
 
 RUN npm install
 
-RUN npm install typescript --global
-RUN npm install typescript --save-dev --global
-RUN npm install @types/node --save-dev
+RUN npm install -g typescript @types/node
 
 
 COPY . .

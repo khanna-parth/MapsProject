@@ -23,6 +23,7 @@ services:
       - "3010:3010"
     volumes:
       - .:/app
+      - /app/node_modules
     environment:
       - NODE_ENV=development
       - SERVER_PORT=3010

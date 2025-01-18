@@ -2,6 +2,8 @@ API Endpoints
 
 ** VIEW RAW FILE BECAUSE ITS FORMATTED **
 
+RUN COMMAND: docker-compose up
+
 
 Group /auth
 
