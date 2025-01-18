@@ -38,15 +38,13 @@ class Party {
 
     broadcast(message: string, senderID: string): void {
         this.connected.forEach((user) => {
-            if (user.ws) {
-                if (user.ws.readyState === WebSocket.OPEN) {
-                    if (user.userID !== senderID) {
-                        user.ws.send(message);
-                        // user.ws.send(`[${senderID}]: ${message}`);
-                    } else {
-                        user.ws.send(message);
-                        // user.ws.send(`[YOU]: ${message}`);
-                    }
+            if (user.ws && user.ws.readyState === WebSocket.OPEN) {
+                if (user.userID !== senderID) {
+                    user.ws.send(message);
+                    // user.ws.send(`[${senderID}]: ${message}`);
+                } else {
+                    user.ws.send(message);
+                    // user.ws.send(`[YOU]: ${message}`);
                 }
             }
         });

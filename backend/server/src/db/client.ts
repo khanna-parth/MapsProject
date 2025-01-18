@@ -9,7 +9,7 @@ export const db = new DataSource({
     port: Number(process.env.DB_PORT) || 5432,
     username: process.env.POSTGRES_USER || 'postgres',
     password: process.env.POSTGRES_PASSWORD || 'postgres',
-    database: process.env.POSTGRES_DB || 'postgres',
+    database: process.env.POSTGRES_DB || 'party maps',
     entities: [User],
     synchronize: true,
     logging: false,
@@ -18,7 +18,7 @@ export const db = new DataSource({
 export async function connectDB() {
     try {
         await db.initialize();
-        console.log('Database connection established!');
+        console.log(`Database connection established to ${process.env.POSTGRES_DB || 'party maps'} located at ${process.env.POSTGRES_HOST || 'localhost'}@${process.env.DB_PORT || 5432}`);
 
     } catch (error) {
         console.error('Error during app initialization', error);

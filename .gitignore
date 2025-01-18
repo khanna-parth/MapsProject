@@ -6,3 +6,4 @@ dist
 # **/docker-compose.yml
 # **/Dockerfile
 bun-server
+.DS_Store
