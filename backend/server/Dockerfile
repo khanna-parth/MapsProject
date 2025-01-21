@@ -1,20 +1,17 @@
 # backend/Dockerfile
 FROM node:23
 
-WORKDIR /app
+WORKDIR /server
 
-COPY package*.json ./
-
-RUN mkdir node_modules
-
-ENV NODE_ENV=development
+COPY package.json package-lock.json ./
 
 RUN npm install
-
-RUN npm install -g typescript @types/node
-
+RUN npm install sequelize pg pg-hstore
+RUN npm install -g typescript sequelize-cli
 
 COPY . .
+
+RUN npx tsc
 
 EXPOSE 3010
 

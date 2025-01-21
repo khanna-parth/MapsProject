@@ -1,67 +1,92 @@
 import bcrypt from 'bcryptjs';
-import { User } from '../models/user';
-import { pool } from '../models/pool';
+import db from '../database/models/index'; // Import Sequelize models
+import pool from '../database/models/pool'; // Pool management
 import { checkValidString } from '../util/util';
-// import { dbFindUsername } from '../db/dbuser';
 import { v4 as uuidv4 } from 'uuid';
-import { UserDB } from '../db/dbuser';
 
-let users: {username: string, password: string}[] = []
+// Define a shared interface for users registered in the Pool
+interface PoolUser {
+  userID: string;
+  username: string;
+  coordinates: { long: number; lat: number };
+  partyID: string;
+}
 
 interface AccessUserResult {
-    success: boolean;
-    user?: User
-    code: number;
-    error?: string;
+  success: boolean;
+  user?: any; // You may replace 'any' with Sequelize's User model type
+  code: number;
+  error?: string;
 }
 
+/**
+ * Creates a new user.
+ * @param username - The username of the new user.
+ * @param password - The password of the new user.
+ * @returns AccessUserResult containing success status and the user object if successful.
+ */
 const createUser = async (username: string, password: string): Promise<AccessUserResult> => {
-    if (!checkValidString(username)) {
-        return {success: false, code: 400, error: "partyID must be properly specified"}
-    }
+  if (!checkValidString(username) || !checkValidString(password)) {
+    return { success: false, code: 400, error: 'Invalid username or password' };
+  }
 
-    if (!checkValidString(password)) {
-        return {success: false, code: 400, error: "userID must be properly specified"}
-    }
+  // Check if the user already exists
+  const existingUser = await db.User.findOne({ where: { username } });
+  if (existingUser) {
+    return { success: false, code: 400, error: 'User already exists' };
+  }
 
-    const exists = await UserDB.dbFindUsername(username)
-    if (exists) {
-        return { success: false, code: 400, error: "user already exists"}
-    }
+  // Hash the password
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+  // Create a new user
+  const newUser = await db.User.create({
+    userID: uuidv4(),
+    username,
+    password: hashedPassword,
+    coordinates: { long: 0, lat: 0 }, // Default coordinates
+  });
 
-    const user = User.CreateUser(username, hashedPassword);
-    pool.registerUser(user);
-    user.syncDB();
-    console.log(`Created user with id: ${user.userID}`)
+  // Register the user in the pool with a default party
+  const poolUser: PoolUser = {
+    userID: newUser.userID,
+    username: newUser.username,
+    coordinates: newUser.coordinates,
+    partyID: 'default', // Default party ID
+  };
 
-    return { success: true, user: user, code: 201}
-}
+  // Add the user to the pool
+  pool.registerUser(poolUser);
 
+  console.log(`Created user with ID: ${newUser.userID}`);
+  return { success: true, user: newUser, code: 201 };
+};
+
+/**
+ * Logs in a user by verifying their credentials.
+ * @param username - The username of the user.
+ * @param password - The password of the user.
+ * @returns AccessUserResult containing success status and the user object if successful.
+ */
 const loginUser = async (username: string, password: string): Promise<AccessUserResult> => {
-    if (!checkValidString(username)) {
-        return { success: false, code: 400, error: "username must be provided"}
-    }
+  if (!checkValidString(username) || !checkValidString(password)) {
+    return { success: false, code: 400, error: 'Invalid username or password' };
+  }
 
-    if (!checkValidString(password)) {
-        return { success: false, code: 400, error: "password must be provided"}
-    }
-    
-    const exists = await UserDB.dbFindUsername(username)
-    if (!exists) {
-        return { success: false, code: 400, error: "invalid credentials provided"}
-    }
+  // Find the user by username
+  const user = await db.User.findOne({ where: { username } });
+  if (!user) {
+    return { success: false, code: 400, error: 'Invalid credentials' };
+  }
 
-    const matchedPassword = await bcrypt.compare(password, exists.password)
+  // Verify the password
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    return { success: false, code: 400, error: 'Invalid credentials' };
+  }
 
-    if (exists.username == username && matchedPassword) {
-        console.log(`Approved sign in request from user account: ${username}`)
-        return { success: true, user: exists, code: 200}
-    } else {
-        console.log(`Unsuccessful sign in attempt from user account: ${username}`)
-        return { success: false, code: 400, error: "invalid user credentials provided"}
-    }
-}
+  console.log(`Approved sign-in request from user account: ${username}`);
+  return { success: true, user, code: 200 };
+};
 
-export { createUser, loginUser }
+export { createUser, loginUser };
