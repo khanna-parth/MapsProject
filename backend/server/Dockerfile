@@ -8,6 +8,7 @@ COPY package.json package-lock.json ./
 RUN npm install
 RUN npm install sequelize pg pg-hstore
 RUN npm install -g typescript sequelize-cli
+RUN npm install -g ts-node
 
 COPY . .
 
