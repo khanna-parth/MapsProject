@@ -7,15 +7,18 @@ import data from './defaults/defaultColors.js'
 function Welcome() {
     const navigation = useNavigation();
 
+    // Login button pressed
     const handleLogIn = () => {
         console.log('Login');
         navigation.navigate('Login');
     };
 
+    // Google button pressed
     const handleGoogle = () => {
         
     };
 
+    // Create button pressed
     const handleCreate = () => {
         console.log('Create Account');
         navigation.navigate('CreateAccount');
@@ -24,9 +27,15 @@ function Welcome() {
     return (
         <SafeAreaView style={styles.safeContainer}>
             <View style={styles.wrapper}>
-            <View style={styles.loginButtonContainer}>
-                <Button title="Log In" color="#F2F2F2" onPress={handleLogIn} />
-            </View>
+
+                {/* Log in button */}
+
+                <View style={styles.loginButtonContainer}>
+                    <Button title="Log In" color="#F2F2F2" onPress={handleLogIn} />
+                </View>
+
+                {/* Text, Image, and Buttons */}
+
                 <View style={styles.centeredContent}>
                     {/* Replace with logo */}
                     <Image source={{ uri: "https://picsum.photos/id/237/200/300" }} style={styles.image} />
@@ -38,6 +47,9 @@ function Welcome() {
                         <Button title="Create Account" color="#F2F2F2" onPress={handleCreate} /> 
                     </View>
                 </View>
+
+                {/* Bottom Disclaimer */}
+                
                 <Text style={styles.endText}>By creating an account, you agree to Waypoint's <Text style={{ textDecorationLine: 'underline' }}>Terms of Service</Text>, <Text style={{ textDecorationLine: 'underline' }}>Privacy Policy</Text>, and <Text style={{ textDecorationLine: 'underline' }}>Safety Policy</Text>.</Text>
             </View>
         </SafeAreaView>
@@ -52,7 +64,7 @@ const styles = StyleSheet.create({
     },
     wrapper: {
         flex: 1,
-        paddingHorizontal: 20,
+        paddingHorizontal: 16,
         justifyContent: 'space-between'
     },
     loginButtonContainer: {

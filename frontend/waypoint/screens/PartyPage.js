@@ -16,10 +16,12 @@ function PartyScreen() {
 
     const [username, setUsername] = useState("")
 
+    // Press leave button
     const handleLeave = () => {
         console.log('leave');
     };
 
+    // Press search button
     const handleSearch = () => {
         setSearchModalVisible(true);
         setInviteModalVisible(false);
@@ -27,6 +29,7 @@ function PartyScreen() {
         //navigation.navigate('Search');
     };
 
+    // Press invite button
     const handleInvite = () => {
         setSearchModalVisible(false);
         setInviteModalVisible(true);
@@ -36,7 +39,9 @@ function PartyScreen() {
 
     return (
         <SafeAreaView style={styles.safeContainer}>
+            
             {/* Top Button Row */}
+
             <View style={styles.topButtons}>
                 <Box style={{ backgroundColor: "#C65252"}} onPress={handleLeave}>Leave</Box>
                 <Box onPress={handleSearch}>Search</Box>
@@ -45,15 +50,15 @@ function PartyScreen() {
 
             {/* List of party members */}
 
-            <View style={styles.scrollView}>
-                <Text style={styles.headerText}>Party Members</Text>
+            <View style={styles.wrapper}>
+                <Text style={styles.listHeaderText}>Party Members</Text>
                 <FlatList 
                     data={[{ "id": "7", "type": "Water", "name": "Grant" }, { "id": "8", "type": "Water", "name": "Regis" }]}
                     renderItem={({ item }) => {
                         return (
                             <View style={styles.card} key={item.id}>
                                 <Image source={defaultImage} style={styles.cardImage}/>
-                                <View style={styles.textArea} key={item.id}>
+                                <View style={styles.cardTextArea} key={item.id}>
                                     <Text style={styles.cardText}>{item.name}</Text>
                                 </View>
                             </View>
@@ -77,19 +82,19 @@ function PartyScreen() {
                 <View style={styles.modalContainer}>
                     <Text style={styles.modalTitle}>Search User</Text>
                     <TextInput 
-                        style={styles.input} 
+                        style={styles.textInput} 
                         placeholder='Search'
                         value={username}
                         onChangeText={setUsername}
                     />
-                        <Text style={styles.headerText}>Results</Text>
+                        <Text style={styles.listHeaderText}>Results</Text>
                         <FlatList 
-                        data={[{ "id": "7", "type": "Water", "name": "Grant" }, { "id": "8", "type": "Water", "name": "Regis" }]}
+                        data={[{ "id": "7", "type": "Water", "name": "Parth Khanna" }, { "id": "8", "type": "Water", "name": "Howard" }]}
                         renderItem={({ item }) => {
                             return (
                                 <View style={styles.card} key={item.id}>
                                     <Image source={defaultImage} style={styles.cardImage}/>
-                                    <View style={styles.textArea} key={item.id}>
+                                    <View style={styles.cardTextArea} key={item.id}>
                                         <Text style={styles.cardText}>{item.name}</Text>
                                     </View>
                                 </View>
@@ -118,19 +123,19 @@ function PartyScreen() {
                 <View style={styles.modalContainer}>
                     <Text style={styles.modalTitle}>Invite Friend</Text>
                     <TextInput 
-                        style={styles.input} 
+                        style={styles.textInput} 
                         placeholder='Search'
                         value={username}
                         onChangeText={setUsername}
                     />
-                        <Text style={styles.headerText}>Friends</Text>
+                        <Text style={styles.listHeaderText}>Friends</Text>
                         <FlatList 
-                        data={[{ "id": "7", "type": "Water", "name": "Grant" }, { "id": "8", "type": "Water", "name": "Regis" }]}
+                        data={[{ "id": "7", "type": "Water", "name": "Theo" }, { "id": "8", "type": "Water", "name": "Collin" }]}
                         renderItem={({ item }) => {
                             return (
                                 <View style={styles.card} key={item.id}>
                                     <Image source={defaultImage} style={styles.cardImage}/>
-                                    <View style={styles.textArea} key={item.id}>
+                                    <View style={styles.cardTextArea} key={item.id}>
                                         <Text style={styles.cardText}>{item.name}</Text>
                                     </View>
                                 </View>
@@ -146,7 +151,6 @@ function PartyScreen() {
                     }} />                 */}
                 </View>
             </Modal>
-            
         </SafeAreaView>
     );
 }
@@ -157,15 +161,15 @@ const styles = StyleSheet.create({
         paddingTop: Platform.OS === 'android' ? 25 : 0,
         backgroundColor: data.offWhite,
     },
-    scrollView: {
+    wrapper: {
         flex: 1,
-        paddingHorizontal: 16
+        paddingHorizontal: 16,
     },
     card: {
         flexDirection: 'row',
         alignItems: 'center',
     },
-    textArea: {
+    cardTextArea: {
         flex: 1,
         backgroundColor: 'white',
         padding: 16,
@@ -182,14 +186,14 @@ const styles = StyleSheet.create({
     cardText: {
         fontSize: 20
     },
-    headerText: {
+    listHeaderText: {
         fontSize: 20,
         marginBottom: 12,
     },
     topButtons: {
         justifyContent: "space-evenly",
         flexDirection: 'row',
-        paddingBottom: 20
+        paddingBottom: 16
     },
     modalContainer: {
         flex: 1,
@@ -203,7 +207,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold'
     },
-    input: {
+    textInput: {
         height: 40,
         backgroundColor: 'white',
         marginBottom: 15,
