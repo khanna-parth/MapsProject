@@ -5,7 +5,7 @@ import HomeScreen from '../screens/Home';
 import LoginScreen from '../screens/Login';
 import CreateAccountScreen from '../screens/CreateAccount';
 
-import ProfileScreen from '../screens/Profile';
+import PartyScreen from '../screens/PartyPage';
 import InviteScreen from '../screens/Invite';
 import SearchScreen from '../screens/Search';
 
@@ -23,10 +23,10 @@ const HomeStack = () => {
     );
 };
 
-const ProfileStack = () => {
+const PartyStack = () => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="Profile" component={PartyScreen} />
         </Stack.Navigator>
     );
 };
@@ -60,7 +60,7 @@ const AppNavigator = () => {
             />
             <Tab.Screen
                 name="Profile"
-                component={ProfileStack}
+                component={PartyStack}
                 options={{ tabBarStyle: { display: 'flex' } }}
             />
         </Tab.Navigator>

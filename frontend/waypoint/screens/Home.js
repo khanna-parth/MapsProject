@@ -2,6 +2,8 @@ import { StyleSheet, Text, View, Button, Platform, SafeAreaView, Image } from 'r
 
 import { useNavigation } from '@react-navigation/native';
 
+import data from './defaults/defaultColors.js'
+
 function Welcome() {
     const navigation = useNavigation();
 
@@ -46,7 +48,7 @@ const styles = StyleSheet.create({
     safeContainer: {
         flex: 1,
         paddingTop: Platform.OS === 'android' ? 25 : 0,
-        backgroundColor: '#3E82FC',
+        backgroundColor: data.primaryColor,
     },
     wrapper: {
         flex: 1,
@@ -72,7 +74,7 @@ const styles = StyleSheet.create({
         height: 45,
         width: '100%',
         borderRadius: 20,
-        backgroundColor: '#F2F2F2',
+        backgroundColor: data.offWhite,
         justifyContent: 'center',
         alignSelf: "center",
         marginBottom: 25
@@ -82,7 +84,7 @@ const styles = StyleSheet.create({
         width: '100%',
         borderRadius: 20,
         borderWidth: 2,
-        borderColor: '#F2F2F2',
+        borderColor: data.offWhite,
         justifyContent: 'center',
         alignSelf: "center",
     },
@@ -90,10 +92,11 @@ const styles = StyleSheet.create({
         fontSize: 32,
         marginBottom: 90,
         fontWeight: 'bold',
-        color: "#F2F2F2"
+        color: "#F2F2F2",
+        alignSelf: "baseline"
     },
     endText: {
-        color: "#F2F2F2",
+        color: data.offWhite,
         textAlign: 'center',
         paddingBottom: 10
     }
