@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, Button, Platform, SafeAreaView, Image } from 'react-native';
 
-function TabOneScreen() {
+function Welcome() {
     const handleLogIn = () => {
         
     };
@@ -93,4 +93,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export default TabOneScreen;
+export default Welcome;
