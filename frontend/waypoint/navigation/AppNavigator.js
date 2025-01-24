@@ -2,9 +2,13 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 
 import HomeScreen from '../screens/Home';
+import LoginScreen from '../screens/Login';
+import CreateAccountScreen from '../screens/CreateAccount';
+
 import ProfileScreen from '../screens/Profile';
 import InviteScreen from '../screens/Invite';
 import SearchScreen from '../screens/Search';
+
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -13,6 +17,8 @@ const HomeStack = () => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="CreateAccount" component={CreateAccountScreen} />
         </Stack.Navigator>
     );
 };

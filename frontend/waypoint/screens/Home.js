@@ -1,8 +1,13 @@
 import { StyleSheet, Text, View, Button, Platform, SafeAreaView, Image } from 'react-native';
 
+import { useNavigation } from '@react-navigation/native';
+
 function Welcome() {
+    const navigation = useNavigation();
+
     const handleLogIn = () => {
-        
+        console.log('Login');
+        navigation.navigate('Login');
     };
 
     const handleGoogle = () => {
@@ -10,7 +15,8 @@ function Welcome() {
     };
 
     const handleCreate = () => {
-        
+        console.log('Create Account');
+        navigation.navigate('CreateAccount');
     };
 
     return (
@@ -22,7 +28,7 @@ function Welcome() {
                 <View style={styles.centeredContent}>
                     {/* Replace with logo */}
                     <Image source={{ uri: "https://picsum.photos/id/237/200/300" }} style={styles.image} />
-                    <Text style={styles.welcomeLabel}>Welcome to Waypoint.</Text>
+                    <Text style={styles.welcomeLabel}>Waypoint</Text>
                     <View style={styles.googleButtonContainer}>
                         <Button title="Continue with Google" color="#3E82FC" onPress={handleGoogle} /> 
                     </View>
