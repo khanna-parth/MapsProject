@@ -1,20 +1,45 @@
-import { StyleSheet, Text, View, Platform, SafeAreaView, FlatList, Image, Modal, Button, TextInput } from 'react-native';
-import { useState } from 'react';
+import { StyleSheet, Text, View, Platform, SafeAreaView, FlatList, Image } from 'react-native';
+import { useState, useEffect } from 'react';
 
 import Box from '../components/Box';
-import data from './defaults/defaultColors.js'
+import SearchScreen from './Search.js';
+import InviteScreen from './Invite.js';
+import data from '../utils/defaults/defaultColors.js'
+import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
 
 const defaultImage = require("../assets/default-avatar-icon.jpg")
 
 import { useNavigation } from '@react-navigation/native';
 
+
+
 function PartyScreen() {
+    const test = async () => {
+        console.log(await postRequest('auth/login', {username: "admin", password: "admin"}))
+    }
+    //test()
+    
     const navigation = useNavigation();
 
     const [searchModalVisible, setSearchModalVisible] = useState(false);
     const [inviteModalVisible, setInviteModalVisible] = useState(false);
 
-    const [username, setUsername] = useState("")
+    const [partyList, setPartyList] = useState([]);
+    const [inviteList, setInviteList] = useState([]);
+    
+    
+    const getPartyList = async () => {
+        const userID = await getData("userID");
+        const partyID = await getData("partyID");
+
+        if (userID.error || partyID.error) {
+            return {error: true, message: "Error retrieving user or party ID."}
+        } else if (!partyID) {
+            return {error: true, message: "User not in party."}
+        }
+        
+        console.log(await postRequest('party/status', {userID: userID, partyID: partyID}))
+    }
 
     // Press leave button
     const handleLeave = () => {
@@ -37,6 +62,18 @@ function PartyScreen() {
         //navigation.navigate('Invite');
     };
 
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         const data = await getPartyList();
+
+    //         if (!data.error) {
+    //             setPartyList(data.connected);
+    //         }
+    //     };
+        
+    //     //fetchData();
+    // }, []);
+
     return (
         <SafeAreaView style={styles.safeContainer}>
             
@@ -53,104 +90,42 @@ function PartyScreen() {
             <View style={styles.wrapper}>
                 <Text style={styles.listHeaderText}>Party Members</Text>
                 <FlatList 
-                    data={[{ "id": "7", "type": "Water", "name": "Grant" }, { "id": "8", "type": "Water", "name": "Regis" }]}
+                    //data={partyList} fix when backend fixed
+                    data={[{ "userID": "7", "username": "Theo" }, { "userID": "8", "username": "Collin" }]}
                     renderItem={({ item }) => {
                         return (
-                            <View style={styles.card} key={item.id}>
+                            <View style={styles.card} key={item.userID}>
                                 <Image source={defaultImage} style={styles.cardImage}/>
-                                <View style={styles.cardTextArea} key={item.id}>
-                                    <Text style={styles.cardText}>{item.name}</Text>
+                                <View style={styles.cardTextArea} key={item.userID}>
+                                    <Text style={styles.cardText}>{item.username}</Text>
                                 </View>
                             </View>
                         );
                     }}
                     horizontal={false}
-                    keyExtractor={(item) => item.id.toString()}
+                    keyExtractor={(item) => item.userID.toString()}
                     ItemSeparatorComponent={<View style={{ height: 16 }} />}
                 />
             </View>
 
             {/* Search Screen */}
 
-            <Modal visible={searchModalVisible} 
-                animationType='slide'
-                presentationStyle='pageSheet'
-                onRequestClose={ () => {
+            <SearchScreen 
+                visible={searchModalVisible} 
+                onRequestClose={() => {
                     setSearchModalVisible(false);
-                    setUsername("");
-                }}>
-                <View style={styles.modalContainer}>
-                    <Text style={styles.modalTitle}>Search User</Text>
-                    <TextInput 
-                        style={styles.textInput} 
-                        placeholder='Search'
-                        value={username}
-                        onChangeText={setUsername}
-                    />
-                        <Text style={styles.listHeaderText}>Results</Text>
-                        <FlatList 
-                        data={[{ "id": "7", "type": "Water", "name": "Parth Khanna" }, { "id": "8", "type": "Water", "name": "Howard" }]}
-                        renderItem={({ item }) => {
-                            return (
-                                <View style={styles.card} key={item.id}>
-                                    <Image source={defaultImage} style={styles.cardImage}/>
-                                    <View style={styles.cardTextArea} key={item.id}>
-                                        <Text style={styles.cardText}>{item.name}</Text>
-                                    </View>
-                                </View>
-                            );
-                        }}
-                        horizontal={false}
-                        keyExtractor={(item) => item.id.toString()}
-                        ItemSeparatorComponent={<View style={{ height: 16 }} />}
-                    />
-                    {/* <Button title='Close' color={data.primaryColor} onPress={() => {
-                        setSearchModalVisible(false); 
-                        setUsername("");
-                    }} />                 */}
-                </View>
-            </Modal>
+                }} 
+            ></SearchScreen>
+            
 
             {/* Invite Screen */}
 
-            <Modal visible={inviteModalVisible} 
-                animationType='slide'
-                presentationStyle='pageSheet'
-                onRequestClose={ () => {
+            <InviteScreen 
+                visible={inviteModalVisible} 
+                onRequestClose={() => {
                     setInviteModalVisible(false);
-                    setUsername("");
-                }}>
-                <View style={styles.modalContainer}>
-                    <Text style={styles.modalTitle}>Invite Friend</Text>
-                    <TextInput 
-                        style={styles.textInput} 
-                        placeholder='Search'
-                        value={username}
-                        onChangeText={setUsername}
-                    />
-                        <Text style={styles.listHeaderText}>Friends</Text>
-                        <FlatList 
-                        data={[{ "id": "7", "type": "Water", "name": "Theo" }, { "id": "8", "type": "Water", "name": "Collin" }]}
-                        renderItem={({ item }) => {
-                            return (
-                                <View style={styles.card} key={item.id}>
-                                    <Image source={defaultImage} style={styles.cardImage}/>
-                                    <View style={styles.cardTextArea} key={item.id}>
-                                        <Text style={styles.cardText}>{item.name}</Text>
-                                    </View>
-                                </View>
-                            );
-                        }}
-                        horizontal={false}
-                        keyExtractor={(item) => item.id.toString()}
-                        ItemSeparatorComponent={<View style={{ height: 16 }} />}
-                    />
-                    {/* <Button title='Close' color={data.primaryColor} onPress={() => {
-                        setSearchModalVisible(false); 
-                        setUsername("");
-                    }} />                 */}
-                </View>
-            </Modal>
+                }} 
+            ></InviteScreen>
         </SafeAreaView>
     );
 }

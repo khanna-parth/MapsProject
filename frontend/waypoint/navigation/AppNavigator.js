@@ -16,8 +16,8 @@ const Stack = createStackNavigator();
 const HomeStack = () => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="HomeScreen" component={HomeScreen} />
+        <Stack.Screen name="LoginScreen" component={LoginScreen} />
         <Stack.Screen name="CreateAccount" component={CreateAccountScreen} />
         </Stack.Navigator>
     );
@@ -26,7 +26,7 @@ const HomeStack = () => {
 const PartyStack = () => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Profile" component={PartyScreen} />
+        <Stack.Screen name="ProfileScreen" component={PartyScreen} />
         </Stack.Navigator>
     );
 };
@@ -34,7 +34,7 @@ const PartyStack = () => {
 const InviteStack = () => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Invite" component={InviteScreen} />
+        <Stack.Screen name="InviteScreen" component={InviteScreen} />
         </Stack.Navigator>
     );
 };
@@ -42,7 +42,7 @@ const InviteStack = () => {
 const SearchStack = () => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Search" component={SearchScreen} />
+        <Stack.Screen name="SearchScreen" component={SearchScreen} />
         </Stack.Navigator>
     );
 };

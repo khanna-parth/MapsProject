@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, Button, Platform, SafeAreaView, Image } from 'r
 
 import { useNavigation } from '@react-navigation/native';
 
-import data from './defaults/defaultColors.js'
+import data from '../utils/defaults/defaultColors.js'
 
 function Welcome() {
     const navigation = useNavigation();
