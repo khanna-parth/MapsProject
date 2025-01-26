@@ -1,94 +1,106 @@
-import db from '../database/models/index'; // Import Sequelize models
+import { User } from "../models/user";
+import { db } from "./client";
+import {Mutex, Semaphore, withTimeout} from 'async-mutex';
+
 
 class SocialDB {
-  static async addFriends(userID: string, friendUserID: string): Promise<{ added: boolean; code: number; error?: string }> {
-    const transaction = await db.sequelize.transaction();
-    try {
-      const user = await db.User.findByPk(userID, {
-        include: [{ model: db.User, as: 'friends' }],
-        transaction,
-      });
+    private static dbMutex = withTimeout(new Mutex(), 500);
+    
+    static async addFriends(user: User, friendUser: User): Promise<{ added: boolean, code: number, error?: string }> {
+        const release = await this.dbMutex.acquire();
+        try {
+            const userWithFriends = await User.findOne({
+                where: { userID: user.userID },
+                relations: ['friends'],
+            });
 
-      if (!user) {
-        return { added: false, code: 404, error: 'User not found.' };
-      }
+            if (!userWithFriends) {
+                return { added: false, code: 404, error: `User not found.` };
+            }
 
-      const isAlreadyFriends = user.friends?.some((friend: any) => friend.userID === friendUserID);
-      if (isAlreadyFriends) {
-        return { added: false, code: 200, error: 'Friend already exists.' };
-      }
+            const isAlreadyFriends = userWithFriends.friends?.some(friend => friend.userID === friendUser.userID);
+            if (isAlreadyFriends) {
+                return { added: false, code: 200, error: "Friend already exists." };
+            }
 
-      const friendUser = await db.User.findByPk(friendUserID, { transaction });
-      if (!friendUser) {
-        return { added: false, code: 404, error: 'Friend user not found.' };
-      }
+            userWithFriends.friends?.push(friendUser);
+            friendUser.friends?.push(userWithFriends);
 
-      // Add the friend relationship
-      await user.addFriend(friendUser, { transaction });
-      await transaction.commit();
+            await User.save(userWithFriends);
+            await User.save(friendUser);
 
-      console.log(`Added ${user.username} and ${friendUser.username} as friends`);
-      return { added: true, code: 200 };
-    } catch (error: any) {
-      await transaction.rollback();
-      console.error(`Error adding friends: ${error.message}`);
-      return { added: false, code: 500, error: `Error: ${error.message}` };
+            console.log(`Added ${user.username} and ${friendUser.username} as friends`);
+            return { added: true, code: 200 };
+        } catch (error) {
+            console.log(`Error adding friends: ${error}`);
+            return { added: false, code: 500, error: `Error: ${error}` };
+        } finally {
+            release();
+        }
     }
-  }
 
-  static async removeFriends(userID: string, friendUserID: string): Promise<{ removed: boolean; code: number; error?: string }> {
-    const transaction = await db.sequelize.transaction();
-    try {
-      const user = await db.User.findByPk(userID, {
-        include: [{ model: db.User, as: 'friends' }],
-        transaction,
-      });
-
-      if (!user) {
-        return { removed: false, code: 404, error: 'User not found.' };
-      }
-
-      const isFriends = user.friends?.some((friend: any) => friend.userID === friendUserID);
-      if (!isFriends) {
-        return { removed: false, code: 400, error: 'Friend relationship does not exist.' };
-      }
-
-      const friendUser = await db.User.findByPk(friendUserID, { transaction });
-      if (!friendUser) {
-        return { removed: false, code: 404, error: 'Friend user not found.' };
-      }
-
-      // Remove the friend relationship
-      await user.removeFriend(friendUser, { transaction });
-      await transaction.commit();
-
-      console.log(`Removed ${user.username} and ${friendUser.username} as friends`);
-      return { removed: true, code: 200 };
-    } catch (error: any) {
-      await transaction.rollback();
-      console.error(`Error removing friends: ${error.message}`);
-      return { removed: false, code: 500, error: `Error: ${error.message}` };
+    static async removeFriends(user: User, friend: User): Promise<{ removed: boolean, code: number, error?: string }> {
+        const release = await this.dbMutex.acquire();
+        try {
+            // Load the user's friends relationship
+            const userWithFriends = await User.findOne({
+                where: { userID: user.userID },
+                relations: ['friends'],
+            });
+    
+            if (!userWithFriends) {
+                return { removed: false, code: 404, error: `User not found.` };
+            }
+    
+            const isFriends = userWithFriends.friends?.some(existingFriend => existingFriend.userID === friend.userID);
+            if (!isFriends) {
+                return { removed: false, code: 400, error: `${friend.username} is not a friend.` };
+            }
+    
+            userWithFriends.friends = userWithFriends.friends?.filter(existingFriend => existingFriend.userID !== friend.userID);
+    
+            const friendWithFriends = await User.findOne({
+                where: { userID: friend.userID },
+                relations: ['friends'],
+            });
+    
+            if (friendWithFriends) {
+                friendWithFriends.friends = friendWithFriends.friends?.filter(existingFriend => existingFriend.userID !== user.userID);
+                await User.save(friendWithFriends);
+            }
+    
+            await User.save(userWithFriends);
+    
+            console.log(`Removed ${user.username} and ${friend.username} as friends`);
+            return { removed: true, code: 200 };
+        } catch (error) {
+            console.log(`Error removing friends: ${error}`);
+            return { removed: false, code: 500, error: `Error: ${error}` };
+        } finally {
+            release();
+        }
     }
-  }
 
-  static async getFriends(userID: string): Promise<{ success: boolean; friends?: any[]; code: number; error?: string }> {
-    try {
-      const user = await db.User.findByPk(userID, {
-        include: [{ model: db.User, as: 'friends' }],
-      });
+    static async getFriends(user: User): Promise<{ success: boolean; friends?: User[], code: number; error?: string }> {
+        try {
+            const userWithFriends = await User.findOne({
+                where: { userID: user.userID },
+                relations: ['friends'],
+            });
 
-      if (!user) {
-        return { success: false, code: 404, error: 'User not found.' };
-      }
+            if (!userWithFriends) {
+                return { success: false, code: 404, error: `User not found.` };
+            }
 
-      const friends = user.friends || []; // Return an empty array if no friends
-      console.log(`Loaded friends for ${user.username}:`, friends.map((friend: any) => friend.username));
-      return { success: true, friends, code: 200 };
-    } catch (error: any) {
-      console.error(`Error loading friends: ${error.message}`);
-      return { success: false, code: 500, error: `Error: ${error.message}` };
+            user.friends = userWithFriends.friends || [];
+
+            console.log(`Loaded friends for ${user.username}:`, user.friends.map(friend => friend.username));
+            return { success: true, friends: user.friends, code: 200 };
+        } catch (error) {
+            console.log(`Error loading friends: ${error}`);
+            return { success: false, code: 500, error: `Error: ${error}` };
+        }
     }
-  }
 }
 
-export { SocialDB };
+export { SocialDB }

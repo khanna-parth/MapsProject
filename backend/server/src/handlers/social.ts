@@ -1,65 +1,57 @@
-import { SocialDB } from '../db/dbsocial';
-import db from '../database/models/index';
-import { checkValidString } from '../util/util';
+import { TreeLevelColumn } from "typeorm"
+import { SocialDB } from "../db/dbsocial"
+import { UserDB } from "../db/dbuser"
+import { User } from "../models/user"
+import { checkValidString } from "../util/util"
 
-/**
- * Adds a friend relationship between two users.
- * @param username - The username of the user.
- * @param friendUsername - The username of the friend.
- * @returns The result of the friend addition operation.
- */
-const addFriend = async (username: string, friendUsername: string) => {
-  if (!checkValidString(username) || !checkValidString(friendUsername)) {
-    return { added: false, code: 400, error: 'Invalid username or friendUsername' };
-  }
+const addFriend = async (userName: string, friendUsername: string): Promise<{added: boolean, code: number, error?: string}> => {
+    if (!checkValidString(userName)) {
+        return { added: false, code: 400, error: "must enter valid userName"}
+    }
 
-  const user = await db.User.findOne({ where: { username } });
-  const friend = await db.User.findOne({ where: { username: friendUsername } });
+    const user = await UserDB.dbFindUsername(userName)
+    const friend = await UserDB.dbFindUsername(friendUsername)
 
-  if (!user || !friend) {
-    return { added: false, code: 404, error: 'User or friend not found' };
-  }
+    if (!user || !friend) {
+        return { added: false, code: 400, error: 'User or friend does not exist'}
+    }
 
-  return SocialDB.addFriends(user.userID, friend.userID); // Pass userID strings
-};
+    const result = await SocialDB.addFriends(user, friend)
+    
+    return result;
+}
 
-/**
- * Removes a friend relationship between two users.
- * @param username - The username of the user.
- * @param friendUsername - The username of the friend.
- * @returns The result of the friend removal operation.
- */
-const removeFriend = async (username: string, friendUsername: string) => {
-  if (!checkValidString(username) || !checkValidString(friendUsername)) {
-    return { removed: false, code: 400, error: 'Invalid username or friendUsername' };
-  }
+const removeFriend = async (userName: string, friendUsername: string): Promise<{removed: boolean, code: number, error?: string}> => {
+    if (!checkValidString(userName)) {
+        return { removed: false, code: 400, error: "must enter valid userName"}
+    }
 
-  const user = await db.User.findOne({ where: { username } });
-  const friend = await db.User.findOne({ where: { username: friendUsername } });
+    const user = await UserDB.dbFindUsername(userName)
+    const friend = await UserDB.dbFindUsername(friendUsername)
 
-  if (!user || !friend) {
-    return { removed: false, code: 404, error: 'User or friend not found' };
-  }
+    if (!user || !friend) {
+        return { removed: false, code: 400, error: 'User or friend does not exist'}
+    }
 
-  return SocialDB.removeFriends(user.userID, friend.userID); // Pass userID strings
-};
+    const result = await SocialDB.removeFriends(user, friend)
+    
+    return result;
+}
 
-/**
- * Retrieves the friends of a user.
- * @param username - The username of the user.
- * @returns The result containing the list of friends or an error message.
- */
-const getFriends = async (username: string) => {
-  if (!checkValidString(username)) {
-    return { code: 400, error: 'Invalid username' };
-  }
 
-  const user = await db.User.findOne({ where: { username } });
-  if (!user) {
-    return { code: 404, error: 'User not found' };
-  }
+const getFriends = async (userName: string): Promise<{friends?: User[], code: number, error?: string}> => {
+    if (!checkValidString(userName)) {
+        return { code: 400, error: "must enter valid userName"}
+    }
 
-  return SocialDB.getFriends(user.userID); // Pass userID string
-};
+    const user = await UserDB.dbFindUsername(userName)
 
-export { addFriend, removeFriend, getFriends };
+    if (!user) {
+        return { code: 400, error: 'User or friend does not exist'}
+    }
+
+    const result = await SocialDB.getFriends(user)
+    return result;
+}
+
+export { addFriend, removeFriend, getFriends }

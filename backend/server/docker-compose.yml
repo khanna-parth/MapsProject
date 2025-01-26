@@ -1,7 +1,7 @@
 services:
   postgres:
-    container_name: mapshare-db
-    image: postgres:latest
+    container_name: mapshare
+    image: postgres
     env_file:
          - .ENV
     environment:
@@ -14,7 +14,6 @@ services:
       - db_data:/var/lib/postgresql/data  
 
   mapshare-backend:
-    container_name: mapshare-backend
     build:
       context: .
       dockerfile: Dockerfile
@@ -23,7 +22,8 @@ services:
     ports:
       - "3010:3010"
     volumes:
-      - .:/server
+      - .:/app
+      - /app/node_modules
     environment:
       - NODE_ENV=development
       - SERVER_PORT=3010

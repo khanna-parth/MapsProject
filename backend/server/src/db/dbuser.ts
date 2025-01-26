@@ -1,37 +1,29 @@
-import db from '../database/models/index'; // Import Sequelize models
+import { User } from "../models/user";
+import { db } from "./client";
+
 
 class UserDB {
-  /**
-   * Find a user by username.
-   * @param username - The username to search for.
-   * @returns The user object or null if not found.
-   */
-  static async dbFindUsername(username: string): Promise<InstanceType<typeof db.User> | null> {
-    try {
-      const user = await db.User.findOne({
-        where: { username },
-      });
-      return user;
-    } catch (error) {
-      console.error('Error finding user by username:', error);
-      throw error;
-    }
-  }
+    static async dbFindUsername(username: string): Promise<User | null> {
+        const userRepository = db.getRepository(User);
 
-  /**
-   * Find a user by their userID.
-   * @param userID - The userID to search for.
-   * @returns The user object or null if not found.
-   */
-  static async dbFindID(userID: string): Promise<InstanceType<typeof db.User> | null> {
-    try {
-      const user = await db.User.findByPk(userID);
-      return user;
-    } catch (error) {
-      console.error('Error finding user by ID:', error);
-      throw error;
+        const user = await userRepository.findOne({
+            where: {
+                username: username,
+            },
+        });
+        return user
     }
-  }
+
+    static async dbFindID(userID: string): Promise<User | null> {
+        const userRepository = db.getRepository(User);
+
+        const user = await userRepository.findOne({
+            where: {
+                userID: userID,
+            },
+        });
+        return user
+    }
 }
 
-export { UserDB };
+export { UserDB }
