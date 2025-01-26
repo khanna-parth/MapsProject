@@ -24,7 +24,7 @@ app.post(ROUTES.CREATE_USER, async (req: Request, res: Response) => {
     }
 })
 
-app.get(ROUTES.LOGIN_USER, async (req: Request, res: Response) => {
+app.post(ROUTES.LOGIN_USER, async (req: Request, res: Response) => {
     const { username, password }: AccessUserRequest = req.body;
 
     const result = await loginUser(username, password);
