@@ -1,20 +1,28 @@
 import { useState } from 'react';
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
-import { storeData, postRequest } from '../utils/utils.js';
+import { storeData, postRequest, storeKeychainData, getKeychainData } from '../utils/utils.js';
+
 
 function LoginScreen() {
+    const navigation = useNavigation();
+
     //Actual Data
     const [form, setForm] = useState({
         username: '',
         password: '',
     });
 
-
     //Placeholders :)
     const [placeholders, setPlaceholders] = useState({
         username: '',
         password: '',
+    });
+
+    const [errorBorders, setErrorBorders] = useState({
+        username: 0,
+        password: 0,
     });
 
     const handleLogin = async () => {
@@ -23,16 +31,40 @@ function LoginScreen() {
 
         console.log("Sign In Clicked")
 
-        //If fields are blank
+        /*
+        try {
+            const storedCredentials = await getKeychainData();
+            if (storedCredentials && !storedCredentials.error) {
+                console.log('Existing credentials found:', storedCredentials.data);
+    
+                form.username = storedCredentials.data.username;
+                form.password = storedCredentials.data.password;
+    
+                return await loginWithCredentials(form.username, form.password);
+            } else {
+                console.log('No stored credentials found.');
+            }
+        } catch (error) {
+            console.error('Error retrieving credentials from Keychain:', error);
+        }
+        */
 
         if (!username.trim()) {
             setPlaceholders(prev => ({ ...prev, username: 'Username Required' }));
+            setErrorBorders(prev => ({ ...prev, username: 1 }));
             hasError = true;
+        } else {
+            setPlaceholders(prev => ({ ...prev, username: ' ' }));
+            setErrorBorders(prev => ({ ...prev, username: 0 }));
         }
 
         if (!password.trim()) {
             setPlaceholders(prev => ({ ...prev, password: 'Password Required' }));
+            setErrorBorders(prev => ({ ...prev, password: 1 }));
             hasError = true;
+        } else {
+            setErrorBorders(prev => ({ ...prev, password: 0 }));
+            setPlaceholders(prev => ({ ...prev, password: ' ' }));
         }
 
         if (hasError) {
@@ -47,7 +79,20 @@ function LoginScreen() {
             if (!response.error) {
                 const userData = response.data;
                 console.log('Login successful:', userData);
+                navigation.navigate('Profile'); //Remove Later
+                return;
+        
+                // --- Under Construction ---
     
+                const storeCredentials = await storeKeychainData(username, password);
+                if (storeCredentials.error) {
+                    console.error('Error storing credentials:', storeCredentials.message);
+                } else {
+                    console.log('User credentials stored successfully');
+                }
+
+                navigation.navigate('Profile');
+        
             } else {
                 console.error('Login failed:', response.message);
                 alert('Invalid username or password. Please try again.');
@@ -56,10 +101,10 @@ function LoginScreen() {
             console.error('Error during login process:', error);
             alert('An error occurred. Please try again later.');
         }
-
     }
 
     const handleForgot = () => {
+        //Need to speak with parf
         console.log("Forgot Password - Not Implemented Yet")
     }
 
@@ -85,14 +130,22 @@ function LoginScreen() {
 
                             <TextInput
                                 placeholder={placeholders.username}
+                                placeholderTextColor='#FF0000'
                                 autoCapitalize='none'
                                 clearButtonMode="while-editing"
                                 autoCorrect={false}
-                                style={styles.inputControl}
+                                style={[
+                                    styles.inputControlUser,
+                                    { borderWidth: errorBorders.username }
+                                ]}
                                 value={form.username}
-                                onChangeText={username =>
-                                    setForm(prev => ({ ...prev, username }))
-                                }
+                                onChangeText={username => {
+                                    setForm(prev => ({ ...prev, username}));
+                                    setErrorBorders(prev => ({
+                                        ...prev, username: 0,
+                                    }));
+                                    setPlaceholders(prev => ({ ...prev, username: ' '}));
+                                }}
                             />
                         </View>
                     </View>
@@ -103,14 +156,22 @@ function LoginScreen() {
 
                             <TextInput
                                 placeholder={placeholders.password}
+                                placeholderTextColor='#FF0000'
                                 autoCorrect={false}
-                                clearButtonMode="while-editing"
-                                style={styles.inputControl}
+                                //clearButtonMode="while-editing"
+                                style={[
+                                    styles.inputControlPass,
+                                    { borderWidth: errorBorders.password }
+                                ]}
                                 secureTextEntry={true}
                                 value={form.password}
-                                onChangeText={password =>
-                                    setForm(prev => ({ ...prev, password }))
-                                }
+                                onChangeText={password => {
+                                    setForm(prev => ({ ...prev, password }));
+                                    setErrorBorders(prev => ({
+                                        ...prev, password: 0,
+                                    }));
+                                    setPlaceholders(prev => ({ ...prev, password: ' '}));
+                                }}
                             />
                         </View>
                     </View>
@@ -177,13 +238,25 @@ const styles = StyleSheet.create({
         color: '#222',
         marginBottom: 8,
     },
-    inputControl: {
+    inputControlUser: {
         height: 44,
         backgroundColor: '#fff',
         paddingHorizontal: 16,
         borderRadius: 12,
         fontWeight: '500',
         color: '#222',
+        borderColor: '#FF0000',
+        borderWidth: 0,
+    },
+    inputControlPass: {
+        height: 44,
+        backgroundColor: '#fff',
+        paddingHorizontal: 16,
+        borderRadius: 12,
+        fontWeight: '500',
+        color: '#222',
+        borderColor: '#FF0000',
+        borderWidth: 0,
     },
     btn: {
         flexDirection: 'row',
