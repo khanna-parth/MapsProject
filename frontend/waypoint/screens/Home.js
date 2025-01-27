@@ -10,7 +10,7 @@ function Welcome() {
     // Login button pressed
     const handleLogIn = () => {
         console.log('Login');
-        navigation.navigate('Login');
+        navigation.navigate('LoginScreen');
     };
 
     // Google button pressed
