@@ -1,11 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { io } from "socket.io-client";
 import * as Keychain from 'react-native-keychain';
 
 const LOCALHOST = process.env.LOCAL_HOST
 
 export const storeData = async (key, value) => {
     try {
-        await AsyncStorage.setItem(String(key), value);
+        await AsyncStorage.setItem(String(key), String(value));
         return { error: false, message: "Created successfully." }
     } catch (e) {
         return { error: true, value: e, message: "Error writing to key." }
@@ -50,7 +51,7 @@ export const getRequest = async (address, data={}) => {
         })
         const reqData = await res.json();
     
-        if (res.status === 200) {
+        if (res.status === 200 || res.status === 201) {
             return {error: false, data: reqData, message: "Request successful."};
         } else {
             return {error: true, data: reqData, message: `Returned with error code: ${res.status}`};
@@ -60,6 +61,7 @@ export const getRequest = async (address, data={}) => {
         return {error: true, message: `Returned with error: ${error}`};
     }
 };
+
 
 export const postRequest = async (address, data={}) => {
     try {
@@ -76,7 +78,7 @@ export const postRequest = async (address, data={}) => {
         })
         const reqData = await res.json();
     
-        if (res.status === 200) {
+        if (res.status === 200 || res.status === 201) {
             return {error: false, data: reqData, message: "Request successful."};
         } else {
             return {error: true, data: reqData, message: `Returned with error code: ${res.status}`};
@@ -121,6 +123,6 @@ export const removeKeychainData = async () => {
 let partyID = 0
 export const getPartyID = () => {
     partyID += 1;
-    return partyID;
+    return String(partyID);
 }
 
