@@ -1,4 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Keychain from 'react-native-keychain';
+
+const LOCALHOST = process.env.LOCAL_HOST
 
 export const storeData = async (key, value) => {
     try {
@@ -34,7 +37,9 @@ export const removeData = async (key) => {
 
 export const getRequest = async (address, data={}) => {
     try {
-        const res = await fetch(`http://192.168.1.20:3010/${address}`, {
+        console.log(`Making POST to ${address} @ ${LOCALHOST}`)
+
+        const res = await fetch(`http://${LOCALHOST}/${address}`, {
             method: 'get',
             headers: {
                 "Content-Type": "application/json"
@@ -58,7 +63,9 @@ export const getRequest = async (address, data={}) => {
 
 export const postRequest = async (address, data={}) => {
     try {
-        const res = await fetch(`http://192.168.1.20:3010/${address}`, {
+        console.log(`Making POST to ${address} @ ${LOCALHOST}`)
+
+        const res = await fetch(`http://${LOCALHOST}/${address}`, {
             method: 'post',
             headers: {
                 "Content-Type": "application/json"
@@ -77,6 +84,37 @@ export const postRequest = async (address, data={}) => {
         
     } catch (error) {
         return {error: true, message: `Returned with error: ${error}`};
+    }
+};
+
+export const storeKeychainData = async (username, password) => {
+    try {
+        await Keychain.setGenericPassword(username, password);
+        return { error: false, message: "Credentials stored successfully." };
+    } catch (e) {
+        return { error: true, value: e, message: e };
+    }
+};
+
+export const getKeychainData = async () => {
+    try {
+        const credentials = await Keychain.getGenericPassword();
+        if (credentials) {
+            return { error: false, data: credentials, message: "Credentials retrieved." };
+        } else {
+            return { error: true, message: "No credentials stored." };
+        }
+    } catch (e) {
+        return { error: true, data: e, message: "Error reading credentials." };
+    }
+};
+
+export const removeKeychainData = async () => {
+    try {
+        await Keychain.resetGenericPassword();
+        return { error: false, message: "Credentials deleted successfully." };
+    } catch (e) {
+        return { error: true, data: e, message: "Error deleting credentials." };
     }
 };
 
