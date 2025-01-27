@@ -13,28 +13,40 @@ function InviteScreen({ visible, onRequestClose }) {
     const [friendList, setFriendList] = useState([]);
 
     const getFriends = async () => {
-        const username = await getData("username");
+        const usernameData = await getData("username");
 
-        if (username.error) {
-            return {error: true, message: "Error retrieving username."}
+        if (usernameData.error) {
+            return {error: true, message: "Error retrieving username."};
         }
 
-        console.log(await postRequest('social/list', {username: username}))
+        const friendData = await postRequest('social/list', {username: usernameData.data});
+
+        if (!friendData.error) {
+            let returnData = []
+
+            for (let i = 0; i < friendData.data.length; i++) {
+                returnData.push({username: friendData.data[i], cardID: i})
+            }
+            
+            return {error: false, data: returnData, message: "Friends retrieved successfully."};
+        }
     }
 
-    const fetchPartyData = async (invitedUser, invitedUserID) => {
-        console.log(`Fetching party data (added ${invitedUser} with id: ${invitedUserID}).`);
+    const inviteButtonPressed = async (invitedUser) => {
+        console.log(`Fetching party data (added ${invitedUser}).`);
+        //await removeData("partyID");
         const userID = await getData('userID');
         const partyID = await getData('partyID');
 
-        if (userID.error || partyID.error) {
+        if (userID.error) {
             return {error: true, message: "Error retrieving user or party ID."}
         }
 
-        if (!partyID) {
+        if (partyID.error) {
             const newPartyID = getPartyID();
 
-            console.log(await postRequest('party/create', {userID: userID, partyID: newPartyID}));
+            const createdPartyData = await postRequest('party/create', {userID: userID, partyID: newPartyID});
+            console.log(createdPartyData);
             await storeData('partyID', newPartyID);
 
             // Join party just made
@@ -47,14 +59,15 @@ function InviteScreen({ visible, onRequestClose }) {
 
     useEffect(() => {
         const fetchData = async () => {
-            const data = await getFriends();
+            const friendData = await getFriends();
 
-            if (!data.error) {
-                //setFriendList(<whatever data>);
+            if (!friendData.error) {
+                //console.log(friendData.data);
+                setFriendList(friendData.data);
             }
         };
         
-        //fetchData();
+        fetchData();
     }, []);
 
     return (

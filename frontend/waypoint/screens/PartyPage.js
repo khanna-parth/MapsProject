@@ -16,6 +16,16 @@ import { useNavigation } from '@react-navigation/native';
 function PartyScreen() {
     const test = async () => {
         console.log(await postRequest('auth/login', {username: "admin", password: "admin"}))
+        const loginData = await postRequest('auth/login', {username: "admin", password: "admin"});
+
+        if (!loginData.error) {
+            await storeData("username", loginData.data.username);
+            await storeData("userID", loginData.data.userID);
+
+            console.log('done logging in');
+        }
+
+
     }
     //test()
     
