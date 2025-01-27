@@ -81,7 +81,7 @@ class Pool {
         this.connectionPool.forEach((party) => {
             party.connected.forEach((user) => {
                 if (user.ws) {
-                    if (user.ws.readyState === user.ws.OPEN) {
+                    if (user.ws.connected === true) {
                         user.ws.send(message);
                     }
                 }
@@ -100,10 +100,13 @@ class Pool {
         }
     }
 
-    disconnectUser(userID: string): void {
+    disconnectUser(userID: string, msg: string | undefined): void {
         this.connectionPool.forEach((party) => {
             const user = party.getUser(userID);
             if (user) {
+                if (user.ws && msg) {
+                    user.ws.emit("ALERT", msg)
+                }
                 user.disconnectConn();
                 party.removeUser(userID);
             }

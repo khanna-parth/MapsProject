@@ -1,16 +1,18 @@
+import cluster from 'cluster';
 import axios from 'axios';
 import express, { Request, Response } from 'express';
 import { createParty, getParty  } from './handlers/party';
-import { setupWebSocket } from './handlers/ws';
 import ROUTES from './routes/routes';
 import { createUser, loginUser } from './handlers/auth';
 import { connectDB } from './db/client';
 import { addFriend, getFriends, removeFriend } from './handlers/social';
 import { AccessUserRequest, AddFriendsRequest, CreatePartyRequest } from './models/connection/requests';
+import { setupSocketIO } from './handlers/socketio-ws';
 
 const app = express();
 
 app.use(express.json());
+
 const PORT = process.env.SERVER_PORT || 3010;
 
 app.post(ROUTES.CREATE_USER, async (req: Request, res: Response) => {
@@ -36,20 +38,22 @@ app.post(ROUTES.LOGIN_USER, async (req: Request, res: Response) => {
 })
 
 
-app.post(ROUTES.CREATE_PARTY, (req: Request, res: Response) => {
+app.post(ROUTES.CREATE_PARTY, async (req: Request, res: Response) => {
     const { partyID, userID }: CreatePartyRequest = req.body;
 
     const result = createParty(partyID, userID);
     if (result.success) {
+        console.log(`Created party with id ${partyID} for host: ${userID}`)
         res.status(result.code).json({'message': `Party with id ${partyID} was created`})
     } else {
+        console.log(`Error creating party: ${result.error}`)
         res.status(result.code).json({'error': result.error})
     }
 })
 
 // PARTY JOIN IN ws.ts
 
-app.get(ROUTES.PARTY_STATUS, (req: Request, res: Response) => {
+app.get(ROUTES.PARTY_STATUS, async (req: Request, res: Response) => {
     const { partyID, userID }: CreatePartyRequest = req.body;
 
     const result = getParty(userID, partyID)
@@ -107,10 +111,49 @@ app.get("/fetch", async (req: Request, res: Response) => {
     }
 })
 
+app.get("/ping", async (req: Request, res: Response) => {
+    console.log(`Sending PONG from worker ${process.pid}`);
+    res.status(200).json({
+        "message": "pong"
+    })
+})
 
-const server = app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-});
+if (cluster.isPrimary) {
+    // const numCPUs = os.cpus().length;
+    const numCPUs = 1;
+    console.log(`Master process up, forking ${numCPUs} workers`);
+    
+    for (let i = 0; i < numCPUs; i++) {
+        cluster.fork();
+    }
 
-setupWebSocket(server);
-connectDB();
+    cluster.on('exit', (worker, code, signal) => {
+        console.log(`Worker ${worker.process.pid} died`);
+    });
+
+} else {
+    const server = app.listen(PORT, () => {
+        console.log(`Server running at http://localhost:${PORT}`);
+    });
+
+    setupSocketIO(server);
+
+    // const io = new Server(server,{});
+
+    // io.on("connection", (socket) => {
+    //     console.log("Recieved connection")
+
+    //     socket.on("message", function(msg) {
+    //         console.log(`Message recieved: ${msg}`)
+    //         io.emit("message", msg);
+    //     }
+    // )});
+    
+    // setupWebSocket(server);
+    connectDB();
+
+    // server.listen(Number(PORT), '127.0.0.1', () => {
+    //     console.log(`Server running at http://localhost:${PORT} in worker ${process.pid}`);
+    //   });
+    server.setTimeout(0);
+}

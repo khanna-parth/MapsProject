@@ -3,6 +3,7 @@ import { Entity, PrimaryGeneratedColumn, Column, BaseEntity, ManyToMany, JoinTab
 import 'reflect-metadata';
 import { v4 as uuidv4 } from 'uuid';
 import { Mutex } from 'async-mutex';
+import { Socket } from "socket.io";
 
 
 @Entity()
@@ -19,7 +20,8 @@ class User extends BaseEntity {
     @Column('json')
     coordinates: { long: number; lat: number };
 
-    ws?: WebSocket
+    // ws?: WebSocket
+    ws?: Socket
     sessionID?: string
 
     @ManyToMany(() => User)
@@ -46,7 +48,7 @@ class User extends BaseEntity {
         return user;
     }
 
-    async setConnection(ws: WebSocket) {
+    async setConnection(ws: Socket) {
         const release = await this.userMutex.acquire();
         try {
             this.ws = ws;
@@ -57,10 +59,10 @@ class User extends BaseEntity {
 
     disconnectConn(): boolean {
         if (this.ws) {
-            if (this.ws.OPEN) {
-                this.ws.close();
+            if (this.ws.connected) {
+                this.ws.disconnect();
             }
-            return this.ws.readyState == this.ws.CLOSED;
+            return this.ws.connected == false;
         }
         return true;
     }
