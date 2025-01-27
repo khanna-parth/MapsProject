@@ -8,7 +8,7 @@ function CreateAccountScreen() {
     const [form, setForm] = useState({
         firstName: '',
         lastName: '',
-        username: '', // Changed from birthday to username
+        username: '',
         password: '',
         reenterPassword: '',
     });
@@ -17,7 +17,7 @@ function CreateAccountScreen() {
     const [placeholders, setPlaceholders] = useState({
         firstName: '',
         lastName: '',
-        username: '', // Changed from birthday to username
+        username: '',
         password: '',
         reenterPassword: '',
     });
@@ -28,7 +28,6 @@ function CreateAccountScreen() {
 
         console.log("Create Account Clicked");
 
-        // If fields are blank/invalid
         if (!firstName.trim()) {
             setPlaceholders(prev => ({ ...prev, firstName: 'First Name Required' }));
             hasError = true;
