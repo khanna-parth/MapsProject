@@ -15,10 +15,6 @@ import { useNavigation } from '@react-navigation/native';
 
 function PartyScreen() {
     const test = async () => {
-        await removeData("partyID");
-        await removeData("username");
-        await removeData("userID");
-
         const loginData = await postRequest('auth/login', {username: "admin", password: "admin"});
 
         if (!loginData.error) {
@@ -28,7 +24,7 @@ function PartyScreen() {
             console.log('done logging in');
         }
     }
-    test()
+    //test()
     
     const navigation = useNavigation();
 

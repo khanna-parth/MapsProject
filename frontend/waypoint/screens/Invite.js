@@ -38,19 +38,17 @@ function InviteScreen({ visible, onRequestClose }) {
         const userID = await getData('userID');
         const partyID = await getData('partyID');
 
-
         if (userID.error) {
             return {error: true, message: "Error retrieving user or party ID."}
         }
-
+        
+        // If user does not have a saved party ID, meaning they have no party
         if (partyID.error) {
-            looping = true;
-
+            let looping = true;
+            
             while (looping) {
                 let newPartyID = getPartyID();
                 const createdPartyData = await postRequest('party/create', {userID: userID, partyID: newPartyID});
-
-                console.log(newPartyID, userID);
 
                 if (!createdPartyData.error) {
                     looping = false;
@@ -60,11 +58,11 @@ function InviteScreen({ visible, onRequestClose }) {
                     await storeData('partyID', newPartyID);
                 }  
             }
+            // Invite bruh
 
-            // Send invite to bruh
-            //console.log(await postRequest('party/join', {userID: userID, partyID: newPartyID}));
+        // If user already has a saved party ID, meaning they were in party
         } else {
-            await reqSocket(userID, partyID)
+            await reqSocket(userID, partyID);
             // Send invite to bruh
         }
     };
