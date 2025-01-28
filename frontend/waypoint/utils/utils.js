@@ -2,7 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { io } from "socket.io-client";
 import * as Keychain from 'react-native-keychain';
 
-const LOCALHOST = process.env.LOCAL_HOST
+import { LOCAL_HOST } from '@env';
+//const LOCALHOST = process.env.LOCAL_HOST
 
 export const storeData = async (key, value) => {
     try {
@@ -36,22 +37,19 @@ export const removeData = async (key) => {
     }
 };
 
-export const getRequest = async (address, data={}) => {
+export const getRequest = async (address) => {
     try {
-        console.log(`Making POST to ${address} @ ${LOCALHOST}`)
+        console.log(`Making GET to ${address} @ ${LOCAL_HOST}`)
 
-        const res = await fetch(`http://${LOCALHOST}/${address}`, {
+        const res = await fetch(`http://${LOCAL_HOST}/${address}`, {
             method: 'get',
             headers: {
                 "Content-Type": "application/json"
-            },
-            body: JSON.stringify(
-                data
-            )
+            }
         })
         const reqData = await res.json();
     
-        if (res.status === 200 || res.status === 201) {
+        if (res.ok) {
             return {error: false, data: reqData, message: "Request successful."};
         } else {
             return {error: true, data: reqData, message: `Returned with error code: ${res.status}`};
@@ -65,9 +63,9 @@ export const getRequest = async (address, data={}) => {
 
 export const postRequest = async (address, data={}) => {
     try {
-        console.log(`Making POST to ${address} @ ${LOCALHOST}`)
+        console.log(`Making POST to ${address} @ ${LOCAL_HOST}`)
 
-        const res = await fetch(`http://${LOCALHOST}/${address}`, {
+        const res = await fetch(`http://${LOCAL_HOST}/${address}`, {
             method: 'post',
             headers: {
                 "Content-Type": "application/json"
@@ -78,7 +76,7 @@ export const postRequest = async (address, data={}) => {
         })
         const reqData = await res.json();
     
-        if (res.status === 200 || res.status === 201) {
+        if (res.ok) {
             return {error: false, data: reqData, message: "Request successful."};
         } else {
             return {error: true, data: reqData, message: `Returned with error code: ${res.status}`};
@@ -119,6 +117,41 @@ export const removeKeychainData = async () => {
         return { error: true, data: e, message: "Error deleting credentials." };
     }
 };
+
+export const reqSocket = async (userID, partyID) => {
+    try {
+        return new Promise((resolve, reject) => {
+            const socket = io(`http://${LOCAL_HOST}`, {
+                path: "/party/join",
+                transports: ['websocket'],  // Force WebSocket transport
+                query: {
+                    userID: String(userID),
+                    partyID: String(partyID)
+                }
+            });
+
+            socket.on("connect", () => {
+                console.log("Connected to socket server");
+                resolve(socket);
+            });
+            
+            socket.on("disconnect", () => {
+                console.log("Disconnected from socket server");
+                resolve(socket);
+            });
+
+            //return socket;
+        });
+    } catch (error) {
+        console.error("Socket connection error: ", error);
+        return null;
+    }
+    
+}
+
+export const sleep = async (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 let partyID = 0
 export const getPartyID = () => {

@@ -5,17 +5,18 @@ import Box from '../components/Box';
 import SearchScreen from './Search.js';
 import InviteScreen from './Invite.js';
 import data from '../utils/defaults/defaultColors.js'
-import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
+import { storeData, getData, removeData, postRequest, getRequest, sleep } from '../utils/utils.js';
 
 const defaultImage = require("../assets/default-avatar-icon.jpg")
 
 import { useNavigation } from '@react-navigation/native';
 
-
+let doOnce = true;
 
 function PartyScreen() {
     const test = async () => {
-        console.log(await postRequest('auth/login', {username: "admin", password: "admin"}))
+        //await removeData('partyID');
+
         const loginData = await postRequest('auth/login', {username: "admin", password: "admin"});
 
         if (!loginData.error) {
@@ -24,10 +25,12 @@ function PartyScreen() {
 
             console.log('done logging in');
         }
-
-
     }
-    //test()
+    if (doOnce) {
+        test();
+        doOnce = false;
+    }
+    
     
     const navigation = useNavigation();
 
@@ -47,10 +50,25 @@ function PartyScreen() {
         } else if (!partyID) {
             return {error: true, message: "User not in party."}
         }
-        
-        console.log(await postRequest('party/status', {userID: userID, partyID: partyID}))
-    }
 
+        const partyData = await postRequest('party/status', {userID: userID.data, partyID: partyID.data});
+
+        console.log(partyData, userID.data, partyID.data);
+
+        if (partyData.error) {
+            return {error: true, message: "User not in party."}
+        } else {
+            let partyMembers = []
+
+            for (let i = 0; i < partyData.data.connected.length; i++) {
+                partyMembers.push({username: partyData.data.connected[i].username, userID: i});
+            }
+
+            setPartyList(partyMembers);
+            return {error: false, message: "Party members successfully retrieved"};
+        }
+    }
+    
     // Press leave button
     const handleLeave = () => {
         console.log('leave');
@@ -72,18 +90,6 @@ function PartyScreen() {
         //navigation.navigate('Invite');
     };
 
-    // useEffect(() => {
-    //     const fetchData = async () => {
-    //         const data = await getPartyList();
-
-    //         if (!data.error) {
-    //             setPartyList(data.connected);
-    //         }
-    //     };
-        
-    //     //fetchData();
-    // }, []);
-
     return (
         <SafeAreaView style={styles.safeContainer}>
             
@@ -100,8 +106,8 @@ function PartyScreen() {
             <View style={styles.wrapper}>
                 <Text style={styles.listHeaderText}>Party Members</Text>
                 <FlatList 
-                    //data={partyList} fix when backend fixed
-                    data={[{ "userID": "7", "username": "Theo" }, { "userID": "8", "username": "Collin" }]}
+                    data={partyList} //fix when backend fixed
+                    //data={[{ "userID": "7", "username": "Theo" }, { "userID": "8", "username": "Collin" }]}
                     renderItem={({ item }) => {
                         return (
                             <View style={styles.card} key={item.userID}>
@@ -134,7 +140,8 @@ function PartyScreen() {
                 visible={inviteModalVisible} 
                 onRequestClose={() => {
                     setInviteModalVisible(false);
-                }} 
+                }}
+                updateParty={getPartyList}
             ></InviteScreen>
         </SafeAreaView>
     );

@@ -62,7 +62,7 @@ app.post(ROUTES.CREATE_PARTY, async (req: Request, res: Response) => {
 
 // PARTY JOIN IN ws.ts
 
-app.get(ROUTES.PARTY_STATUS, async (req: Request, res: Response) => {
+app.post(ROUTES.PARTY_STATUS, async (req: Request, res: Response) => {
     const { partyID, userID }: CreatePartyRequest = req.body;
 
     const result = getParty(userID, partyID)
