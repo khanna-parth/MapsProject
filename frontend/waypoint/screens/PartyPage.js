@@ -5,16 +5,18 @@ import Box from '../components/Box';
 import SearchScreen from './Search.js';
 import InviteScreen from './Invite.js';
 import data from '../utils/defaults/defaultColors.js'
-import { storeData, getData, removeData, postRequest, getRequest } from '../utils/utils.js';
+import { storeData, getData, removeData, postRequest, getRequest, sleep } from '../utils/utils.js';
 
 const defaultImage = require("../assets/default-avatar-icon.jpg")
 
 import { useNavigation } from '@react-navigation/native';
 
-
+let doOnce = true;
 
 function PartyScreen() {
     const test = async () => {
+        //await removeData('partyID');
+
         const loginData = await postRequest('auth/login', {username: "admin", password: "admin"});
 
         if (!loginData.error) {
@@ -24,7 +26,11 @@ function PartyScreen() {
             console.log('done logging in');
         }
     }
-    //test()
+    if (doOnce) {
+        test();
+        doOnce = false;
+    }
+    
     
     const navigation = useNavigation();
 
@@ -44,8 +50,10 @@ function PartyScreen() {
         } else if (!partyID) {
             return {error: true, message: "User not in party."}
         }
-        
-        const partyData = await postRequest('party/status', {userID: userID, partyID: partyID});
+
+        const partyData = await postRequest('party/status', {userID: userID.data, partyID: partyID.data});
+
+        console.log(partyData, userID.data, partyID.data);
 
         if (partyData.error) {
             return {error: true, message: "User not in party."}
@@ -56,10 +64,11 @@ function PartyScreen() {
                 partyMembers.push({username: partyData.data.connected[i].username, userID: i});
             }
 
-            return {error: false, data: partyMembers, message: "Party members successfully retrieved"};
+            setPartyList(partyMembers);
+            return {error: false, message: "Party members successfully retrieved"};
         }
     }
-
+    
     // Press leave button
     const handleLeave = () => {
         console.log('leave');
@@ -80,18 +89,6 @@ function PartyScreen() {
         //console.log('invite');
         //navigation.navigate('Invite');
     };
-
-    useEffect(() => {
-        const fetchData = async () => {
-            const data = await getPartyList();
-
-            if (!data.error) {
-                setPartyList(data.data);
-            }
-        };
-        
-        fetchData();
-    }, []);
 
     return (
         <SafeAreaView style={styles.safeContainer}>
@@ -143,7 +140,8 @@ function PartyScreen() {
                 visible={inviteModalVisible} 
                 onRequestClose={() => {
                     setInviteModalVisible(false);
-                }} 
+                }}
+                updateParty={getPartyList}
             ></InviteScreen>
         </SafeAreaView>
     );

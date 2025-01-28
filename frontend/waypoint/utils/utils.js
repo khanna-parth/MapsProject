@@ -120,31 +120,39 @@ export const removeKeychainData = async () => {
 
 export const reqSocket = async (userID, partyID) => {
     try {
-        //const socket = io("http://192.168.1.20:3010/?userID=242551ca-d209-4a06-9cd2-a91b12df807e&partyID=6");
-        const socket = io(`http://${LOCAL_HOST}`, {
-            path: "/party/join",
-            transports: ['websocket'],  // Force WebSocket transport
-            query: {
-                userID: String(userID),
-                partyID: String(partyID)
-            }
-        });
+        return new Promise((resolve, reject) => {
+            const socket = io(`http://${LOCAL_HOST}`, {
+                path: "/party/join",
+                transports: ['websocket'],  // Force WebSocket transport
+                query: {
+                    userID: String(userID),
+                    partyID: String(partyID)
+                }
+            });
 
-        socket.on("connect", () => {
-            console.log("Connected to socket server");
+            socket.on("connect", () => {
+                console.log("Connected to socket server");
+                resolve(socket);
+            });
+            
+            socket.on("disconnect", () => {
+                console.log("Disconnected from socket server");
+                resolve(socket);
+            });
+
+            //return socket;
         });
-        
-        socket.on("disconnect", () => {
-            console.log("Disconnected from socket server");
-        });
-        
-        return socket;
     } catch (error) {
         console.error("Socket connection error: ", error);
         return null;
     }
     
 }
+
+export const sleep = async (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 let partyID = 0
 export const getPartyID = () => {
     partyID += 1;

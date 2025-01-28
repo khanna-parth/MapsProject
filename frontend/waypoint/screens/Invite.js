@@ -5,9 +5,9 @@ const defaultImage = require("../assets/default-avatar-icon.jpg")
 const plusImage = require("../assets/plus.png")
 
 import data from '../utils/defaults/defaultColors.js'
-import { storeData, getData, removeData, postRequest, getPartyID, reqSocket } from '../utils/utils.js';
+import { storeData, getData, removeData, postRequest, getPartyID, reqSocket, sleep } from '../utils/utils.js';
 
-function InviteScreen({ visible, onRequestClose }) {
+function InviteScreen({ visible, onRequestClose, updateParty }) {
     const [username, setUsername] = useState("");
 
     const [friendList, setFriendList] = useState([]);
@@ -34,7 +34,8 @@ function InviteScreen({ visible, onRequestClose }) {
 
     const inviteButtonPressed = async (invitedUser) => {
         console.log(`Fetching party data (added ${invitedUser}).`);
-    
+        
+        await removeData('partyID');
         const userID = await getData('userID');
         const partyID = await getData('partyID');
 
@@ -48,35 +49,43 @@ function InviteScreen({ visible, onRequestClose }) {
             
             while (looping) {
                 let newPartyID = getPartyID();
-                const createdPartyData = await postRequest('party/create', {userID: userID, partyID: newPartyID});
+                const createdPartyData = await postRequest('party/create', {userID: userID.data, partyID: newPartyID});
 
                 if (!createdPartyData.error) {
                     looping = false;
 
-                    await reqSocket(userID, newPartyID);
+                    await reqSocket(userID.data, newPartyID);
 
                     await storeData('partyID', newPartyID);
+
+                    //await sleep(200);
+
+                    await updateParty();
                 }  
             }
             // Invite bruh
 
         // If user already has a saved party ID, meaning they were in party
         } else {
-            await reqSocket(userID, partyID);
+            await reqSocket(userID.data, partyID.data);
+
+            await updateParty();
             // Send invite to bruh
+        }
+
+        
+    };
+
+    const fetchData = async () => {
+        const friendData = await getFriends();
+
+        if (!friendData.error) {
+            console.log(friendData.data);
+            setFriendList(friendData.data);
         }
     };
 
     useEffect(() => {
-        const fetchData = async () => {
-            const friendData = await getFriends();
-
-            if (!friendData.error) {
-                //console.log(friendData.data);
-                setFriendList(friendData.data);
-            }
-        };
-        
         fetchData();
     }, []);
 
