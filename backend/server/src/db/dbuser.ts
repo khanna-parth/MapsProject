@@ -1,6 +1,6 @@
 import { User } from "../models/user";
 import { db } from "./client";
-
+import { Like, Raw } from "typeorm";
 
 class UserDB {
     static async dbFindUsername(username: string): Promise<User | null> {
@@ -23,6 +23,18 @@ class UserDB {
             },
         });
         return user
+    }
+
+    static async dbFindUserWithUsername(username: string): Promise<string[]> {
+        const users = await User.find({
+            select: ["username"],
+            where: {
+                username: Raw((alias: string) => `LOWER(${alias}) LIKE LOWER(:value)`, { 
+                    value: `${username}%` 
+                })
+            }
+        });
+        return users.map(user => user.username);
     }
 }
 

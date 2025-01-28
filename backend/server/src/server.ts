@@ -3,7 +3,7 @@ import axios from 'axios';
 import express, { Request, Response } from 'express';
 import { createParty, getParty  } from './handlers/party';
 import ROUTES from './routes/routes';
-import { createUser, loginUser } from './handlers/auth';
+import { createUser, loginUser, searchUsers } from './handlers/auth';
 import { connectDB } from './db/client';
 import { addFriend, getFriends, removeFriend } from './handlers/social';
 import { AccessUserRequest, AddFriendsRequest, CreatePartyRequest } from './models/connection/requests';
@@ -37,6 +37,15 @@ app.post(ROUTES.LOGIN_USER, async (req: Request, res: Response) => {
     }
 })
 
+app.get(ROUTES.SEARCH_USERS, async (req: Request, res: Response) => {
+    const query = req.query.username as string;
+    const result = await searchUsers(query);
+    if (result.success) {
+        res.status(result.code).json(result.usernames);
+    } else {
+        res.status(result.code).json({ error: result.error });
+    }
+});
 
 app.post(ROUTES.CREATE_PARTY, async (req: Request, res: Response) => {
     const { partyID, userID }: CreatePartyRequest = req.body;

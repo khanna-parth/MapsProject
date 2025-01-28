@@ -7,6 +7,8 @@ const ROUTES = {
     CREATE_PARTY: "/party/create",
     JOIN_PARTY: "/party/join",
     PARTY_STATUS: "/party/status",
+    //http://localhost:3010/auth/search?username=
+    SEARCH_USERS: "/auth/search",
 };
 
 export default ROUTES;

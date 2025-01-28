@@ -17,4 +17,8 @@ interface GetFriendsRequest {
     username: string;
 }
 
-export { CreatePartyRequest, AccessUserRequest, AddFriendsRequest, GetFriendsRequest }
+interface SearchUsersRequest {
+    username: string;
+}
+
+export { CreatePartyRequest, AccessUserRequest, AddFriendsRequest, GetFriendsRequest, SearchUsersRequest }

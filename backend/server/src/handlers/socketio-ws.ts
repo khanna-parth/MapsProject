@@ -1,8 +1,8 @@
 import { Server as HttpServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
-import { pool } from '../models/pool.js';
-import { checkValidString } from '../util/util.js';
-import { UserDB } from '../db/dbuser.js';
+import { pool } from '../models/pool';
+import { checkValidString } from '../util/util';
+import { UserDB } from '../db/dbuser';
 
 export function setupSocketIO(server: HttpServer) {
     const io = new SocketIOServer(server, {

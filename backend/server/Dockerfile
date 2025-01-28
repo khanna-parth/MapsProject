@@ -1,21 +1,20 @@
 # backend/Dockerfile
 FROM node:23
 
-WORKDIR /app
+WORKDIR /server
 
-COPY package*.json ./
-
-RUN mkdir node_modules
-
-ENV NODE_ENV=development
+COPY package.json package-lock.json ./
 
 RUN npm install
 
-RUN npm install -g typescript @types/node
-
+RUN npm install -g typescript @types/node typeorm pg reflect-metadata ts-node
 
 COPY . .
 
 EXPOSE 3010
 
-CMD ["sh", "-c", "npx tsc -w & npx nodemon"]
+# Specify outDir in tsconfig or compile to dist
+RUN npx tsc --outDir dist
+
+# Run the compiled JavaScript files
+CMD ["npx", "nodemon", "./dist/server.js"]
