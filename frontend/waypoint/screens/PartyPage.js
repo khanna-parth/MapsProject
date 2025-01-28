@@ -5,7 +5,7 @@ import Box from '../components/Box';
 import SearchScreen from './Search.js';
 import InviteScreen from './Invite.js';
 import data from '../utils/defaults/defaultColors.js'
-import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
+import { storeData, getData, removeData, postRequest, getRequest } from '../utils/utils.js';
 
 const defaultImage = require("../assets/default-avatar-icon.jpg")
 
@@ -15,7 +15,10 @@ import { useNavigation } from '@react-navigation/native';
 
 function PartyScreen() {
     const test = async () => {
-        console.log(await postRequest('auth/login', {username: "admin", password: "admin"}))
+        await removeData("partyID");
+        await removeData("username");
+        await removeData("userID");
+
         const loginData = await postRequest('auth/login', {username: "admin", password: "admin"});
 
         if (!loginData.error) {
@@ -24,10 +27,8 @@ function PartyScreen() {
 
             console.log('done logging in');
         }
-
-
     }
-    //test()
+    test()
     
     const navigation = useNavigation();
 
@@ -48,7 +49,19 @@ function PartyScreen() {
             return {error: true, message: "User not in party."}
         }
         
-        console.log(await postRequest('party/status', {userID: userID, partyID: partyID}))
+        const partyData = await postRequest('party/status', {userID: userID, partyID: partyID});
+
+        if (partyData.error) {
+            return {error: true, message: "User not in party."}
+        } else {
+            let partyMembers = []
+
+            for (let i = 0; i < partyData.data.connected.length; i++) {
+                partyMembers.push({username: partyData.data.connected[i].username, userID: i});
+            }
+
+            return {error: false, data: partyMembers, message: "Party members successfully retrieved"};
+        }
     }
 
     // Press leave button
@@ -72,17 +85,17 @@ function PartyScreen() {
         //navigation.navigate('Invite');
     };
 
-    // useEffect(() => {
-    //     const fetchData = async () => {
-    //         const data = await getPartyList();
+    useEffect(() => {
+        const fetchData = async () => {
+            const data = await getPartyList();
 
-    //         if (!data.error) {
-    //             setPartyList(data.connected);
-    //         }
-    //     };
+            if (!data.error) {
+                setPartyList(data.data);
+            }
+        };
         
-    //     //fetchData();
-    // }, []);
+        fetchData();
+    }, []);
 
     return (
         <SafeAreaView style={styles.safeContainer}>
@@ -100,8 +113,8 @@ function PartyScreen() {
             <View style={styles.wrapper}>
                 <Text style={styles.listHeaderText}>Party Members</Text>
                 <FlatList 
-                    //data={partyList} fix when backend fixed
-                    data={[{ "userID": "7", "username": "Theo" }, { "userID": "8", "username": "Collin" }]}
+                    data={partyList} //fix when backend fixed
+                    //data={[{ "userID": "7", "username": "Theo" }, { "userID": "8", "username": "Collin" }]}
                     renderItem={({ item }) => {
                         return (
                             <View style={styles.card} key={item.userID}>

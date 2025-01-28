@@ -5,7 +5,7 @@ const defaultImage = require("../assets/default-avatar-icon.jpg")
 const plusImage = require("../assets/plus.png")
 
 import data from '../utils/defaults/defaultColors.js'
-import { storeData, getData, removeData, postRequest, getPartyID } from '../utils/utils.js';
+import { storeData, getData, removeData, postRequest, getPartyID, reqSocket } from '../utils/utils.js';
 
 function InviteScreen({ visible, onRequestClose }) {
     const [username, setUsername] = useState("");
@@ -34,25 +34,37 @@ function InviteScreen({ visible, onRequestClose }) {
 
     const inviteButtonPressed = async (invitedUser) => {
         console.log(`Fetching party data (added ${invitedUser}).`);
-        //await removeData("partyID");
+    
         const userID = await getData('userID');
         const partyID = await getData('partyID');
+
 
         if (userID.error) {
             return {error: true, message: "Error retrieving user or party ID."}
         }
 
         if (partyID.error) {
-            const newPartyID = getPartyID();
+            looping = true;
 
-            const createdPartyData = await postRequest('party/create', {userID: userID, partyID: newPartyID});
-            console.log(createdPartyData);
-            await storeData('partyID', newPartyID);
+            while (looping) {
+                let newPartyID = getPartyID();
+                const createdPartyData = await postRequest('party/create', {userID: userID, partyID: newPartyID});
 
-            // Join party just made
+                console.log(newPartyID, userID);
+
+                if (!createdPartyData.error) {
+                    looping = false;
+
+                    await reqSocket(userID, newPartyID);
+
+                    await storeData('partyID', newPartyID);
+                }  
+            }
+
             // Send invite to bruh
             //console.log(await postRequest('party/join', {userID: userID, partyID: newPartyID}));
         } else {
+            await reqSocket(userID, partyID)
             // Send invite to bruh
         }
     };
@@ -85,15 +97,15 @@ function InviteScreen({ visible, onRequestClose }) {
                 />
                 <Text style={styles.listHeaderText}>Friends</Text>
                 <FlatList 
-                    //data={friendList}
-                    data={[{ "userID": "7", "username": "Theo" }, { "userID": "8", "username": "Collin" }]}
+                    data={friendList}
+                    //data={[{ "userID": "7", "username": "Theo" }, { "userID": "8", "username": "Collin" }]}
                     renderItem={({ item }) => {
                         return (
-                            <View style={styles.card} key={item.userID}>
+                            <View style={styles.card} key={item.cardID}>
                                 <Image source={defaultImage} style={styles.cardImage}/>
-                                <View style={styles.cardTextArea} key={item.userID}>
+                                <View style={styles.cardTextArea} key={item.cardID}>
                                     <Text style={styles.cardText}>{item.username}</Text>
-                                    <TouchableOpacity onPress={() => fetchPartyData(item.username, item.userID)}>
+                                    <TouchableOpacity onPress={() => inviteButtonPressed(item.username)}>
                                         <Image source={plusImage} style={styles.cardPlusImage}/>
                                     </TouchableOpacity>
                                 </View>
@@ -101,7 +113,7 @@ function InviteScreen({ visible, onRequestClose }) {
                         );
                     }}
                     horizontal={false}
-                    keyExtractor={(item) => item.userID.toString()}
+                    keyExtractor={(item) => item.cardID.toString()}
                     ItemSeparatorComponent={<View style={{ height: 16 }} />}
                 />
                 {/* <Button title='Close' color={data.primaryColor} onPress={() => {

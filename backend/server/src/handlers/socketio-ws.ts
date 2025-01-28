@@ -6,7 +6,7 @@ import { UserDB } from '../db/dbuser.js';
 
 export function setupSocketIO(server: HttpServer) {
     const io = new SocketIOServer(server, {
-        // path: "/party/join",
+        path: "/party/join",
         cors: {
             origin: "*",
             methods: ["GET", "POST"]
