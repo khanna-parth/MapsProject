@@ -66,31 +66,4 @@ const loginUser = async (username: string, password: string): Promise<AccessUser
     }
 }
 
-const searchUsers = async (username: string): Promise<AccessUserResult> => {
-    if (!checkValidString(username)) {
-        return { success: false, code: 400, error: "username must be provided" };
-    }
-
-    // Minimum search length check
-    if (username.length < 3) {
-        return { success: false, code: 404, error: "no users found" };
-    }
-
-    try {
-        const usernames = await UserDB.dbFindUserWithUsername(username);
-        
-        if (usernames.length === 0) {
-            return { success: false, code: 404, error: "no users found" };
-        }
-
-        console.log(`Search request completed for username: ${username}`);
-        return { success: true, usernames: usernames, code: 200 };
-    } catch (error) {
-        console.error("Search error:", error);
-        return { success: false, code: 500, error: "Internal server error" };
-    }
-}
-
-export { searchUsers };
-
-export { createUser, loginUser }
+export { createUser, loginUser, AccessUserResult }

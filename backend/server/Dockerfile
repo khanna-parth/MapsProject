@@ -13,8 +13,6 @@ COPY . .
 
 EXPOSE 3010
 
-# Specify outDir in tsconfig or compile to dist
 RUN npx tsc --outDir dist
 
-# Run the compiled JavaScript files
-CMD ["npx", "nodemon", "./dist/server.js"]
+CMD ["sh", "-c", "npx tsc -w & npx nodemon"]

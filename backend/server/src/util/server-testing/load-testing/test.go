@@ -104,12 +104,13 @@ func main() {
 
 	for i := 0; i < numRequests; i++ {
 		wg.Add(1)
-		// loginReq := LoginRequest{
-		// 	Username: uuid.New().String(),
-		// 	Password: "testPassword",
-		// }
-		// go sendCreateUserRequest(url, loginReq, &wg, results)
-		go sendPingRequest(&wg, results)
+		userFields := fmt.Sprintf("user%d", i)
+		loginReq := LoginRequest{
+			Username: userFields,
+			Password: userFields,
+		}
+		go sendCreateUserRequest(url, loginReq, &wg, results)
+		// go sendPingRequest(&wg, results)
 	}
 
 	wg.Wait()
