@@ -5,13 +5,15 @@ const defaultImage = require("../assets/default-avatar-icon.jpg")
 const plusImage = require("../assets/plus.png")
 
 import data from '../utils/defaults/defaultColors.js'
-import { storeData, getData, removeData, postRequest, getPartyID, reqSocket, sleep } from '../utils/utils.js';
+import { storeData, getData, removeData, postRequest, reqSocket } from '../utils/utils.js';
+import { getUserFriends, getPartyID } from '../utils/userUtils.js';
 
 function InviteScreen({ visible, onRequestClose, updateParty }) {
     const [username, setUsername] = useState("");
 
     const [friendList, setFriendList] = useState([]);
 
+    // Get all friends of logged in user
     const getFriends = async () => {
         const usernameData = await getData("username");
 
@@ -19,23 +21,17 @@ function InviteScreen({ visible, onRequestClose, updateParty }) {
             return {error: true, message: "Error retrieving username."};
         }
 
-        const friendData = await postRequest('social/list', {username: usernameData.data});
+        const friendData = await getUserFriends(usernameData.data);
 
         if (!friendData.error) {
-            let returnData = []
-
-            for (let i = 0; i < friendData.data.length; i++) {
-                returnData.push({username: friendData.data[i], cardID: i})
-            }
-            
-            return {error: false, data: returnData, message: "Friends retrieved successfully."};
+            setFriendList(friendData.data);
         }
     }
 
     const inviteButtonPressed = async (invitedUser) => {
         console.log(`Fetching party data (added ${invitedUser}).`);
         
-        await removeData('partyID');
+        await removeData('partyID'); // Temporary to always delete party id, will fix once part id stuff updated on backend
         const userID = await getData('userID');
         const partyID = await getData('partyID');
 
@@ -72,23 +68,15 @@ function InviteScreen({ visible, onRequestClose, updateParty }) {
             await updateParty();
             // Send invite to bruh
         }
-
-        
-    };
-
-    const fetchData = async () => {
-        const friendData = await getFriends();
-
-        if (!friendData.error) {
-            console.log(friendData.data);
-            setFriendList(friendData.data);
-        }
     };
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        if (visible) {
+            getFriends()
+        }
 
+    }, [visible]);
+    
     return (
         <Modal visible={ visible } 
             animationType='slide'
@@ -102,7 +90,6 @@ function InviteScreen({ visible, onRequestClose, updateParty }) {
                     value={username}
                     onChangeText={setUsername}
                 />
-                <Text style={styles.listHeaderText}>Friends</Text>
                 <FlatList 
                     data={friendList}
                     //data={[{ "userID": "7", "username": "Theo" }, { "userID": "8", "username": "Collin" }]}
@@ -122,10 +109,12 @@ function InviteScreen({ visible, onRequestClose, updateParty }) {
                     horizontal={false}
                     keyExtractor={(item) => item.cardID.toString()}
                     ItemSeparatorComponent={<View style={{ height: 16 }} />}
+                    ListEmptyComponent={<Text style={{textAlign: 'center', fontSize: 20,}}>No Friends Founds</Text>}
+                    ListHeaderComponent={<Text style={styles.listHeaderText}>Friends</Text>}
                 />
                 {/* <Button title='Close' color={data.primaryColor} onPress={() => {
                     setSearchModalVisible(false); 
-                    setUsername("");
+                    setUsername("");getPartyID
                 }} />                 */}
             </View>
         </Modal>
@@ -142,7 +131,7 @@ const styles = StyleSheet.create({
     modalTitle: {
         textAlign: 'center',
         paddingBottom: 16,
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold'
     },
     textInput: {

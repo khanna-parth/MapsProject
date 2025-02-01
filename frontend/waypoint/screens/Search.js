@@ -1,15 +1,66 @@
-import { StyleSheet, View, Text, Image, TextInput, FlatList, Modal } from 'react-native';
+import { StyleSheet, View, Text, Image, TextInput, FlatList, Modal, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 
 const defaultImage = require("../assets/default-avatar-icon.jpg")
+const plusImage = require("../assets/plus.png")
 
 import data from '../utils/defaults/defaultColors.js'
-import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
+import { storeData, getData, removeData, postRequest, getUsers } from '../utils/utils.js';
+import { getUserFriends } from '../utils/userUtils.js';
 
 function SearchScreen({ visible, onRequestClose }) {
     const [username, setUsername] = useState("");
 
     const [searchList, setSearchList] = useState([]);
+
+    const searchInputChange = async (searchText) => {
+        setUsername(searchText);
+        
+        if (searchText.length >= 3) {
+            const currentUser = await getData('username');
+
+            // Get friends of logged in user
+            const friendData = await getUserFriends(currentUser.data);
+            
+            let userFriends = [];
+            if (!friendData.error) {
+                for (let i = 0; i < friendData.data.length; i++) {
+                    userFriends.push(friendData.data[i].username);
+                }
+            }
+
+            // Get search results
+            const searchData = await getUsers('social/search', String(searchText));
+
+            if (!searchData.error) {
+                let returnData = []
+
+                for (let i = 0; i < searchData.data.length; i++) {
+                    if (searchData.data[i] !== currentUser.data) {
+                        returnData.push({username: searchData.data[i], cardID: i, isFriend: userFriends.includes(searchData.data[i])})
+                    }
+                }
+                
+                setSearchList(returnData);
+            } else {
+                setSearchList([]);
+            }
+        } else {
+            setSearchList([]);
+        }
+    };
+
+    const addButtonPressed = async (addedUser) => {
+        const currentUser = await getData('username');
+
+        if (currentUser.error) {
+            return {error: true, message: "Error retrieving username."}
+        }
+
+        await postRequest('social/add', {username: currentUser.data, friendUsername: addedUser});
+
+        searchInputChange(username);
+    };
 
     return (
         <Modal visible={ visible } 
@@ -22,24 +73,31 @@ function SearchScreen({ visible, onRequestClose }) {
                     style={styles.textInput} 
                     placeholder='Search'
                     value={username}
-                    onChangeText={setUsername}
+                    onChangeText={searchInputChange}
                 />
-                    <Text style={styles.listHeaderText}>Results</Text>
                     <FlatList 
-                    data={[{ "userID": "7", "username": "Parth Khanna" }, { "userID": "8", "username": "Howard" }]}
+                    data={searchList}
+                    //data={[{ "userID": "7", "username": "Parth Khanna" }, { "userID": "8", "username": "Howard" }]}
                     renderItem={({ item }) => {
                         return (
-                            <View style={styles.card} key={item.userID}>
+                            <View style={styles.card} key={item.cardID}>
                                 <Image source={defaultImage} style={styles.cardImage}/>
-                                <View style={styles.cardTextArea} key={item.userID}>
+                                <View style={styles.cardTextArea} key={item.cardID}>
                                     <Text style={styles.cardText}>{item.username}</Text>
+                                    {!item.isFriend && (
+                                        <TouchableOpacity onPress={() => addButtonPressed(item.username)}>
+                                            <Image source={plusImage} style={styles.cardPlusImage}/>
+                                        </TouchableOpacity>
+                                    )}
                                 </View>
                             </View>
                         );
                     }}
                     horizontal={false}
-                    keyExtractor={(item) => item.userID.toString()}
+                    keyExtractor={(item) => item.cardID.toString()}
                     ItemSeparatorComponent={<View style={{ height: 16 }} />}
+                    ListEmptyComponent={<Text style={{textAlign: 'center', fontSize: 20,}}>No Users Founds</Text>}
+                    ListHeaderComponent={<Text style={styles.listHeaderText}>Users</Text>}
                 />
                 {/* <Button title='Close' color={data.primaryColor} onPress={() => {
                     setSearchModalVisible(false); 
@@ -60,7 +118,7 @@ const styles = StyleSheet.create({
     modalTitle: {
         textAlign: 'center',
         paddingBottom: 16,
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold'
     },
     textInput: {
@@ -80,6 +138,8 @@ const styles = StyleSheet.create({
     },
     cardTextArea: {
         flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         backgroundColor: 'white',
         padding: 16,
         borderRadius: 8,
@@ -94,6 +154,11 @@ const styles = StyleSheet.create({
     },
     cardText: {
         fontSize: 20
+    },
+    cardPlusImage: {
+        width: 25,
+        height: 25,
+        alignSelf: 'flex-end'
     },
 });
 

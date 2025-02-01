@@ -5,15 +5,12 @@ import Box from '../components/Box';
 import SearchScreen from './Search.js';
 import InviteScreen from './Invite.js';
 import data from '../utils/defaults/defaultColors.js'
-import { storeData, getData, removeData, postRequest, getRequest, sleep } from '../utils/utils.js';
+import { storeData, getData, removeData, postRequest, getRequest } from '../utils/utils.js';
 
 const defaultImage = require("../assets/default-avatar-icon.jpg")
 
-import { useNavigation } from '@react-navigation/native';
-
-let doOnce = true;
-
 function PartyScreen() {
+    // Function to always log in admin user by default, will be removed when log in fully complete
     const test = async () => {
         //await removeData('partyID');
 
@@ -26,20 +23,15 @@ function PartyScreen() {
             console.log('done logging in');
         }
     }
-    if (doOnce) {
+    useEffect(() => {
         test();
-        doOnce = false;
-    }
-    
-    
-    const navigation = useNavigation();
+
+    }, []);
 
     const [searchModalVisible, setSearchModalVisible] = useState(false);
     const [inviteModalVisible, setInviteModalVisible] = useState(false);
 
     const [partyList, setPartyList] = useState([]);
-    const [inviteList, setInviteList] = useState([]);
-    
     
     const getPartyList = async () => {
         const userID = await getData("userID");
@@ -53,7 +45,7 @@ function PartyScreen() {
 
         const partyData = await postRequest('party/status', {userID: userID.data, partyID: partyID.data});
 
-        console.log(partyData, userID.data, partyID.data);
+        //console.log(partyData, userID.data, partyID.data);
 
         if (partyData.error) {
             return {error: true, message: "User not in party."}
@@ -79,7 +71,6 @@ function PartyScreen() {
         setSearchModalVisible(true);
         setInviteModalVisible(false);
         //console.log('search');
-        //navigation.navigate('Search');
     };
 
     // Press invite button
@@ -87,7 +78,6 @@ function PartyScreen() {
         setSearchModalVisible(false);
         setInviteModalVisible(true);
         //console.log('invite');
-        //navigation.navigate('Invite');
     };
 
     return (

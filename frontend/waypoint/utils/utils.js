@@ -16,7 +16,6 @@ export const storeData = async (key, value) => {
 
 export const getData = async (key) => {
     try {
-        
         const value = await AsyncStorage.getItem(String(key));
         if (value !== null) {
             return { error: false, data: value, message: "Success." }
@@ -60,6 +59,24 @@ export const getRequest = async (address) => {
     }
 };
 
+export const getUsers = async (address, prompt) => {
+    try {
+        console.log(`Making GET to ${address} @ ${LOCAL_HOST}`)
+
+        const res = await fetch(`http://${LOCAL_HOST}/${address}?username=${prompt}`)
+
+        const reqData = await res.json();
+    
+        if (res.ok) {
+            return {error: false, data: reqData, message: "Request successful."};
+        } else {
+            return {error: true, data: reqData, message: `Returned with error code: ${res.status}`};
+        }
+        
+    } catch (error) {
+        return {error: true, message: `Returned with error: ${error}`};
+    }
+};
 
 export const postRequest = async (address, data={}) => {
     try {
@@ -74,6 +91,7 @@ export const postRequest = async (address, data={}) => {
                 data
             )
         })
+
         const reqData = await res.json();
     
         if (res.ok) {
@@ -152,10 +170,3 @@ export const reqSocket = async (userID, partyID) => {
 export const sleep = async (ms) => {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-
-let partyID = 0
-export const getPartyID = () => {
-    partyID += 1;
-    return String(partyID);
-}
-
