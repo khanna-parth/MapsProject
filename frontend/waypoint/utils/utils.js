@@ -59,25 +59,6 @@ export const getRequest = async (address) => {
     }
 };
 
-export const getUsers = async (address, prompt) => {
-    try {
-        console.log(`Making GET to ${address} @ ${LOCAL_HOST}`)
-
-        const res = await fetch(`http://${LOCAL_HOST}/${address}?username=${prompt}`)
-
-        const reqData = await res.json();
-    
-        if (res.ok) {
-            return {error: false, data: reqData, message: "Request successful."};
-        } else {
-            return {error: true, data: reqData, message: `Returned with error code: ${res.status}`};
-        }
-        
-    } catch (error) {
-        return {error: true, message: `Returned with error: ${error}`};
-    }
-};
-
 export const postRequest = async (address, data={}) => {
     try {
         console.log(`Making POST to ${address} @ ${LOCAL_HOST}`)

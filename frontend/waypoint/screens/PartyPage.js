@@ -45,8 +45,6 @@ function PartyScreen() {
 
         const partyData = await postRequest('party/status', {userID: userID.data, partyID: partyID.data});
 
-        //console.log(partyData, userID.data, partyID.data);
-
         if (partyData.error) {
             return {error: true, message: "User not in party."}
         } else {

@@ -1,5 +1,7 @@
 import * as utils from './utils.js';
 
+import { LOCAL_HOST } from '@env';
+
 let partyID = 0
 export const getPartyID = () => {
     partyID += 1;
@@ -25,3 +27,22 @@ export const getUserFriends = async (currentUser) => {
         return {error: false, data: returnData, message: 'Successfully retrieved friends.'}
     }
 }
+
+export const getUsers = async (address, prompt) => {
+    try {
+        console.log(`Making GET to ${address} @ ${LOCAL_HOST}`)
+
+        const res = await fetch(`http://${LOCAL_HOST}/${address}?username=${prompt}`)
+
+        const reqData = await res.json();
+    
+        if (res.ok) {
+            return {error: false, data: reqData, message: "Request successful."};
+        } else {
+            return {error: true, data: reqData, message: `Returned with error code: ${res.status}`};
+        }
+        
+    } catch (error) {
+        return {error: true, message: `Returned with error: ${error}`};
+    }
+};

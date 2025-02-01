@@ -5,8 +5,8 @@ const defaultImage = require("../assets/default-avatar-icon.jpg")
 const plusImage = require("../assets/plus.png")
 
 import data from '../utils/defaults/defaultColors.js'
-import { storeData, getData, removeData, postRequest, getUsers } from '../utils/utils.js';
-import { getUserFriends } from '../utils/userUtils.js';
+import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
+import { getUserFriends, getUsers } from '../utils/userUtils.js';
 
 function SearchScreen({ visible, onRequestClose }) {
     const [username, setUsername] = useState("");
