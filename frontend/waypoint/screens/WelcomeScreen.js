@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 
 import data from '../utils/defaults/defaultColors.js'
 
-function Welcome() {
+function WelcomeScreen() {
     const navigation = useNavigation();
 
     // Login button pressed
@@ -114,4 +114,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export default Welcome;
+export default WelcomeScreen;

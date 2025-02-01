@@ -1,24 +1,31 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 
-import HomeScreen from '../screens/Home';
+import WelcomeScreen from '../screens/WelcomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import CreateAccountScreen from '../screens/CreateAccount';
 
 import PartyScreen from '../screens/PartyPage';
-import InviteScreen from '../screens/Invite';
-import SearchScreen from '../screens/Search';
+import HomeScreen from '../screens/HomeScreen';
 
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
+const WelcomeStack = () => {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
+        <Stack.Screen name="CreateAccount" component={CreateAccountScreen} />
+        <Stack.Screen name="LoginScreen" component={LoginScreen} />
+        </Stack.Navigator>
+    );
+};
+
 const HomeStack = () => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="HomeScreen" component={HomeScreen} />
-        <Stack.Screen name="CreateAccount" component={CreateAccountScreen} />
-        <Stack.Screen name="LoginScreen" component={LoginScreen} />
         </Stack.Navigator>
     );
 };
@@ -31,28 +38,17 @@ const PartyStack = () => {
     );
 };
 
-const InviteStack = () => {
-    return (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="InviteScreen" component={InviteScreen} />
-        </Stack.Navigator>
-    );
-};
-
-const SearchStack = () => {
-    return (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="SearchScreen" component={SearchScreen} />
-        </Stack.Navigator>
-    );
-};
-
 const AppNavigator = () => {
     return (
         <Tab.Navigator
-            initialRouteName="Home"
+            initialRouteName="Welcome"
             screenOptions={{ headerShown: false, }}
         >
+            <Tab.Screen
+                name="Welcome"
+                component={WelcomeStack}
+                options={{ tabBarStyle: { display: 'flex' } }}
+            />
             <Tab.Screen
                 name="Home"
                 component={HomeStack}
