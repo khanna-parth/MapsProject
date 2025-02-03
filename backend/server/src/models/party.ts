@@ -1,14 +1,25 @@
+import { getDirections } from "../ext/gmaps"
 import { User } from "./user"
 
 class Party {
     partyID: string
     connectedPartially?: Partial<User>[]
     connected: User[]
+    invited: User[]
     lastEmpty: number
     constructor(partyID: string) {
         this.partyID = partyID
         this.connected = []
+        this.invited = []
         this.lastEmpty = Date.now()
+    }
+
+    invite(user: User): void {
+        this.invited.push(user);
+    }
+
+    deinvite(username: string): void {
+        this.invited = this.invited.filter(user => user.username !== username)
     }
 
     addUser(user: User): void {
@@ -34,6 +45,17 @@ class Party {
         if (this.connected.length == 0) {
             this.lastEmpty = Date.now();
         }
+    }
+
+    update(): void {
+        setInterval(() => {
+            this.connected.forEach((user) => {
+                if (user.ws) {
+                    // getDirections('37.6604,121.8758', '36.9741,122.0308')
+                    user.ws.emit('directions', )
+                }
+            })
+        }, 3000);
     }
 
     broadcast(message: string, senderID: string): void {
