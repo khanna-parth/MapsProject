@@ -8,6 +8,10 @@ const ROUTES = {
     CREATE_PARTY: "/party/create",
     JOIN_PARTY: "/party/join",
     PARTY_STATUS: "/party/status",
+    GET_DIRECTIONS: "/routing/fetch",
+    SEARCH_PLACES: "/routing/search",
+    FEED_PLACES: "/routing/feed",
+
     //http://localhost:3010/auth/search?username=
     
 };

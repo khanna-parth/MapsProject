@@ -106,10 +106,25 @@ Group: /social
         Will return empty array if no friends exist
         Friends are not explicitly sorted in any order
 
+/social/search will be a GET request that will return a 200 OK response or a 400 error code. Response content will contain all the usernames that match the search query.
+    Request URL Parameter data:
+        string username: Username that you want to search the database for
+    Validation:
+        If the search query is under 3 characters, it will return 404 bad request.
+        If no usernames match the search query, it will return 404 bad reuqest
+    Task:
+        After ensuring the url param fields are valid, it goes into the Postgres database and fetches all usernames that contain the search substring
+    Use:
+        Searching existing usernames in db
+    Note/BEHAVIOR:
+        Normal HTTP request
+        Search query MUST be provided as a URL parameter(NOT JSON BODY)
+        Returns 200 or 404 or 500(rare internal server error)
+
 
 Group: /party
 
-/party/create will be a GET request that will return with a 200 OK response or 400, 500 error codes. Response content is not relevant
+/party/create will be a POST request that will return with a 200 OK response or 400, 500 error codes. Response content is not relevant
     Request data:
         string partyID: Name of the party that you want to create
         string userID: User identifier for creating party
@@ -127,23 +142,77 @@ Group: /party
         If the member count for the party hits 0 at any point in time and at the same time the party monitoring interval has struck, the party object will be deleted and removed from the pool
         This is to prevent tons of empty partys to be allocated/monitored which consumes system resouces
 
-/party/join will be a GET request that will result in 101 Switching Protocols response if successful or return 400, 500 error codes. No response content
-    Request headers:
-        X-Party-ID: Name of the party that you want to join
-        X-User-ID: User identifier for registering joined party
+/party/join will be a SocketIO request that will result in a successful SocketIO connection result or an error
+    Request URL parameters:
+        partyID: Name of the party that you want to join
+        userID: User identifier for registering joined party
     Validation:
-        If fields are empty, will return 400 Bad Request error code
-        If PartyID provided doesn't map to a valid existing party, will return 400 Bad Request error code
+        If fields are empty, will fail SocketIO connection
+        If PartyID provided doesn't map to a valid existing party, will fail SocketIO connection
     Task:
-        After verifying the fields are included, it will attempt to upgrade the current connection to a Websocket connection and then continuously listen for messages to write to the party or read from
-        Will continously poll, will not have any response content(unless possibly an error)
+        Will continously poll, listen to all the different channels
     Use:
         Send coordinates over time to this endpoint which will be shared across the party members
     NOTE/BEHAVIOR:
-        Will attempt to switch to a long-running Websocket protocol
         Upon disconnecting from the party, the registerd user provided in this join command will be removed from the party's members.
         If the member count hits 0 at any point of time and at the same time the party monitoring interval has struck, the party object will be deleted and removed from the pool
         If the user (re-)requests this endpoint while already connected, they will be disconnected from the prior connection and added to the new one.
+
+    TODO: PROVIDE DOCUMENTATION ON CHANNELS
+
+
+Group: /routing
+
+/routing/search will be a POST request that will result in a 200 OK or 400/500 errors
+    Request data:
+        string query: Name or search query to retrieve results for
+    Validation:
+        Check if query is empty
+    Task:
+        Use Google Places API to show places with names/details matching query
+    Use:
+        Search for places and get their location
+    Note/Behavior:
+        N/A
+
+/routing/feed will be a POST request that will result in a 200 OK or 400/500 errors
+    Request data:
+        string lat: Latitude of origin to suggest for
+        string long: Longitude of origin to suggest for
+    Validation:
+        Check if fields is empty
+    Task:
+        Use Google Places API to show places surrounding origin coordinates within a 500 meter radisu
+    Use:
+        Show feed of results
+    Note/Behavior:
+        Only queries within a 500 meter radius of origin
+
+/routing/fetch will be a POST request that will result in a 200 OK or 400/500 errors
+    Request data(Type 1):
+        obj origin: {
+            string lat: Latitude of origin
+            string long: Longitude of origin
+        }
+        obj destination: {
+            string lat: Latitude of destination
+            string long: Longitude of destination
+        }
+    Request data(Type 2):
+        string originString: Name of origin place as string
+        string destinationString: Name of destination place as string
+    Validation:
+        Check if either type is completely provided
+    Task:
+        Use Google Places API to show matching results for either type
+    Use:
+        Show results for places and getting details such as coordinates
+    Note/Behavior:
+        Type 1 or Type 2 must be COMPLTELY provided.
+        When using type 2, be as descriptive as possible as it searches just based on a string(rather than exact coordinates)
+    
+
+
 
 
 
