@@ -1,5 +1,3 @@
-import { Coordinates } from "../geolocation";
-
 interface CreatePartyRequest {
     partyID: string;
     userID: string;
@@ -23,11 +21,4 @@ interface SearchUsersRequest {
     username: string;
 }
 
-interface DirectionsRequest {
-    origin: Coordinates
-    destination: Coordinates
-    originString: string
-    destinationString: string
-}
-
-export { CreatePartyRequest, AccessUserRequest, AddFriendsRequest, GetFriendsRequest, SearchUsersRequest, DirectionsRequest }
+export { CreatePartyRequest, AccessUserRequest, AddFriendsRequest, GetFriendsRequest, SearchUsersRequest }

@@ -83,10 +83,10 @@ func sendCreateUserRequest(url string, request LoginRequest, wg *sync.WaitGroup,
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusCreated {
-		// log.Println("Request successful")
+		log.Println("Request successful")
 		ch <- true
 	} else {
-		// log.Println("Request failed:", resp.StatusCode)
+		log.Println("Request failed:", resp.StatusCode)
 		ch <- false
 	}
 }
@@ -95,7 +95,7 @@ func main() {
 	url := "http://localhost:3010/auth/create"
 	_ = url
 
-	numRequests := 1000
+	numRequests := 150
 
 	var wg sync.WaitGroup
 	results := make(chan bool, numRequests)

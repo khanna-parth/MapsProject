@@ -8,18 +8,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      PGOPTIONS: "-c max_connections=1000"
-
     ports:
       - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
-    command: ["postgres", "-c", "max_connections=1000"]
-    ulimits:
-      nofile:
-        soft: 10000
-        hard: 20000
-
+      - db_data:/var/lib/postgresql/data  
 
   mapshare-backend:
     build:
@@ -41,10 +33,6 @@ services:
       - DB_PORT=${POSTGRES_PORT}
     depends_on:
       - postgres
-    ulimits:
-      nofile:
-        soft: 10000
-        hard: 20000
 
 volumes:
   db_data:

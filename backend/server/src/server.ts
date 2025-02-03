@@ -6,10 +6,8 @@ import ROUTES from './routes/routes';
 import { createUser, loginUser } from './handlers/auth';
 import { connectDB } from './db/client';
 import { addFriend, getFriends, removeFriend, searchUsers } from './handlers/social';
-import { AccessUserRequest, AddFriendsRequest, CreatePartyRequest, DirectionsRequest } from './models/connection/requests';
+import { AccessUserRequest, AddFriendsRequest, CreatePartyRequest } from './models/connection/requests';
 import { setupSocketIO } from './handlers/socketio-ws';
-import { getDirections, nearbyPlaces, searchPlaces } from './ext/gmaps';
-import { Coordinates} from './models/geolocation';
 
 const app = express();
 
@@ -109,47 +107,6 @@ app.get(ROUTES.SEARCH_USERS, async (req: Request, res: Response) => {
     }
 });
 
-app.post(ROUTES.GET_DIRECTIONS, async (req: Request, res: Response) => {
-    const directionsReq: DirectionsRequest = req.body;
-    const response = await getDirections(directionsReq);
-
-    if (response.data) {
-        res.status(200).json(response.data)
-    } else {
-        res.status(500).json({error: "could not perform request"})
-    }
-})
-
-app.post(ROUTES.FEED_PLACES, async (req: Request, res: Response) => {
-    const { lat, long }: Coordinates = req.body;
-    if (!lat || !long) {
-        res.status(404).json({error: "Origin lat/long must be provided"})
-        return
-    }
-    const places = await nearbyPlaces(new Coordinates(lat, long))
-
-    if (places.data) {
-        res.status(200).json(places.data)
-    } else {
-        console.log(`Unknwon response code: ${places.code}`)
-        res.status(places.code).json({error: places.error})
-    }
-})
-
-app.post(ROUTES.SEARCH_PLACES, async (req: Request, res: Response) => {
-    const { query }: any = req.body;
-    if (!query) {
-        res.status(404).json({error: "Query cannot be empty"})
-    }
-    const places = await searchPlaces(query)
-
-    if (places.data) {
-        res.status(200).json({places})
-    } else {
-        res.status(places.code).json({error: places.error})
-    }
-})
-
 // TEST AXIOS(USE FOR LOCATION REPLACE URL)
 app.get("/fetch", async (req: Request, res: Response) => {
     try {
@@ -190,7 +147,23 @@ if (cluster.isPrimary) {
     });
 
     setupSocketIO(server);
+
+    // const io = new Server(server,{});
+
+    // io.on("connection", (socket) => {
+    //     console.log("Recieved connection")
+
+    //     socket.on("message", function(msg) {
+    //         console.log(`Message recieved: ${msg}`)
+    //         io.emit("message", msg);
+    //     }
+    // )});
+    
+    // setupWebSocket(server);
     connectDB();
 
+    // server.listen(Number(PORT), '127.0.0.1', () => {
+    //     console.log(`Server running at http://localhost:${PORT} in worker ${process.pid}`);
+    //   });
     server.setTimeout(0);
 }
