@@ -88,12 +88,18 @@ export const postRequest = async (address, data={}) => {
 
 export const storeKeychainData = async (username, password) => {
     try {
+        if (!Keychain || !Keychain.setGenericPassword) {
+            throw new Error("Keychain module is not properly initialized.");
+        }
+        
         await Keychain.setGenericPassword(username, password);
         return { error: false, message: "Credentials stored successfully." };
     } catch (e) {
-        return { error: true, value: e, message: e };
+        //console.error("Keychain storage error:", e);
+        return { error: true, message: e.message || "Failed to store credentials." };
     }
 };
+
 
 export const getKeychainData = async () => {
     try {

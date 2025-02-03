@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState,  useEffect } from 'react';
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
@@ -25,29 +25,35 @@ function LoginScreen() {
         password: 0,
     });
 
+    useEffect(() => {
+        const attemptAutoLogin = async () => {
+            try {
+                const storedCredentials = await getKeychainData();
+                if (storedCredentials && storedCredentials.username && storedCredentials.password) {
+                    console.log('Stored credentials found, attempting auto-login');
+    
+                    setForm({
+                        username: storedCredentials.username,
+                        password: storedCredentials.password,
+                    });
+    
+                    handleLogin(storedCredentials.username, storedCredentials.password, true);
+                } else {
+                    console.log("No credentials found.");
+                }
+            } catch (error) {
+                console.error('Error retrieving stored credentials:', error);
+            }
+        };
+
+        attemptAutoLogin();
+    }, []);
+
     const handleLogin = async () => {
         const { username, password } = form;
         let hasError = false;
 
         console.log("Sign In Clicked")
-
-        /*
-        try {
-            const storedCredentials = await getKeychainData();
-            if (storedCredentials && !storedCredentials.error) {
-                console.log('Existing credentials found:', storedCredentials.data);
-    
-                form.username = storedCredentials.data.username;
-                form.password = storedCredentials.data.password;
-    
-                return await loginWithCredentials(form.username, form.password);
-            } else {
-                console.log('No stored credentials found.');
-            }
-        } catch (error) {
-            console.error('Error retrieving credentials from Keychain:', error);
-        }
-        */
 
         if (!username.trim()) {
             setPlaceholders(prev => ({ ...prev, username: 'Username Required' }));
@@ -79,14 +85,10 @@ function LoginScreen() {
             if (!response.error) {
                 const userData = response.data;
                 console.log('Login successful:', userData);
-                navigation.navigate('Profile'); //Remove Later
-                return;
-        
-                // --- Under Construction ---
     
                 const storeCredentials = await storeKeychainData(username, password);
                 if (storeCredentials.error) {
-                    console.error('Error storing credentials:', storeCredentials.message);
+                    console.error('Ignore for now - Error storing credentials:', storeCredentials.message);
                 } else {
                     console.log('User credentials stored successfully');
                 }
