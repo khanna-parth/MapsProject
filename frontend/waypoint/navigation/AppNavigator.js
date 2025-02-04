@@ -7,6 +7,7 @@ import CreateAccountScreen from '../screens/CreateAccount';
 
 import PartyScreen from '../screens/PartyPage';
 import HomeScreen from '../screens/HomeScreen';
+import NavScreen from '../screens/Navigation';
 
 
 const Tab = createBottomTabNavigator();
@@ -30,6 +31,14 @@ const HomeStack = () => {
     );
 };
 
+const NavigationStack = () => {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="NavigationScreen" component={NavScreen}/>
+        </Stack.Navigator>
+    )
+}
+
 const PartyStack = () => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -52,6 +61,11 @@ const AppNavigator = () => {
             <Tab.Screen
                 name="Home"
                 component={HomeStack}
+                options={{ tabBarStyle: { display: 'flex' } }}
+            />
+            <Tab.Screen
+                name="Navigation"
+                component={NavigationStack}
                 options={{ tabBarStyle: { display: 'flex' } }}
             />
             <Tab.Screen

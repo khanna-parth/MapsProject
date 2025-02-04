@@ -93,7 +93,7 @@ function LoginScreen() {
                     console.log('User credentials stored successfully');
                 }
 
-                navigation.navigate('Profile');
+                navigation.navigate('Home');
         
             } else {
                 console.error('Login failed:', response.message);

@@ -1,6 +1,6 @@
 import * as utils from './utils.js';
 
-// Yea thats right I used the haversine formula, in meters
+// Yea thats right I used the haversine formula, in meters 8==D - - - 
 export const getDistance = (latitude1, longitude1, latitude2, longitude2) => {
     const earthRadius = 6371000;
     const latitude1Radians = (latitude1 * Math.PI) / 180;
