@@ -56,15 +56,16 @@ const nearbyPlaces = async (coords: Coordinates, preferences?: string[]): Promis
 
         return places
     } catch (error: unknown) {
-        console.log(`Error: ${error}`);
         if (isAxiosError(error)) {
             let errMsg: string;
             if (error.response) {
                 errMsg = error.response.data['error']['message'];
+                console.log(`Error: ${errMsg}`)
                 const err: PlacesResult = {code: 400, error: `${errMsg}`};
                 return err;
             }
         }
+        console.log(`Error: ${error}`);
         const err: PlacesResult = {code: 500, error: `${error}`};
         return err;
     }
