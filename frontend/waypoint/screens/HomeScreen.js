@@ -3,19 +3,15 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
+import { getNearbyPlaces } from '../utils/mapUtils.js';
+
 import data from '../utils/defaults/defaultColors.js'
 import MapView, { PROVIDER_DEFAULT, PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 
-async function requestLocationPermission() {
-    let { status } = await Location.requestPermissionsAsync();
-    if (status !== 'granted') {
-        alert('Permission to access location was denied');
-    }
-}
-
 const HomeScreen = () => {
     const [location, setLocation] = useState(null);
+    const [places, setPlaces] = useState([null]);
 
     const snapPoints = useMemo(() => ['15%', '60%', '90%'], [])
 
@@ -25,24 +21,64 @@ const HomeScreen = () => {
         console.log('handleSheetChanges', index);
     }, []);
 
+    const fetchPlaces = async (latitude, longitude) => {
+        const placeData = await getNearbyPlaces(latitude, longitude);
+
+        if (!placeData.error) {
+            setPlaces(placeData.data);
+        }
+    }
+
     useEffect(() => {
-        requestLocationPermission();
-    
-        const locationSubscription = Location.watchPositionAsync(
-            {
-                accuracy: Location.Accuracy.High,
-                timeInterval: 1000,
-                distanceInterval: 1,
-            }, (newLocation) => {
-                setLocation(newLocation);
+        let locationSubscription = null;
+
+        const requestLocationPermission = async () => {
+            let { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                alert('Permission to access location was denied');
+                return;
             }
-        );
-    
+
+            // Initial location
+            const currentLocation = await Location.getCurrentPositionAsync({
+                accuracy: Location.Accuracy.High,
+            });
+            setLocation(currentLocation.coords);
+
+            // Location updates
+            locationSubscription = await Location.watchPositionAsync(
+                {
+                    accuracy: Location.Accuracy.High,
+                    timeInterval: 1000, // 1 sec
+                    distanceInterval: 1, // Moved 1m
+                },
+                (newLocation) => {
+                    setLocation(newLocation.coords);
+                }
+            );
+        }
+
+        requestLocationPermission();
+
+        // Stop watching location updates
+        return () => {
+            if (locationSubscription) {
+                locationSubscription.remove();
+            }
+        };
     }, []);
 
-    if (!location) {
+    useEffect(() => {
+        if (location) {
+            fetchPlaces(location.latitude, location.longitude);
+        }
+    }, [location]);
+
+    if (!location || !places[0]) {
         return (
-            <ActivityIndicator size="large" animating={true}/>
+            <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" animating={true}/>
+            </SafeAreaView>
         )
     }
 
@@ -53,13 +89,25 @@ const HomeScreen = () => {
                 provider={PROVIDER_DEFAULT}
                 showsUserLocation={true}
                 showsMyLocationButton={true}
+                showsPointsOfInterest={false}
                 initialRegion={{
-                    latitude: location.coords.latitude,
-                    longitude: location.coords.longitude,
+                    latitude: location.latitude,
+                    longitude: location.longitude,
                     latitudeDelta: 0.1,
                     longitudeDelta: 0.1,
                 }}
-            />
+            >
+                {places.map((place, index) => (
+                    <Marker
+                        key={index}
+                        coordinate={{
+                            latitude: place.coordinates.lat,
+                            longitude: place.coordinates.long,
+                        }}
+                        title={place.address}
+                    />
+                ))}
+            </MapView>
             <GestureHandlerRootView style={styles.swipeUpContainer}>
                 <BottomSheet
                     useRef={bottomSheetRef}
