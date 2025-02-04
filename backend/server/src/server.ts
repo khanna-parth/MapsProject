@@ -10,6 +10,7 @@ import { AccessUserRequest, AddFriendsRequest, CreatePartyRequest, DirectionsReq
 import { setupSocketIO } from './handlers/socketio-ws';
 import { getDirections, nearbyPlaces, searchPlaces } from './ext/gmaps';
 import { Coordinates} from './models/geolocation';
+import { error } from 'console';
 
 const app = express();
 
@@ -138,10 +139,18 @@ app.post(ROUTES.FEED_PLACES, async (req: Request, res: Response) => {
 
 app.post(ROUTES.SEARCH_PLACES, async (req: Request, res: Response) => {
     const { query }: any = req.body;
+    const { lat, long }: Coordinates = req.body;
+
+    if (!lat || !long) {
+        res.status(404).json({error: "User location coordinate bias must be provided"})
+        return
+    }
+
     if (!query) {
         res.status(404).json({error: "Query cannot be empty"})
+        return
     }
-    const places = await searchPlaces(query)
+    const places = await searchPlaces(query, new Coordinates(lat, long))
 
     if (places.data) {
         res.status(200).json({places})
@@ -159,6 +168,7 @@ app.get("/fetch", async (req: Request, res: Response) => {
             message: 'Data fetched successfully!',
             data: response.data,
         });
+        return
     } catch (error) {
         console.log(error);
     }

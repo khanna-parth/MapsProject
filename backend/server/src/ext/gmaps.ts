@@ -54,11 +54,13 @@ const nearbyPlaces = async (coords: Coordinates): Promise<PlacesResult> => {
 }
 
 
-const searchPlaces = async (query: string): Promise<PlacesResult> => {
+const searchPlaces = async (query: string, coords: Coordinates): Promise<PlacesResult> => {
     if (!checkValidString(query)) { return { code: 404, error: "Query cannot be empty"} }
-    try {
+    if (!checkValidString(coords.asString())) { return { code: 404, error: "User location coordinate bias must be given"}}
 
-        const data = { textQuery: query }
+    try {
+        const data = { textQuery: query, locationBias: {circle: {center: {latitude: coords.lat, longitude: coords.long} } } }
+        
         const headers = {
             "Content-Type": "application/json",
             "X-Goog-Api-Key": process.env.GMAPS_API,
@@ -79,12 +81,16 @@ const searchPlaces = async (query: string): Promise<PlacesResult> => {
                     address: place['formattedAddress']
                 })
             })
-            return places
+            return places;
         } else {
+            if (response.data['error'] != null) {
+                // console.log(response.data['error']);
+                console.log(response.data.error);
+            }
             return {code: response.status, error: "Request failed"}
         }
     } catch (error) {
-        console.log(error)
+        // console.log(error['response']['data']['error'])
         return { code: 500, error: `${error}`}
     }
 }

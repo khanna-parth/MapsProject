@@ -165,12 +165,15 @@ Group: /routing
 /routing/search will be a POST request that will result in a 200 OK or 400/500 errors
     Request data:
         string query: Name or search query to retrieve results for
+        string lat: Latitude coordinate for location biased results
+        string long: Longitude coordinate for location biased results
     Validation:
         Check if query is empty
+        Check if lat/long are empty
     Task:
         Use Google Places API to show places with names/details matching query
     Use:
-        Search for places and get their location
+        Search for places around the user and get their details
     Note/Behavior:
         N/A
 
@@ -203,9 +206,9 @@ Group: /routing
     Validation:
         Check if either type is completely provided
     Task:
-        Use Google Places API to show matching results for either type
+        Use Google Maps API to provide routing
     Use:
-        Show results for places and getting details such as coordinates
+        Show step by step directions and get step by step polylines
     Note/Behavior:
         Type 1 or Type 2 must be COMPLTELY provided.
         When using type 2, be as descriptive as possible as it searches just based on a string(rather than exact coordinates)
