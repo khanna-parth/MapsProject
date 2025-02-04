@@ -19,8 +19,10 @@ export const getDistance = (latitude1, longitude1, latitude2, longitude2) => {
     return distance;
 };
 
-export const getNearbyPlaces = async (latitude, longitude) => {
-    const nearbyPlaces = await utils.postRequest('routing/feed', {lat: latitude, long: longitude, preferences: ['restaurant']});
+export const getNearbyPlaces = async (latitude, longitude, preferences=['restaurant', 'parking', 'park', 'beach']) => {
+    console.log(latitude, longitude);
+    
+    const nearbyPlaces = await utils.postRequest('routing/feed', {lat: latitude, long: longitude, preferences: preferences});
 
     if (nearbyPlaces.error) {
         return {error: true, message: 'Error retrieving nearby places.'};
