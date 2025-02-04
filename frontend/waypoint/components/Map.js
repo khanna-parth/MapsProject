@@ -8,7 +8,7 @@ import { getNearbyPlaces, getDistance } from '../utils/mapUtils.js';
 const Map = () => {
     const [location, setLocation] = useState(null);
     const [places, setPlaces] = useState([null]);
-    const [previousLocation, setPreviousLocation] = useState(location);
+    const [previousLocation, setPreviousLocation] = useState(null);
     const [timeoutId, setTimeoutId] = useState(null);
 
     // Location stuff
@@ -37,8 +37,8 @@ const Map = () => {
                     distanceInterval: 1, // Moved 1m
                 },
                 (newLocation) => {
-                    //setLocation(newLocation.coords);
-                    //setPreviousLocation(newLocation.coords);
+                    setLocation(newLocation.coords);
+                    //setPreviousLocation(currentLocation.coords);
                 }
             );
         }
@@ -54,7 +54,7 @@ const Map = () => {
     }, []);
 
     // Get places from coordinates
-    const fetchPlaces = useCallback(async(latitude, longitude) => {
+    const fetchPlaces = async(latitude, longitude) => {
         //const placeData = await getNearbyPlaces(latitude, longitude); // Uncomment when done
 
         const placeData = {error: false, data: [{address: "Pizza My Heart", coordinates: {lat: 36.972285, long: -122.02541699999999}, details: {formattedAddress: "1116 Pacific Ave, Santa Cruz, CA 95060, USA", primaryType: "pizza_restaurant", types: ["pizza_restaurant", "italian_restaurant", "meal_takeaway", "restaurant", "food", "point_of_interest", "establishment"]}}]}
@@ -62,10 +62,10 @@ const Map = () => {
         if (!placeData.error) {
             setPlaces(placeData.data);
         }
-    }, []);
+    };
     
     // When camera moves
-    const handleRegionChangeComplete = useCallback((region) => {
+    const handleRegionChangeComplete = (region) => {
         const distance = getDistance(
             previousLocation.latitude,
             previousLocation.longitude,
@@ -85,6 +85,7 @@ const Map = () => {
             const newTimeoutID = setTimeout(() => {
                 fetchPlaces(region.latitude, region.longitude);
                 setPreviousLocation({ latitude: region.latitude, longitude: region.longitude });
+                console.log('map updated');
             }, 1000); // Wait 1 second
 
             setTimeoutId(newTimeoutID);
@@ -99,7 +100,7 @@ const Map = () => {
 
             setTimeoutId(newTimeoutID);
         }
-    }, []);
+    };
 
     // Get first stuff on map
     useEffect(() => {
