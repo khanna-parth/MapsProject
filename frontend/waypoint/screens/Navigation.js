@@ -1,20 +1,29 @@
 import { StyleSheet, Text, View, Platform, SafeAreaView, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useNavigation } from '@react-navigation/native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import Icon from 'react-native-vector-icons/FontAwesome';
 
-import { getNearbyPlaces } from '../utils/mapUtils.js';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { getRoute } from '../utils/mapUtils.js';
 
 import data from '../utils/defaults/assets.js'
-import MapView, { PROVIDER_DEFAULT, PROVIDER_GOOGLE, Marker } from 'react-native-maps';
+import MapView, { PROVIDER_DEFAULT, Marker, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 
 const NavScreen = () => {
+    const navigation = useNavigation();
+
     const [location, setLocation] = useState(null);
-    const [places, setPlaces] = useState([null]);
+
+    const [route, setRoute] = useState(null);
+    const [loadingRoute, setLoadingRoute] = useState(false);
+
     const [showNewButtons, setShowNewButtons] = useState(false);
     const [notifications, setNotifications] = useState([]);
+
+    const [eta, setEta] = useState("");
+    const [remainingTime, setRemainingTime] = useState("");
 
     const snapPoints = useMemo(() => ['25%', '50%', '90%'], [])
     const bottomSheetRef = useRef<BottomSheet>(null);
@@ -23,21 +32,35 @@ const NavScreen = () => {
         console.log('handleSheetChanges', index);
     }, []);
 
-    const fetchPlaces = async (latitude, longitude) => {
-        const placeData = await getNearbyPlaces(latitude, longitude);
-
-        if (!placeData.error) {
-            setPlaces(placeData.data);
-        }
-    }
-
-    const updateETA = () => {
-        
-    }
-
     const endRoute = () => {
-        console.log("Ending Route")
+        console.log("End Route -> Homepage")
+        setShowNewButtons(false);
+        setRoute(null);
+        navigation.navigate("Home");
     }
+
+    useEffect(() => {
+        const fetchRoute = async () => {
+            if (!location) return;
+
+            setLoadingRoute(true);
+            const routeData = await getRoute(location.latitude, location.longitude);
+
+            if (!routeData.error && routeData.data.directions) {
+                const routeCoordinates = routeData.data.directions.flatMap((step) => {
+                    const decodedPolyline = decodePolyline(step.polyline);
+                    return decodedPolyline;
+                });
+
+                setRoute(routeCoordinates);
+            } else {
+                console.error("Failed to fetch route:", routeData.message);
+            }
+            setLoadingRoute(false);
+        };
+
+        fetchRoute();
+    }, [location]);
 
     useEffect(() => {
         let locationSubscription = null;
@@ -64,11 +87,10 @@ const NavScreen = () => {
                     setLocation(newLocation.coords);
                 }
             );
-        }
+        };
 
         requestLocationPermission();
 
-        // Stop watching location updates
         return () => {
             if (locationSubscription) {
                 locationSubscription.remove();
@@ -76,23 +98,58 @@ const NavScreen = () => {
         };
     }, []);
 
-    useEffect(() => {
-        if (location) {
-            //fetchPlaces(location.latitude, location.longitude);
-        }
-    }, [location]);
+    const decodePolyline = (encoded) => {
+        //Some magic happens here I guess
+        let points = [];
+        let index = 0;
+        let lat = 0;
+        let lng = 0;
 
-    if (!location || !places[0]) {
+        while (index < encoded.length) {
+            let byte;
+            let shift = 0;
+            let result = 0;
+
+            do {
+                byte = encoded.charCodeAt(index++) - 63;
+                result |= (byte & 0x1f) << shift;
+                shift += 5;
+            } while (byte >= 0x20);
+
+            let deltaLat = (result & 1) ? ~(result >> 1) : (result >> 1);
+            lat += deltaLat;
+
+            shift = 0;
+            result = 0;
+
+            do {
+                byte = encoded.charCodeAt(index++) - 63;
+                result |= (byte & 0x1f) << shift;
+                shift += 5;
+            } while (byte >= 0x20);
+
+            let deltaLng = (result & 1) ? ~(result >> 1) : (result >> 1);
+            lng += deltaLng;
+
+            points.push({
+                latitude: lat / 1E5,
+                longitude: lng / 1E5,
+            });
+        }
+
+        return points;
+    };
+
+    if (!location || loadingRoute) {
         return (
             <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                 <ActivityIndicator size="large" animating={true}/>
             </SafeAreaView>
-        )
+        );
     }
 
     return (
         <View style={styles.container}>
-
             <MapView 
                 style={styles.map}
                 provider={PROVIDER_DEFAULT}
@@ -106,18 +163,15 @@ const NavScreen = () => {
                     longitudeDelta: 0.1,
                 }}
             >
-                {places.map((place, index) => (
-                    <Marker
-                        key={index}
-                        coordinate={{
-                            latitude: place.coordinates.lat,
-                            longitude: place.coordinates.long,
-                        }}
-                        title={place.address}
+                {route && (
+                    <Polyline
+                        coordinates={route}
+                        strokeWidth={7}
+                        strokeColor="blue"
                     />
-                ))}
+                )}
             </MapView>
-            
+
             <GestureHandlerRootView style={styles.swipeUpContainer}>
                 <BottomSheet
                     useRef={bottomSheetRef}
@@ -127,11 +181,9 @@ const NavScreen = () => {
                     enablePanDownToClose={false}
                 >
                     <BottomSheetView style={styles.swipeUpContentContainer}>
-                        {/* Static values for now :) */}
-                        <Text style={styles.topLeftText}>ETA: 12:00 AM</Text>
-                        <Text style={styles.topRightText}>12 Hours 5 Minutes</Text>
+                        <Text style={styles.topLeftText}>ETA: --:-- --</Text>
+                        <Text style={styles.topRightText}>-- Hours -- Minutes</Text>
                         
-
                         <View style={styles.buttonContainer}>
                             {showNewButtons ? (
                                 <>
@@ -163,8 +215,8 @@ const NavScreen = () => {
                 </BottomSheet>
             </GestureHandlerRootView>
         </View>
-    )
-}
+    );
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -172,16 +224,6 @@ const styles = StyleSheet.create({
     },
     map: {
         ...StyleSheet.absoluteFillObject,
-    },
-    notificationBar: {
-        width: '100%',
-        backgroundColor: '#333',
-        paddingVertical: 10,
-        paddingHorizontal: 15,
-    },
-    notificationText: {
-        color: 'white',
-        fontSize: 14,
     },
     swipeUpContainer: {
         flex: 1,
