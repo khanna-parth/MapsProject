@@ -24,7 +24,7 @@ const nearbyPlaces = async (coords: Coordinates, preferences?: string[]): Promis
                         latitude: coords.lat,
                         longitude: coords.long
                     },
-                    radius: 10000.0
+                    radius: 2000.0
                 }
             }
         }
