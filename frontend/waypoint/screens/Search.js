@@ -30,7 +30,7 @@ function SearchScreen({ visible, onRequestClose }) {
             }
 
             // Get search results
-            const searchData = await getUsers('social/search', String(searchText));
+            const searchData = await getUsers(String(searchText));
 
             if (!searchData.error) {
                 let returnData = []

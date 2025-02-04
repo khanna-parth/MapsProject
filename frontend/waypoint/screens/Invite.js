@@ -44,15 +44,14 @@ function InviteScreen({ visible, onRequestClose, updateParty }) {
             let looping = true;
             
             while (looping) {
-                let newPartyID = getPartyID();
-                const createdPartyData = await postRequest('party/create', {userID: userID.data, partyID: newPartyID});
+                const createdPartyData = await postRequest('party/create', {userID: userID.data});
 
                 if (!createdPartyData.error) {
                     looping = false;
 
-                    await reqSocket(userID.data, newPartyID);
+                    await reqSocket(userID.data, createdPartyData.data);
 
-                    await storeData('partyID', newPartyID);
+                    await storeData('partyID', createdPartyData.data);
 
                     //await sleep(200);
 

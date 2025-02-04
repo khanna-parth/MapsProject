@@ -10,7 +10,7 @@ export const storeData = async (key, value) => {
         await AsyncStorage.setItem(String(key), String(value));
         return { error: false, message: "Created successfully." }
     } catch (e) {
-        return { error: true, value: e, message: "Error writing to key." }
+        return { error: true, message: "Error writing to key." }
     }
   };
 
@@ -23,7 +23,7 @@ export const getData = async (key) => {
             return { error: true, message: "No data for that key." }
         }
     } catch (e) {
-        return { error: true, data: e, message: "Error reading key." }
+        return { error: true, message: "Error reading key." }
     }
 };
 
@@ -32,7 +32,7 @@ export const removeData = async (key) => {
         await AsyncStorage.removeItem(String(key));
         return { error: false, message: "Deleted successfully." };
     } catch (e) {
-        return { error: true, data: e, message: "Error deleting key." };
+        return { error: true, message: "Error deleting key." };
     }
 };
 
