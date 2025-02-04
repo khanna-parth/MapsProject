@@ -1,23 +1,28 @@
 import { pool } from "../models/pool";
 import { Party } from "../models/party";
 import { PartyCreationResult } from "../models/connection/responses";
-import { checkValidString } from "../util/util";
+import { checkValidString, generateUniqueId, generateUniqueIDNumber } from "../util/util";
 import { User } from "../models/user";
 
 
-const createParty = (partyID: string, userID: string) : PartyCreationResult => {
-    if (!checkValidString(partyID)) {
-        return {success: false, code: 400, error: "partyID must be properly specified"}
-    }
-
+const createParty = (userID: string) : PartyCreationResult => {
     if (!checkValidString) {
         return {success: false, code: 400, error: "userID must be properly specified"}
     }
-    const party = new Party(partyID);
-    try {
-        pool.registerParty(partyID, party);
 
-        return {success: true, code: 201};
+    let partyID = generateUniqueIDNumber(100000, 999999)
+
+    while (pool.partyExists(partyID.toString())) {
+        partyID = generateUniqueIDNumber(100000, 999999);
+    }
+
+    const partyIDString = partyID.toString()
+
+    const party = new Party(partyIDString);
+    try {
+        pool.registerParty(partyIDString, party);
+
+        return {success: true, code: 201, partyID: partyIDString};
 
     } catch (error) {
         return {success: false, code: 400, error: `Failed to create existing party.`}

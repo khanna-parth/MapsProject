@@ -40,12 +40,12 @@ app.post(ROUTES.LOGIN_USER, async (req: Request, res: Response) => {
 })
 
 app.post(ROUTES.CREATE_PARTY, async (req: Request, res: Response) => {
-    const { partyID, userID }: CreatePartyRequest = req.body;
+    const { userID }: CreatePartyRequest = req.body;
 
-    const result = createParty(partyID, userID);
+    const result = createParty(userID);
     if (result.success) {
-        console.log(`Created party with id ${partyID} for host: ${userID}`)
-        res.status(result.code).json({'message': `Party with id ${partyID} was created`})
+        console.log(`Created party with id ${result.partyID} for host: ${userID}`)
+        res.status(result.code).json(result.partyID)
     } else {
         console.log(`Error creating party: ${result.error}`)
         res.status(result.code).json({'error': result.error})

@@ -126,13 +126,12 @@ Group: /party
 
 /party/create will be a POST request that will return with a 200 OK response or 400, 500 error codes. Response content is not relevant
     Request data:
-        string partyID: Name of the party that you want to create
         string userID: User identifier for creating party
     Validation:
         If fields are empty, will return 400 Bad Request error code
-        If party under partyID already exists, will return 400 Bad Request error code
     Task:
         After verifying that the fields are included, it will create a party object and allocate it in the pool.
+        Prior to creation, will continuously keep generating a free identifier
         Will return immedately signaling whether the party is ready for use or not
     Use:
         Create a group or party to await adding users or location updates
@@ -140,7 +139,7 @@ Group: /party
         Normal HTTP request
         You must connect to the same party using the same partyID within the companion /join endpoint within ~30 second set timeframe.
         If the member count for the party hits 0 at any point in time and at the same time the party monitoring interval has struck, the party object will be deleted and removed from the pool
-        This is to prevent tons of empty partys to be allocated/monitored which consumes system resouces
+        This is to prevent tons of empty parties to be allocated/monitored which consumes system resouces
 
 /party/join will be a SocketIO request that will result in a successful SocketIO connection result or an error
     Request URL parameters:
