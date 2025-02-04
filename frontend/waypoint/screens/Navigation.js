@@ -6,7 +6,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { getNearbyPlaces } from '../utils/mapUtils.js';
 
-import data from '../utils/defaults/defaultColors.js'
+import data from '../utils/defaults/assets.js'
 import MapView, { PROVIDER_DEFAULT, PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 

@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { io } from "socket.io-client";
 import * as Keychain from 'react-native-keychain';
 
 import { LOCAL_HOST } from '@env';
@@ -122,37 +121,6 @@ export const removeKeychainData = async () => {
         return { error: true, data: e, message: "Error deleting credentials." };
     }
 };
-
-export const reqSocket = async (userID, partyID) => {
-    try {
-        return new Promise((resolve, reject) => {
-            const socket = io(`http://${LOCAL_HOST}`, {
-                path: "/party/join",
-                transports: ['websocket'],  // Force WebSocket transport
-                query: {
-                    userID: String(userID),
-                    partyID: String(partyID)
-                }
-            });
-
-            socket.on("connect", () => {
-                console.log("Connected to socket server");
-                resolve(socket);
-            });
-            
-            socket.on("disconnect", () => {
-                console.log("Disconnected from socket server");
-                resolve(socket);
-            });
-
-            //return socket;
-        });
-    } catch (error) {
-        console.error("Socket connection error: ", error);
-        return null;
-    }
-    
-}
 
 export const sleep = async (ms) => {
     return new Promise(resolve => setTimeout(resolve, ms));

@@ -1,13 +1,12 @@
-import { StyleSheet, Text, View, Platform, SafeAreaView, FlatList, Image } from 'react-native';
+import { StyleSheet, Text, View, Platform, SafeAreaView, FlatList, Image, TextInput } from 'react-native';
 import { useState, useEffect } from 'react';
 
 import Box from '../components/Box';
 import SearchScreen from './Search.js';
 import InviteScreen from './Invite.js';
-import data from '../utils/defaults/defaultColors.js'
+import data from '../utils/defaults/assets.js'
 import { storeData, getData, removeData, postRequest, getRequest } from '../utils/utils.js';
-
-const defaultImage = require("../assets/default-avatar-icon.jpg")
+import { joinParty } from '../utils/userUtils';
 
 function PartyScreen() {
     // Function to always log in admin user by default, will be removed when log in fully complete
@@ -31,7 +30,18 @@ function PartyScreen() {
     const [searchModalVisible, setSearchModalVisible] = useState(false);
     const [inviteModalVisible, setInviteModalVisible] = useState(false);
 
+    const [partySearch, setPartySearch] = useState("");
+
     const [partyList, setPartyList] = useState([]);
+    const [partyID, setPartyID] = useState();
+
+    const getPartyID = async () => {
+        const partyID = await getData('partyID');
+
+        if (!partyID.error) {
+            setPartyID(partyID.data);
+        }
+    };
     
     const getPartyList = async () => {
         const userID = await getData("userID");
@@ -39,14 +49,15 @@ function PartyScreen() {
 
         if (userID.error || partyID.error) {
             return {error: true, message: "Error retrieving user or party ID."}
-        } else if (!partyID) {
+        } else if (!partyID.data) {
             return {error: true, message: "User not in party."}
         }
 
         const partyData = await postRequest('party/status', {userID: userID.data, partyID: partyID.data});
 
         if (partyData.error) {
-            return {error: true, message: "User not in party."}
+            removeData('partyID');
+            return {error: true, message: "User does not have permission to join party."}
         } else {
             let partyMembers = []
 
@@ -54,14 +65,27 @@ function PartyScreen() {
                 partyMembers.push({username: partyData.data.connected[i].username, userID: i});
             }
 
+            getPartyID();
             setPartyList(partyMembers);
             return {error: false, message: "Party members successfully retrieved"};
         }
     }
     
     // Press leave button
-    const handleLeave = () => {
-        console.log('leave');
+    const handleLeave = async () => {
+        const partyID = await getData('partyID');
+        const userID = await getData('userID');
+
+        if (!partyID.error && !userID.error) {
+            const socketConnection = await joinParty(userID.data, partyID.data);
+            await socketConnection.disconnect();
+            console.log('Party left.');
+        } else {
+
+        }
+        
+        removeData('partyID');
+        setPartyList([]);
     };
 
     // Press search button
@@ -78,28 +102,45 @@ function PartyScreen() {
         //console.log('invite');
     };
 
+    const handleJoinParty = async (partyID) => {
+        await storeData('partyID', partyID);
+        
+        const joinPartyData = await getPartyList();
+
+        if (joinPartyData.error) {
+            removeData('partyID');
+        }
+
+        setPartySearch("");
+    };
+
+    useEffect(() => {
+        getPartyList();
+
+    }, []);
+
     return (
         <SafeAreaView style={styles.safeContainer}>
             
             {/* Top Button Row */}
 
             <View style={styles.topButtons}>
-                <Box style={{ backgroundColor: "#C65252"}} onPress={handleLeave}>Leave</Box>
-                <Box onPress={handleSearch}>Search</Box>
-                <Box onPress={handleInvite}>Invite</Box>
+                {/* <Box style={{ backgroundColor: data.colors.red}} onPress={handleLeave}>Leave</Box> */}
+                <Box source={data.images.searchIcon} onPress={handleSearch}>Search</Box>
+                <Box source={data.images.inviteButtonIcon} onPress={handleInvite}>Invite</Box>
             </View>
 
             {/* List of party members */}
 
             <View style={styles.wrapper}>
-                <Text style={styles.listHeaderText}>Party Members</Text>
+                {/* <Text style={styles.listHeaderText}>Party Members</Text> */}
                 <FlatList 
-                    data={partyList} //fix when backend fixed
+                    data={partyList}
                     //data={[{ "userID": "7", "username": "Theo" }, { "userID": "8", "username": "Collin" }]}
                     renderItem={({ item }) => {
                         return (
                             <View style={styles.card} key={item.userID}>
-                                <Image source={defaultImage} style={styles.cardImage}/>
+                                <Image source={data.images.defaultAvatar} style={styles.cardImage}/>
                                 <View style={styles.cardTextArea} key={item.userID}>
                                     <Text style={styles.cardText}>{item.username}</Text>
                                 </View>
@@ -109,6 +150,36 @@ function PartyScreen() {
                     horizontal={false}
                     keyExtractor={(item) => item.userID.toString()}
                     ItemSeparatorComponent={<View style={{ height: 16 }} />}
+                    ListEmptyComponent={
+                        <View style={styles.listEmptyContainer}>
+                            {/* <Text style={{textAlign: 'center', fontSize: 24,}}>Join Party: </Text> */}
+                            <TextInput 
+                                style={styles.textInput}
+                                keyboardType="numeric" 
+                                placeholder='Party ID'
+                                value={partySearch}
+                                onChangeText={setPartySearch}
+                            />
+                            <Box style={{width: 150, height: 50, justifyContent: 'center'}} textStyle={{fontSize: 16, paddingBottom: 0}} onPress={() => handleJoinParty(partySearch)}>Join Party</Box>
+                        </View>
+                    }
+                    ListHeaderComponent={
+                        partyList.length > 0 ? ( // Only show header when there's data
+                            <View style={{felx:1}}>
+                                <View style={styles.listHeaderContainer}>
+                                    <Text style={styles.listHeaderText}>Party Members</Text>
+                                    <Box 
+                                        style={{ backgroundColor: data.colors.red, width: 70, height: 30, justifyContent: 'center'}} 
+                                        textStyle={{ fontSize: 16, paddingBottom: 0 }} 
+                                        onPress={handleLeave}
+                                    >
+                                        Leave
+                                    </Box>
+                                </View>  
+                                <Text style={styles.listHeaderText}>PartyID: {partyID}</Text>
+                            </View> 
+                        ) : null  
+                    }
                 />
             </View>
 
@@ -139,7 +210,7 @@ const styles = StyleSheet.create({
     safeContainer: {
         flex: 1,
         paddingTop: Platform.OS === 'android' ? 25 : 0,
-        backgroundColor: data.offWhite,
+        backgroundColor: data.colors.offWhite,
     },
     wrapper: {
         flex: 1,
@@ -177,7 +248,7 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
         flex: 1,
-        backgroundColor: data.offWhite,
+        backgroundColor: data.colors.offWhite,
         padding: 16,
         paddingBottom: 0,
     },
@@ -189,6 +260,26 @@ const styles = StyleSheet.create({
     },
     textInput: {
         height: 40,
+        backgroundColor: 'white',
+        marginBottom: 15,
+        padding: 10,
+        borderRadius: 5
+    },
+    listHeaderContainer: {
+        flex: 1,
+        justifyContent: "space-between",
+        flexDirection: 'row',
+        paddingBottom: 16
+    },
+    listEmptyContainer: {
+        flex: 1,
+        justifyContent: 'space-evenly',
+        flexDirection: 'row',
+        rowGap: 20,
+    },
+    textInput: {
+        width: 150,
+        height: 50,
         backgroundColor: 'white',
         marginBottom: 15,
         padding: 10,

@@ -3,7 +3,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
-import data from '../utils/defaults/defaultColors.js'
+import data from '../utils/defaults/assets.js'
 
 import PartyScreen from './PartyPage.js';
 import Map from '../components/Map.js';
@@ -24,7 +24,7 @@ const HomeScreen = () => {
                 <BottomSheet
                     useRef={bottomSheetRef}
                     snapPoints={snapPoints}
-                    backgroundStyle={{ backgroundColor: data.offWhite }}
+                    backgroundStyle={{ backgroundColor: data.colors.offWhite }}
                     onChange={handleSheetChanges}
                     index={0}
                 >
