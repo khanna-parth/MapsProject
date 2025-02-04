@@ -1,4 +1,4 @@
-import axios from "axios"
+import axios, { isAxiosError } from "axios"
 import {Client} from "@googlemaps/google-maps-services-js";
 import { Coordinates, Directions, DirectionsResult, PlacesResult, Location } from "../models/geolocation";
 import { DirectionsRequest } from "../models/connection/requests";
@@ -6,21 +6,25 @@ import { checkValidString } from "../util/util";
 
 const client = new Client({});
 
-const nearbyPlaces = async (coords: Coordinates): Promise<PlacesResult> => {
+const nearbyPlaces = async (coords: Coordinates, preferences?: string[]): Promise<PlacesResult> => {
     if (!coords.lat || !coords.long) {
         return {code: 404, error: `Invalid coordinates: ${coords.lat}, ${coords.long}`}
+    }
+    if (!preferences) {
+        preferences = []
     }
 
     try {
         const data = {
-            // includedTypes: ["restaurant"],
-            maxResultCount: 10,
+            includedTypes: preferences,
+            maxResultCount: 20,
             locationRestriction: {
                 circle: {
                     center: {
                         latitude: coords.lat,
-                        longitude: coords.long},
-                        radius: 500.0
+                        longitude: coords.long
+                    },
+                    radius: 10000.0
                 }
             }
         }
@@ -28,26 +32,41 @@ const nearbyPlaces = async (coords: Coordinates): Promise<PlacesResult> => {
         const headers = {
             "Content-Type": "application/json",
             "X-Goog-Api-Key": process.env.GMAPS_API,
-            "X-Goog-FieldMask": "places.displayName,places.location"
+            "X-Goog-FieldMask": "places.displayName,places.location,places.types,places.photos,places.primaryType,places.formattedAddress"
         }
 
         const response = await axios.post("https://places.googleapis.com/v1/places:searchNearby", data, {headers: headers});
 
         const placesData = response.data['places'];
 
+        console.log(placesData[0]['photos'])
+
         let places: PlacesResult = {data: {places: []}, code: response.status};
 
         placesData.map((place: any) => {
             let location: Location = {
                 address: place['displayName']['text'],
-                coordinates: new Coordinates(place['location']['latitude'], place['location']['longitude'])
+                coordinates: new Coordinates(place['location']['latitude'], place['location']['longitude']),
+                details: {
+                    formattedAddress: place['formattedAddress'],
+                    primaryType: place['primaryType'],
+                    types: place['types'],
+                }
             }
             places.data?.places.push(location);
         })
 
         return places
-    } catch (error) {
+    } catch (error: unknown) {
         console.log(`Error: ${error}`);
+        if (isAxiosError(error)) {
+            let errMsg: string;
+            if (error.response) {
+                errMsg = error.response.data['error']['message'];
+                const err: PlacesResult = {code: 400, error: `${errMsg}`};
+                return err;
+            }
+        }
         const err: PlacesResult = {code: 500, error: `${error}`};
         return err;
     }
@@ -56,7 +75,7 @@ const nearbyPlaces = async (coords: Coordinates): Promise<PlacesResult> => {
 
 const searchPlaces = async (query: string, coords: Coordinates): Promise<PlacesResult> => {
     if (!checkValidString(query)) { return { code: 404, error: "Query cannot be empty"} }
-    if (!checkValidString(coords.asString())) { return { code: 404, error: "User location coordinate bias must be given"}}
+    if (!checkValidString(coords.asString())) { return { code: 400, error: "User location coordinate bias must be given"}}
 
     try {
         const data = { textQuery: query, locationBias: {circle: {center: {latitude: coords.lat, longitude: coords.long} } } }
@@ -109,7 +128,7 @@ const getDirections = async (directionsReq: DirectionsRequest): Promise<Directio
         return {code: 404, error: "Origin/Destination cannot be empty"}
     }
 
-    if (!origin || !destination) { return {code: 404, error: "Origin/Destination cannot be empty"} }
+    if (!origin || !destination) { return {code: 400, error: "Origin/Destination cannot be empty"} }
     if ( !checkValidString(origin) || !checkValidString(destination)) { return {code: 404, error: "Origin/Destination cannot be empty"} }
 
     try {

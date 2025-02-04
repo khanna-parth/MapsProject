@@ -1,3 +1,5 @@
+import { AxiosError } from "axios";
+
 const generateUniqueId = () => {
     return Math.random().toString(36).substring(2, 9);
 };
@@ -14,4 +16,8 @@ const checkValidString = (str: string): boolean => {
     return true;
 }
 
-export { generateUniqueId, checkValidString, generateUniqueIDNumber }
+function isAxiosError(error: unknown): error is AxiosError {
+    return (error as AxiosError).isAxiosError !== undefined;
+}
+
+export { generateUniqueId, checkValidString, generateUniqueIDNumber, isAxiosError }

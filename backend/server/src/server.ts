@@ -6,7 +6,7 @@ import ROUTES from './routes/routes';
 import { createUser, loginUser } from './handlers/auth';
 import { connectDB } from './db/client';
 import { addFriend, getFriends, removeFriend, searchUsers } from './handlers/social';
-import { AccessUserRequest, AddFriendsRequest, CreatePartyRequest, DirectionsRequest } from './models/connection/requests';
+import { AccessUserRequest, AddFriendsRequest, CreatePartyRequest, DirectionsRequest, SearchNearbyRequest } from './models/connection/requests';
 import { setupSocketIO } from './handlers/socketio-ws';
 import { getDirections, nearbyPlaces, searchPlaces } from './ext/gmaps';
 import { Coordinates} from './models/geolocation';
@@ -122,12 +122,17 @@ app.post(ROUTES.GET_DIRECTIONS, async (req: Request, res: Response) => {
 })
 
 app.post(ROUTES.FEED_PLACES, async (req: Request, res: Response) => {
-    const { lat, long }: Coordinates = req.body;
-    if (!lat || !long) {
-        res.status(404).json({error: "Origin lat/long must be provided"})
+    const {preferences, lat, long }: SearchNearbyRequest = req.body;
+    if (preferences && (!Array.isArray(preferences) || !preferences.every(item => typeof item === 'string'))) {
+        res.status(400).json({ error: "preferences not formatted as string array" });
         return
     }
-    const places = await nearbyPlaces(new Coordinates(lat, long))
+
+    if (!lat || !long) {
+        res.status(400).json({error: "Origin lat/long must be provided"})
+        return
+    }
+    const places = await nearbyPlaces(new Coordinates(lat, long), preferences)
 
     if (places.data) {
         res.status(200).json(places.data)
@@ -142,12 +147,12 @@ app.post(ROUTES.SEARCH_PLACES, async (req: Request, res: Response) => {
     const { lat, long }: Coordinates = req.body;
 
     if (!lat || !long) {
-        res.status(404).json({error: "User location coordinate bias must be provided"})
+        res.status(400).json({error: "User location coordinate bias must be provided"})
         return
     }
 
     if (!query) {
-        res.status(404).json({error: "Query cannot be empty"})
+        res.status(400).json({error: "Query cannot be empty"})
         return
     }
     const places = await searchPlaces(query, new Coordinates(lat, long))

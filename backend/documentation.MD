@@ -181,14 +181,17 @@ Group: /routing
     Request data:
         string lat: Latitude of origin to suggest for
         string long: Longitude of origin to suggest for
+        OPTIONAL preferences: Array of string preference types to filter feed
     Validation:
         Check if fields is empty
     Task:
-        Use Google Places API to show places surrounding origin coordinates within a 500 meter radisu
+        Use Google Places API to show places surrounding origin coordinates within a 10000 meter radius
     Use:
         Show feed of results
     Note/Behavior:
-        Only queries within a 500 meter radius of origin
+        Only queries within a 10000 meters radius of origin
+        Only shows up to 20 results max(limit by google)
+        Preferences must be provided in a string array and exactly typed as per Table A(https://developers.google.com/maps/documentation/places/web-service/place-types#table-a)
 
 /routing/fetch will be a POST request that will result in a 200 OK or 400/500 errors
     Request data(Type 1):

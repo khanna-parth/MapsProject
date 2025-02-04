@@ -39,11 +39,18 @@ interface DirectionsDuration {
     units: string
 }
 
+interface LocationDetails {
+    photos?: string[]
+    formattedAddress: string
+    types: string[]
+    primaryType: string
+}
 
 interface Location {
     name?: string
     address: string
     coordinates?: Coordinates
+    details?: LocationDetails
 }
 
 interface Directions {

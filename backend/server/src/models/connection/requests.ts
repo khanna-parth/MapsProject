@@ -30,4 +30,11 @@ interface DirectionsRequest {
     destinationString: string
 }
 
-export { CreatePartyRequest, AccessUserRequest, AddFriendsRequest, GetFriendsRequest, SearchUsersRequest, DirectionsRequest }
+interface SearchNearbyRequest {
+    query: string;
+    preferences?: string[];
+    lat: number;
+    long: number;
+  }
+
+export { CreatePartyRequest, AccessUserRequest, AddFriendsRequest, GetFriendsRequest, SearchUsersRequest, DirectionsRequest, SearchNearbyRequest }
