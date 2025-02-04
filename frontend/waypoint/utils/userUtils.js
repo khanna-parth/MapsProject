@@ -28,11 +28,11 @@ export const getUserFriends = async (currentUser) => {
     }
 }
 
-export const getUsers = async (address, prompt) => {
+export const getUsers = async (prompt) => {
     try {
-        console.log(`Making GET to ${address} @ ${LOCAL_HOST}`)
+        console.log(`Making GET to social/search @ ${LOCAL_HOST}`)
 
-        const res = await fetch(`http://${LOCAL_HOST}/${address}?username=${prompt}`)
+        const res = await fetch(`http://${LOCAL_HOST}/social/search?username=${prompt}`)
 
         const reqData = await res.json();
     
