@@ -30,3 +30,42 @@ export const getNearbyPlaces = async (latitude, longitude, preferences=['restaur
 
     return {error: false, data: nearbyPlaces.data.places, message: "Retrieved places successfully."};
 }
+
+export const getRoute = async (latitude, longitude) => {
+    //Temp Hard Code 
+    const destination = {
+        lat: "37.76741612078479",
+        long: "-122.23997872905375"
+    };
+
+    if (!latitude || !longitude) {
+        return { error: true, message: "Origin coordinates must be provided." };
+    }
+
+    const requestData = {
+        origin: {
+            lat: latitude.toString(),
+            long: longitude.toString()
+        },
+        destination: destination
+    };
+
+    try {
+        const routeResponse = await utils.postRequest('routing/fetch', requestData);
+
+        // console.log("RouteResponse");
+        // console.log(JSON.stringify(routeResponse, null, 2));
+
+        if (routeResponse.error) {
+            return { error: true, message: "Error retrieving route." };
+        }
+
+        return {
+            error: false,
+            data: routeResponse.data,
+            message: "Got Route."
+        };
+    } catch (error) {
+        return { error: true, message: "An error occurred while fetching the route." };
+    }
+};
