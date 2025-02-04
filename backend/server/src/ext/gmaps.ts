@@ -8,7 +8,7 @@ const client = new Client({});
 
 const nearbyPlaces = async (coords: Coordinates, preferences?: string[]): Promise<PlacesResult> => {
     if (!coords.lat || !coords.long) {
-        return {code: 404, error: `Invalid coordinates: ${coords.lat}, ${coords.long}`}
+        return {code: 400, error: `Invalid coordinates: ${coords.lat}, ${coords.long}`}
     }
     if (!preferences) {
         preferences = []
@@ -38,8 +38,6 @@ const nearbyPlaces = async (coords: Coordinates, preferences?: string[]): Promis
         const response = await axios.post("https://places.googleapis.com/v1/places:searchNearby", data, {headers: headers});
 
         const placesData = response.data['places'];
-
-        console.log(placesData[0]['photos'])
 
         let places: PlacesResult = {data: {places: []}, code: response.status};
 
@@ -74,7 +72,7 @@ const nearbyPlaces = async (coords: Coordinates, preferences?: string[]): Promis
 
 
 const searchPlaces = async (query: string, coords: Coordinates): Promise<PlacesResult> => {
-    if (!checkValidString(query)) { return { code: 404, error: "Query cannot be empty"} }
+    if (!checkValidString(query)) { return { code: 400, error: "Query cannot be empty"} }
     if (!checkValidString(coords.asString())) { return { code: 400, error: "User location coordinate bias must be given"}}
 
     try {
@@ -103,13 +101,11 @@ const searchPlaces = async (query: string, coords: Coordinates): Promise<PlacesR
             return places;
         } else {
             if (response.data['error'] != null) {
-                // console.log(response.data['error']);
                 console.log(response.data.error);
             }
             return {code: response.status, error: "Request failed"}
         }
     } catch (error) {
-        // console.log(error['response']['data']['error'])
         return { code: 500, error: `${error}`}
     }
 }
@@ -125,11 +121,11 @@ const getDirections = async (directionsReq: DirectionsRequest): Promise<Directio
         origin = directionsReq.originString;
         destination = directionsReq.destinationString;
     } else {
-        return {code: 404, error: "Origin/Destination cannot be empty"}
+        return {code: 400, error: "Origin/Destination cannot be empty"}
     }
 
     if (!origin || !destination) { return {code: 400, error: "Origin/Destination cannot be empty"} }
-    if ( !checkValidString(origin) || !checkValidString(destination)) { return {code: 404, error: "Origin/Destination cannot be empty"} }
+    if ( !checkValidString(origin) || !checkValidString(destination)) { return {code: 400, error: "Origin/Destination cannot be empty"} }
 
     try {
         const response = await client.directions({
