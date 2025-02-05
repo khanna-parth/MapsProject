@@ -1,3 +1,5 @@
+//TESTING: node socketio-testing.js
+
 const io = require('socket.io-client');
 
 console.log(`Connecting`)
