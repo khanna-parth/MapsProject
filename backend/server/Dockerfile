@@ -13,6 +13,6 @@ COPY . .
 
 EXPOSE 3010
 
-RUN npx tsc --outDir dist
+# RUN npx tsc --outDir dist
 
-CMD ["sh", "-c", "npx tsc -w & npx nodemon"]
+CMD ["sh", "-c", "npx tsc && (npx tsc -w & npx nodemon)"]

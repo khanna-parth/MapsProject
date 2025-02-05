@@ -1,9 +1,10 @@
 import { WebSocket } from "ws";
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity, ManyToMany, JoinTable, Like } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, BaseEntity, ManyToMany, JoinTable, Like, OneToMany } from 'typeorm';
 import 'reflect-metadata';
 import { v4 as uuidv4 } from 'uuid';
 import { Mutex } from 'async-mutex';
 import { Socket } from "socket.io";
+import { Party } from "./party";
 
 
 @Entity()
@@ -25,6 +26,13 @@ class User extends BaseEntity {
     wsID?: string
 
     sessionID?: string
+
+    @OneToMany(() => Party, party => party.host)
+    hostedParties!: Party[];
+
+    @ManyToMany(() => Party, party => party.participants)
+    @JoinTable()
+    parties!: Party[];
 
     @ManyToMany(() => User)
     @JoinTable()

@@ -70,7 +70,7 @@ class Pool {
         setInterval(() => {
             this.connectionPool.forEach((party) => {
                 // console.log(party.connected);
-                if (party.connected.entries().toArray().length === 0 && this.hasElapsedCheck(party.lastEmpty, 30)) {
+                if (party.connected.entries().toArray().length === 0 && this.hasElapsedCheck(party.lastEmpty, 100)) {
                     this.removeParty(party.partyID);
                     console.log(`Party ${party.partyID} was deleted for inactivity`)
                 }

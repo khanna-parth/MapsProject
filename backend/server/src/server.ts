@@ -43,15 +43,29 @@ app.post(ROUTES.LOGIN_USER, async (req: Request, res: Response) => {
 app.post(ROUTES.CREATE_PARTY, async (req: Request, res: Response) => {
     const { userID }: CreatePartyRequest = req.body;
 
-    const result = createParty(userID);
-    if (result.success) {
-        console.log(`Created party with id ${result.partyID} for host: ${userID}`)
-        res.status(result.code).json(result.partyID)
-    } else {
-        console.log(`Error creating party: ${result.error}`)
-        res.status(result.code).json({'error': result.error})
+    try {
+        const result = await createParty(userID);
+        
+        if (result.success) {
+            console.log(`Created party ${result.partyID} for host: ${userID}`);
+            res.status(result.code).json({
+                partyID: result.partyID,
+                host: result.host,
+                participants: result.participants
+            });
+        } else {
+            console.log(`Failed to create party: ${result.error}`);
+            res.status(result.code).json({
+                error: result.error || 'Unknown error'
+            });
+        }
+    } catch (error) {
+        console.error('Unexpected error creating party:', error);
+        res.status(500).json({
+            error: 'Internal server error'
+        });
     }
-})
+});
 
 // PARTY JOIN IN ws.ts
 

@@ -1,16 +1,33 @@
 import { User } from "./user"
+import { Entity, PrimaryColumn, Column, ManyToOne, ManyToMany, JoinTable, BaseEntity, BeforeInsert } from 'typeorm';
 
-class Party {
-    partyID: string
-    connectedPartially?: Partial<User>[]
-    connected: Map<string, User>
-    invited: User[]
-    lastEmpty: number
-    constructor(partyID: string) {
-        this.partyID = partyID
-        this.connected = new Map<string, User>()
-        this.invited = []
-        this.lastEmpty = Date.now()
+@Entity()
+class Party extends BaseEntity {
+    @PrimaryColumn()
+    partyID!: string;
+
+    invited: User[] = [];
+    connected: Map<string, User> = new Map();
+    lastEmpty: number = Date.now();
+
+    @ManyToOne(() => User, user => user.hostedParties)
+    host!: User;
+
+    @ManyToMany(() => User, user => user.parties)
+    @JoinTable()
+    participants!: User[];
+
+    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    createdAt!: Date;
+
+    @Column({ default: true })
+    isActive!: boolean;
+
+    @BeforeInsert()
+    setDefaults() {
+        this.connected = new Map();
+        this.lastEmpty = Date.now();
+        this.isActive = true;
     }
 
     invite(user: User): void {
@@ -54,7 +71,7 @@ class Party {
     }
 
     checkUpdateEmpty(): void {
-        if (this.connected.entries.length == 0) {
+        if (this.connected.size === 0) {
             this.lastEmpty = Date.now();
         }
         // if (this.connected.length == 0) {
@@ -89,8 +106,13 @@ class Party {
 
     toJSON() {
         return {
-            connected: this.connected,
-        }
+            partyID: this.partyID,
+            host: this.host?.username,
+            participants: this.participants?.map(p => p.username),
+            createdAt: this.createdAt,
+            isActive: this.isActive,
+            connected: Array.from(this.connected.values()).map(u => u.toJSONShallow())
+        };
     }
 }
 
