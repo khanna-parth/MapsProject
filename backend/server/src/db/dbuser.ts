@@ -7,9 +7,8 @@ class UserDB {
         const userRepository = db.getRepository(User);
 
         const user = await userRepository.findOne({
-            where: {
-                username: username,
-            },
+            where: { username: username }, 
+            relations: ['friends'],
         });
         return user
     }
@@ -18,9 +17,8 @@ class UserDB {
         const userRepository = db.getRepository(User);
 
         const user = await userRepository.findOne({
-            where: {
-                userID: userID,
-            },
+            where: { userID: userID},
+            relations: ['friends'],
         });
         return user
     }

@@ -6,7 +6,7 @@ import { User } from "../models/user";
 
 
 const createParty = (userID: string) : PartyCreationResult => {
-    if (!checkValidString) {
+    if (!checkValidString(userID)) {
         return {success: false, code: 400, error: "userID must be properly specified"}
     }
 
@@ -19,16 +19,21 @@ const createParty = (userID: string) : PartyCreationResult => {
     const partyIDString = partyID.toString()
 
     const party = new Party(partyIDString);
+
+    const creator = pool.userExistsByID(userID);
+    if (creator) {
+        party.addUser(creator);
+    } else {
+        console.warn(`Creator with userID ${userID} not found in pool. Ensure the user is registered.`);
+        return { success: false, code: 400, error: "Creator not registered. Please register the user before creating a party." };
+    }
     try {
         pool.registerParty(partyIDString, party);
-
-        return {success: true, code: 201, partyID: partyIDString};
-
+        return { success: true, code: 201, partyID: partyIDString };
     } catch (error) {
-        return {success: false, code: 400, error: `Failed to create existing party.`}
+        return { success: false, code: 400, error: `Failed to create party.` };
     }
 };
-
 const getParty = (userID: string, partyID: string): {party?: PartyDisplay, code: number, error?: string} => {
     if (!checkValidString(partyID)) {
         return {code: 400, error: "partyID must be properly specified"}

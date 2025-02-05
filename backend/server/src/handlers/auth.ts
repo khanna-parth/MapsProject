@@ -35,7 +35,7 @@ const createUser = async (username: string, password: string): Promise<AccessUse
 
     const user = User.CreateUser(username, hashedPassword);
     pool.registerUser(user);
-    user.syncDB();
+    await user.syncDB();
     console.log(`Created user with id: ${user.userID}`)
 
     return { success: true, user: user, code: 201}
@@ -59,6 +59,9 @@ const loginUser = async (username: string, password: string): Promise<AccessUser
 
     if (exists.username == username && matchedPassword) {
         console.log(`Approved sign in request from user account: ${username}`)
+        if (!pool.userExistsByID(exists.userID)) {
+            pool.registerUser(exists);
+        }
         return { success: true, user: exists, code: 200}
     } else {
         console.log(`Unsuccessful sign in attempt from user account: ${username}`)
