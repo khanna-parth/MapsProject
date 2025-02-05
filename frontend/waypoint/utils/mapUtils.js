@@ -33,6 +33,10 @@ export const getNearbyPlaces = async (latitude, longitude, preferences=['restaur
 
 export const getRoute = async (latitude, longitude) => {
     //Temp Hard Code 
+
+    /*
+        Will need to get from the search for directions
+    */
     const destination = {
         lat: "37.76741612078479",
         long: "-122.23997872905375"
@@ -53,8 +57,9 @@ export const getRoute = async (latitude, longitude) => {
     try {
         const routeResponse = await utils.postRequest('routing/fetch', requestData);
 
-        // console.log("RouteResponse");
-        // console.log(JSON.stringify(routeResponse, null, 2));
+        //console.log(requestData);
+        //console.log("RouteResponse");
+        //console.log(JSON.stringify(routeResponse, null, 2));
 
         if (routeResponse.error) {
             return { error: true, message: "Error retrieving route." };
