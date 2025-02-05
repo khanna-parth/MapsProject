@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, Button, Platform, SafeAreaView, Image } from 'r
 
 import { useNavigation } from '@react-navigation/native';
 
-import data from '../utils/defaults/defaultColors.js'
+import data from '../utils/defaults/assets.js'
 
 function WelcomeScreen() {
     const navigation = useNavigation();
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     safeContainer: {
         flex: 1,
         paddingTop: Platform.OS === 'android' ? 25 : 0,
-        backgroundColor: data.primaryColor,
+        backgroundColor: data.colors.primaryColor,
     },
     wrapper: {
         flex: 1,
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
         height: 45,
         width: '100%',
         borderRadius: 20,
-        backgroundColor: data.offWhite,
+        backgroundColor: data.colors.offWhite,
         justifyContent: 'center',
         alignSelf: "center",
         marginBottom: 25
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
         width: '100%',
         borderRadius: 20,
         borderWidth: 2,
-        borderColor: data.offWhite,
+        borderColor: data.colors.offWhite,
         justifyContent: 'center',
         alignSelf: "center",
     },
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
         alignSelf: "baseline"
     },
     endText: {
-        color: data.offWhite,
+        color: data.colors.offWhite,
         textAlign: 'center',
         paddingBottom: 10
     }

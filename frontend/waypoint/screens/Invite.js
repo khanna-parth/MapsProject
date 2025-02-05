@@ -2,11 +2,10 @@ import { StyleSheet, View, Text, Image, TextInput, FlatList, Modal, TouchableOpa
 import { useState, useEffect } from 'react';
 
 const defaultImage = require("../assets/default-avatar-icon.jpg")
-const plusImage = require("../assets/plus.png")
 
-import data from '../utils/defaults/defaultColors.js'
-import { storeData, getData, removeData, postRequest, reqSocket } from '../utils/utils.js';
-import { getUserFriends, getPartyID } from '../utils/userUtils.js';
+import data from '../utils/defaults/assets.js'
+import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
+import { getUserFriends, joinParty } from '../utils/userUtils.js';
 
 function InviteScreen({ visible, onRequestClose, updateParty }) {
     const [username, setUsername] = useState("");
@@ -31,7 +30,6 @@ function InviteScreen({ visible, onRequestClose, updateParty }) {
     const inviteButtonPressed = async (invitedUser) => {
         console.log(`Fetching party data (added ${invitedUser}).`);
         
-        await removeData('partyID'); // Temporary to always delete party id, will fix once part id stuff updated on backend
         const userID = await getData('userID');
         const partyID = await getData('partyID');
 
@@ -41,28 +39,18 @@ function InviteScreen({ visible, onRequestClose, updateParty }) {
         
         // If user does not have a saved party ID, meaning they have no party
         if (partyID.error) {
-            let looping = true;
-            
-            while (looping) {
-                const createdPartyData = await postRequest('party/create', {userID: userID.data});
+            const createdPartyData = await postRequest('party/create', {userID: userID.data});
 
-                if (!createdPartyData.error) {
-                    looping = false;
-
-                    await reqSocket(userID.data, createdPartyData.data);
-
-                    await storeData('partyID', createdPartyData.data);
-
-                    //await sleep(200);
-
-                    await updateParty();
-                }  
+            if (!createdPartyData.error) {
+                await joinParty(userID.data, createdPartyData.data);
+                await storeData('partyID', createdPartyData.data);
+                await updateParty();
             }
             // Invite bruh
 
         // If user already has a saved party ID, meaning they were in party
         } else {
-            await reqSocket(userID.data, partyID.data);
+            await joinParty(userID.data, partyID.data);
 
             await updateParty();
             // Send invite to bruh
@@ -99,7 +87,7 @@ function InviteScreen({ visible, onRequestClose, updateParty }) {
                                 <View style={styles.cardTextArea} key={item.cardID}>
                                     <Text style={styles.cardText}>{item.username}</Text>
                                     <TouchableOpacity onPress={() => inviteButtonPressed(item.username)}>
-                                        <Image source={plusImage} style={styles.cardPlusImage}/>
+                                        <Image source={data.images.plusIcon} style={styles.cardPlusImage}/>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -111,7 +99,7 @@ function InviteScreen({ visible, onRequestClose, updateParty }) {
                     ListEmptyComponent={<Text style={{textAlign: 'center', fontSize: 20,}}>No Friends Founds</Text>}
                     ListHeaderComponent={<Text style={styles.listHeaderText}>Friends</Text>}
                 />
-                {/* <Button title='Close' color={data.primaryColor} onPress={() => {
+                {/* <Button title='Close' color={data.colors.primaryColor} onPress={() => {
                     setSearchModalVisible(false); 
                     setUsername("");getPartyID
                 }} />                 */}
@@ -123,7 +111,7 @@ function InviteScreen({ visible, onRequestClose, updateParty }) {
 const styles = StyleSheet.create({
     modalContainer: {
         flex: 1,
-        backgroundColor: data.offWhite,
+        backgroundColor: data.colors.offWhite,
         padding: 16,
         paddingBottom: 0,
     },

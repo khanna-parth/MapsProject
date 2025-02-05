@@ -2,9 +2,8 @@ import { StyleSheet, View, Text, Image, TextInput, FlatList, Modal, TouchableOpa
 import { useState } from 'react';
 
 const defaultImage = require("../assets/default-avatar-icon.jpg")
-const plusImage = require("../assets/plus.png")
 
-import data from '../utils/defaults/defaultColors.js'
+import data from '../utils/defaults/assets.js'
 import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
 import { getUserFriends, getUsers } from '../utils/userUtils.js';
 
@@ -86,7 +85,7 @@ function SearchScreen({ visible, onRequestClose }) {
                                     <Text style={styles.cardText}>{item.username}</Text>
                                     {!item.isFriend && (
                                         <TouchableOpacity onPress={() => addButtonPressed(item.username)}>
-                                            <Image source={plusImage} style={styles.cardPlusImage}/>
+                                            <Image source={data.images.addFriendIcon} style={styles.cardPlusImage}/>
                                         </TouchableOpacity>
                                     )}
                                 </View>
@@ -99,7 +98,7 @@ function SearchScreen({ visible, onRequestClose }) {
                     ListEmptyComponent={<Text style={{textAlign: 'center', fontSize: 20,}}>No Users Founds</Text>}
                     ListHeaderComponent={<Text style={styles.listHeaderText}>Users</Text>}
                 />
-                {/* <Button title='Close' color={data.primaryColor} onPress={() => {
+                {/* <Button title='Close' color={data.colors.primaryColor} onPress={() => {
                     setSearchModalVisible(false); 
                     setUsername("");
                 }} />                 */}
@@ -111,7 +110,7 @@ function SearchScreen({ visible, onRequestClose }) {
 const styles = StyleSheet.create({
     modalContainer: {
         flex: 1,
-        backgroundColor: data.offWhite,
+        backgroundColor: data.colors.offWhite,
         padding: 16,
         paddingBottom: 0,
     },
