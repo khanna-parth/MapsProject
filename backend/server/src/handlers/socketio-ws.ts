@@ -84,7 +84,7 @@ export function setupSocketIO(server: HttpServer) {
                     content: message,
                     timestamp: new Date().toISOString(),
                 };
-                party.broadcast(JSON.stringify(jsonMessage), userID);
+                party.broadcast('INTERNAL', JSON.stringify(jsonMessage), userID, true);
             } else {
                 const errorMessage = { error: "Error sending message" };
                 socket.emit('error', errorMessage);

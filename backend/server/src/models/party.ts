@@ -1,4 +1,3 @@
-import { getDirections } from "../ext/gmaps"
 import { User } from "./user"
 
 class Party {
@@ -9,7 +8,7 @@ class Party {
     lastEmpty: number
     constructor(partyID: string) {
         this.partyID = partyID
-        this.connected = new Map()
+        this.connected = new Map<string, User>()
         this.invited = []
         this.lastEmpty = Date.now()
     }
@@ -67,21 +66,22 @@ class Party {
             this.connected.forEach((user) => {
                 if (user.ws) {
                     // getDirections('37.6604,121.8758', '36.9741,122.0308')
-                    user.ws.emit('directions', )
+                    user.ws.emit('directions', {})
                 }
             })
         }, 3000);
     }
 
-    broadcast(message: string, senderID: string): void {
+    broadcast(broadcastChannel: string, message: string, senderID: string, systemMessage?: boolean): void {
+        if (!systemMessage) { systemMessage = false }
         this.connected.forEach((user) => {
             if (user.ws && user.ws.connected === true) {
-                if (user.userID !== senderID) {
-                    user.ws.send(message);
-                    // user.ws.send(`[${senderID}]: ${message}`);
+                if (!systemMessage) {
+                    user.ws.emit(broadcastChannel, `${senderID}: ${message}`)
+                    console.log(`${senderID} sent a message on ${broadcastChannel} channel`)
                 } else {
-                    user.ws.send(message);
-                    // user.ws.send(`[YOU]: ${message}`);
+                    user.ws.emit(broadcastChannel, `SYSTEM: ${message}`)
+                    console.log(`System broadcasted a message on ${broadcastChannel} channel`)
                 }
             }
         });
