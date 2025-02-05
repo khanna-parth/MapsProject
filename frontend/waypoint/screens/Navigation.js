@@ -8,7 +8,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { getRoute } from '../utils/mapUtils.js';
 
 import data from '../utils/defaults/assets.js'
-import MapView, { PROVIDER_DEFAULT, Marker, Polyline } from 'react-native-maps';
+import MapView, { PROVIDER_DEFAULT, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 
 const NavScreen = () => {
@@ -99,7 +99,7 @@ const NavScreen = () => {
     }, []);
 
     const decodePolyline = (encoded) => {
-        //Some magic happens here I guess
+        //Some magic happens here I guess 🪄🪄 - Decodes the polyline gibberish i get
         let points = [];
         let index = 0;
         let lat = 0;
