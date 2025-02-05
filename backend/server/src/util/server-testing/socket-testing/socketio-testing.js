@@ -1,4 +1,4 @@
-import io from 'socket.io-client';
+const io = require('socket.io-client');
 
 console.log(`Connecting`)
 // const socket = io('http://localhost:3010')
@@ -7,8 +7,9 @@ const socket = io('http://localhost:3010', {
     transports: ['websocket'],  // Force WebSocket transport
     query: {
         // userID: '9029a653-92d3-4dd6-810e-88647fd483f3',
-        userID: '70c549ba-ca89-4238-b029-84bd458ababd',
-        partyID: '823367'
+        // userID: '77c77fce-03e1-48f1-b367-eb9fc03c5f38'
+        userID: '77c77fce-03e1-48f1-b367-eb9fc03c5f38',
+        partyID: '980011'
     }
 });
 
