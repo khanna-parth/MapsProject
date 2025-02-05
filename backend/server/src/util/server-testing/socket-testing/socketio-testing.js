@@ -11,7 +11,7 @@ const socket = io('http://localhost:3010', {
         // userID: '9029a653-92d3-4dd6-810e-88647fd483f3',
         // userID: '77c77fce-03e1-48f1-b367-eb9fc03c5f38'
         userID: '77c77fce-03e1-48f1-b367-eb9fc03c5f38',
-        partyID: '502785'
+        partyID: '805970'
     }
 });
 

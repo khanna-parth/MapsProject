@@ -3,6 +3,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { pool } from '../models/pool';
 import { checkValidString } from '../util/util';
 import { UserDB } from '../db/dbuser';
+import { PartyDB } from '../db/dbparty';
 
 export function setupSocketIO(server: HttpServer) {
     const io = new SocketIOServer(server, {
@@ -59,19 +60,26 @@ export function setupSocketIO(server: HttpServer) {
             return;
         }
 
-        const existing = pool.isUserConnected(userID);
-        if (existing) {
-            console.log(`Disconnecting user from existing party: ${existing.partyID}`);
+        const existingParty = pool.isUserConnected(userID);
+        if (existingParty) {
+            console.log(`Disconnecting ${userID} from existing party: ${existingParty.partyID}`);
             pool.disconnectUser(userID, "You were disconnected because you joined from somewhere else");
-            existing.removeUser(userID);
+            existingParty.removeUser(userID);
         } else {
             console.log(`Did not find existing party for user: ${userID}`);
         }
 
-        validUser.setConnection(socket, socket.id);
-        const connected = pool.connectUser(validUser, partyID, socket.id)
+        const joinResult = await PartyDB.joinParty(partyID, validUser);
+        if (!joinResult.success) {
+            socket.emit('error', joinResult.error);
+            socket.disconnect();
+            return;
+        }
 
-        console.log(`Connected ${userID} to ${partyID}!`)
+        validUser.setConnection(socket, socket.id);
+        pool.connectUser(validUser, partyID, socket.id)
+
+        console.log(`Connected user ${userID} to party ${partyID}!`)
 
         socket.emit('connected', `Connected to ${partyID}`);
 
@@ -92,10 +100,10 @@ export function setupSocketIO(server: HttpServer) {
             }
         });
 
-        socket.on('disconnect', () => {
+        socket.on('disconnect', async () => {
             console.log(`User ${userID} disconnected from party ${partyID}`);
             pool.disconnectBySocketID(socket.id)
-            
+            await PartyDB.leaveParty(partyID, validUser);
         });
 
         socket.on('error', (error) => {
