@@ -69,7 +69,8 @@ class Pool {
     monitor() {
         setInterval(() => {
             this.connectionPool.forEach((party) => {
-                if (party.connected.length === 0 && this.hasElapsedCheck(party.lastEmpty, 30)) {
+                // console.log(party.connected);
+                if (party.connected.entries().toArray().length === 0 && this.hasElapsedCheck(party.lastEmpty, 30)) {
                     this.removeParty(party.partyID);
                     console.log(`Party ${party.partyID} was deleted for inactivity`)
                 }
@@ -89,10 +90,10 @@ class Pool {
         });
     }
 
-    connectUser(user: User, partyID: string): {connected: boolean, error?: string} {
+    connectUser(user: User, partyID: string, socketID: string): {connected: boolean, error?: string} {
         const party = this.partyExists(partyID)
         if (party) {
-            party.addUser(user)
+            party.addUser(user, socketID)
             return {connected: true};
         } else {
             console.log(`Did not find partyID: ${partyID} to connect ${user.userID} to`)
@@ -111,6 +112,18 @@ class Pool {
                 party.removeUser(userID);
             }
         });
+    }
+
+    disconnectBySocketID(socketID: string): boolean {
+        this.connectionPool.forEach((party) => {
+            const user = party.getUserBySocket(socketID)
+            if (user) {
+                user.disconnectConn()
+                party.removeUser(socketID)
+                return true
+            }
+        })
+        return false;
     }
 
     isUserConnected(userID: string): Party | null {

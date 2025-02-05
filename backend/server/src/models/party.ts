@@ -4,12 +4,12 @@ import { User } from "./user"
 class Party {
     partyID: string
     connectedPartially?: Partial<User>[]
-    connected: User[]
+    connected: Map<string, User>
     invited: User[]
     lastEmpty: number
     constructor(partyID: string) {
         this.partyID = partyID
-        this.connected = []
+        this.connected = new Map()
         this.invited = []
         this.lastEmpty = Date.now()
     }
@@ -22,29 +22,44 @@ class Party {
         this.invited = this.invited.filter(user => user.username !== username)
     }
 
-    addUser(user: User): void {
-        this.connected.push(user);
+    addUser(user: User, socketID: string): void {
+        this.connected= this.connected.set(socketID, user)
+        // this.connected.push(user);
         this.checkUpdateEmpty();
     }
 
-    removeUser(userID: string): void {
-        this.connected = this.connected.filter(user => user.userID !== userID);
+    removeUser(socketID: string): void {
+        this.connected.delete(socketID)
+        // this.connected = this.connected.filter(user => user.userID !== userID);
         this.checkUpdateEmpty()
     }
 
     userExists(userID: string): boolean {
-        return this.connected.some(user => user.userID === userID)
+        return this.connected.get(userID) != undefined
+        // return this.connected.some(user => user.userID === userID)
     }
 
     getUser(userID: string): User | null {
-        const user = this.connected.find(user => user.userID === userID);
+        const user = this.connected.get(userID)
+        // const user = this.connected.find(user => user.userID === userID);
         return user || null;
     }
 
+    getUserBySocket(socketID: string): User | null {
+        for (let [sockID, value] of this.connected.entries()) {
+            if (socketID === sockID)
+                return value
+        }
+
+        return null;
+    }
+
     checkUpdateEmpty(): void {
-        if (this.connected.length == 0) {
+        if (this.connected.entries.length == 0) {
             this.lastEmpty = Date.now();
         }
+        // if (this.connected.length == 0) {
+        //     this.lastEmpty = Date.now();
     }
 
     update(): void {

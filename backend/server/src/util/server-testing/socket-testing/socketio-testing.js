@@ -2,14 +2,17 @@ import io from 'socket.io-client';
 
 console.log(`Connecting`)
 // const socket = io('http://localhost:3010')
-const socket = io('http://localhost:3010/?partyID=1&userID=f17e28c9-f3bb-4b3e-b075-d804c6c1fd60')
-// const socket = io('http://localhost:3010/send')
+const socket = io('http://localhost:3010', {
+    path: "/party/join",
+    transports: ['websocket'],  // Force WebSocket transport
+    query: {
+        // userID: '9029a653-92d3-4dd6-810e-88647fd483f3',
+        userID: '70c549ba-ca89-4238-b029-84bd458ababd',
+        partyID: '823367'
+    }
+});
 
 console.log(`Tried`)
-// socket.on('connection', () => {
-//     console.log('Connected to the server');
-//     socket.emit('message', 'Hello, I am testing a message!');
-// });
 
 socket.on('connect', () => {
     console.log('Connected to the server');

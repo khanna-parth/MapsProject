@@ -12,9 +12,9 @@ export function setupSocketIO(server: HttpServer) {
             methods: ["GET", "POST"]
         }
     });
-
+    
     io.on('connect', async (socket) => {
-        console.log('New connection:', socket.handshake.query);
+        console.log('SocketIO new connection triggered')
         let userID = socket.handshake.query.userID;
         let partyID = socket.handshake.query.partyID;
 
@@ -68,8 +68,8 @@ export function setupSocketIO(server: HttpServer) {
             console.log(`Did not find existing party for user: ${userID}`);
         }
 
-        validUser.setConnection(socket);
-        const connected = pool.connectUser(validUser, partyID)
+        validUser.setConnection(socket, socket.id);
+        const connected = pool.connectUser(validUser, partyID, socket.id)
 
         console.log(`Connected ${userID} to ${partyID}!`)
 
@@ -94,6 +94,8 @@ export function setupSocketIO(server: HttpServer) {
 
         socket.on('disconnect', () => {
             console.log(`User ${userID} disconnected from party ${partyID}`);
+            pool.disconnectBySocketID(socket.id)
+            
         });
 
         socket.on('error', (error) => {

@@ -115,8 +115,11 @@ app.post(ROUTES.GET_DIRECTIONS, async (req: Request, res: Response) => {
     const response = await getDirections(directionsReq);
 
     if (response.data) {
+        // console.log(JSON.stringify(response.data, null, 2));
+        console.log(`[${response.code}] Directions request successfully processed`)
         res.status(200).json(response.data)
     } else {
+        console.log(`[${response.code}] Failed processing directions request`)
         res.status(500).json({error: "could not perform request"})
     }
 })
@@ -135,9 +138,10 @@ app.post(ROUTES.FEED_PLACES, async (req: Request, res: Response) => {
     const places = await nearbyPlaces(new Coordinates(lat, long), preferences)
 
     if (places.data) {
+        console.log(`[${places.code}] Nearby Feed request successfully processed`)
         res.status(200).json(places.data)
     } else {
-        console.log(`Unknwon response code: ${places.code}`)
+        console.log(`[${places.code}] Failed processing nearby feed request`)
         res.status(places.code).json({error: places.error})
     }
 })
@@ -158,8 +162,10 @@ app.post(ROUTES.SEARCH_PLACES, async (req: Request, res: Response) => {
     const places = await searchPlaces(query, new Coordinates(lat, long))
 
     if (places.data) {
+        console.log(`[${places.code}] Places Search successfully processed`)
         res.status(200).json({places})
     } else {
+        console.log(`[${places.code}] Failed processing Search Places request`)
         res.status(places.code).json({error: places.error})
     }
 })

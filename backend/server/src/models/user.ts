@@ -22,6 +22,8 @@ class User extends BaseEntity {
 
     // ws?: WebSocket
     ws?: Socket
+    wsID?: string
+
     sessionID?: string
 
     @ManyToMany(() => User)
@@ -48,10 +50,11 @@ class User extends BaseEntity {
         return user;
     }
 
-    async setConnection(ws: Socket) {
+    async setConnection(ws: Socket, socketID: string) {
         const release = await this.userMutex.acquire();
         try {
             this.ws = ws;
+            this.wsID = socketID
         } finally {
             release();
         }
@@ -61,6 +64,7 @@ class User extends BaseEntity {
         if (this.ws) {
             if (this.ws.connected) {
                 this.ws.disconnect();
+
             }
             return this.ws.connected == false;
         }
