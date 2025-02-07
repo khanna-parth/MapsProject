@@ -14,6 +14,9 @@ import * as Location from 'expo-location';
 const NavScreen = () => {
     const navigation = useNavigation();
 
+    const mapRef = useRef(null);
+    const [isZoomedIn, setIsZoomedIn] = useState(true);
+
     const [location, setLocation] = useState(null);
 
     const [route, setRoute] = useState(null);
@@ -32,6 +35,7 @@ const NavScreen = () => {
         console.log('handleSheetChanges', index);
     }, []);
 
+    //End Route
     const endRoute = () => {
         console.log("End Route -> Homepage")
         setShowNewButtons(false);
@@ -39,29 +43,49 @@ const NavScreen = () => {
         navigation.navigate("Home");
     }
 
+    
+    //Fetch User Route
     useEffect(() => {
         const fetchRoute = async () => {
             if (!location) return;
-
+    
             setLoadingRoute(true);
             const routeData = await getRoute(location.latitude, location.longitude);
-
+            
+            //console.log(JSON.stringify(routeData, null, 2))
+    
             if (!routeData.error && routeData.data.directions) {
                 const routeCoordinates = routeData.data.directions.flatMap((step) => {
-                    const decodedPolyline = decodePolyline(step.polyline);
-                    return decodedPolyline;
+                    return decodePolyline(step.polyline);
                 });
-
+    
                 setRoute(routeCoordinates);
+    
+                if (routeData.data.duration) {
+                    const durationInSeconds = routeData.data.duration.value;
+                    const durationInMinutes = Math.round(durationInSeconds / 60);
+    
+                    // Convert seconds to hours & minutes
+                    const hours = Math.floor(durationInMinutes / 60);
+                    const minutes = durationInMinutes % 60;
+                    setRemainingTime(`${hours} Hours ${minutes} Minutes`);
+    
+                    // Get ETA
+                    let arrivalTime = new Date();
+                    arrivalTime.setSeconds(arrivalTime.getSeconds() + durationInSeconds);
+                    setEta(arrivalTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+                }
             } else {
                 console.error("Failed to fetch route:", routeData.message);
             }
             setLoadingRoute(false);
         };
-
+    
         fetchRoute();
     }, [location]);
 
+
+    //Location
     useEffect(() => {
         let locationSubscription = null;
 
@@ -80,8 +104,8 @@ const NavScreen = () => {
             locationSubscription = await Location.watchPositionAsync(
                 {
                     accuracy: Location.Accuracy.High,
-                    timeInterval: 1000,
-                    distanceInterval: 100,
+                    timeInterval: 1000000000000000000000,
+                    distanceInterval: 10000000000000000000000000,
                 },
                 (newLocation) => {
                     setLocation(newLocation.coords);
@@ -98,8 +122,36 @@ const NavScreen = () => {
         };
     }, []);
 
+    //Zoom to user or zoom out to route
+    const toggleZoom = () => {
+        if (isZoomedIn) {
+            if (route && route.length > 0 && mapRef.current) {
+                const routeCoordinates = route.map(coord => ({
+                    latitude: coord.latitude,
+                    longitude: coord.longitude
+                }));
+    
+                mapRef.current.fitToCoordinates(routeCoordinates, {
+                    edgePadding: { top: 50, right: 50, bottom: 150, left: 50 },
+                    animated: true,
+                });
+            }
+        } else {
+            if (location && mapRef.current) {
+                mapRef.current.animateToRegion({
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    latitudeDelta: 0.004,
+                    longitudeDelta: 0.004,
+                }, 1000);
+            }
+        }
+        
+        setIsZoomedIn(prev => !prev)
+    };
+
+    //Uses the polyline objects given by parths api 🪄🪄
     const decodePolyline = (encoded) => {
-        //Some magic happens here I guess 🪄🪄 - Decodes the polyline gibberish i get
         let points = [];
         let index = 0;
         let lat = 0;
@@ -151,6 +203,7 @@ const NavScreen = () => {
     return (
         <View style={styles.container}>
             <MapView 
+                ref={mapRef}
                 style={styles.map}
                 provider={PROVIDER_DEFAULT}
                 showsUserLocation={true}
@@ -159,8 +212,8 @@ const NavScreen = () => {
                 initialRegion={{
                     latitude: location.latitude,
                     longitude: location.longitude,
-                    latitudeDelta: 0.1,
-                    longitudeDelta: 0.1,
+                    latitudeDelta: 0.004,
+                    longitudeDelta: 0.004,
                 }}
             >
                 {route && (
@@ -172,6 +225,10 @@ const NavScreen = () => {
                 )}
             </MapView>
 
+            <TouchableOpacity style={styles.zoomButton} onPress={toggleZoom}>
+                <Icon name={isZoomedIn ? "arrows-alt" : "location-arrow"} size={30} color="white" />
+            </TouchableOpacity>
+
             <GestureHandlerRootView style={styles.swipeUpContainer}>
                 <BottomSheet
                     useRef={bottomSheetRef}
@@ -181,8 +238,8 @@ const NavScreen = () => {
                     enablePanDownToClose={false}
                 >
                     <BottomSheetView style={styles.swipeUpContentContainer}>
-                        <Text style={styles.topLeftText}>ETA: --:-- --</Text>
-                        <Text style={styles.topRightText}>-- Hours -- Minutes</Text>
+                        <Text style={styles.topLeftText}>ETA: {eta || "--:-- --"}</Text>
+                        <Text style={styles.topRightText}>{remainingTime || "-- Hours -- Minutes"}</Text>
                         
                         <View style={styles.buttonContainer}>
                             {showNewButtons ? (
@@ -290,6 +347,22 @@ const styles = StyleSheet.create({
         color: 'black',
         zIndex: 1000,
     },
+    zoomButton: {
+        position: 'absolute',
+        bottom: 150,
+        right: 20,
+        width: 60,
+        height: 60,
+        backgroundColor: '#007bff',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 30,
+        elevation: 5, //Smelly Android
+        shadowColor: '#000', //Pog IOS
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 2,
+    }
 })
 
 export default NavScreen;

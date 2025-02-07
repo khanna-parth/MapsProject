@@ -64,6 +64,8 @@ export const getRoute = async (latitude, longitude) => {
         if (routeResponse.error) {
             return { error: true, message: "Error retrieving route." };
         }
+        
+        //console.log(routeResponse.data.duration);
 
         return {
             error: false,
