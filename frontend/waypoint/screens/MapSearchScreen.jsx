@@ -182,6 +182,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
     },
     card: {
+        flexDirection: 'row',
         alignItems: 'center',
     },
     cardTextArea: {
