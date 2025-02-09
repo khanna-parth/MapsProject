@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View, Platform, SafeAreaView, FlatList, Image, TextInput } from 'react-native';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import Box from '../components/Box';
-import SearchScreen from './SearchScreen';
-import InviteScreen from './Invite';
+import UserSearchScreen from './UserSearch';
+import UserInviteScreen from './UserInvite';
 
 import data from '../utils/defaults/assets.js'
 import { storeData, getData, removeData, postRequest, getRequest } from '../utils/utils.js';
@@ -187,23 +187,23 @@ function PartyScreen() {
 
             {/* Search Screen */}
 
-            <SearchScreen 
+            <UserSearchScreen 
                 visible={searchModalVisible} 
                 onRequestClose={() => {
                     setSearchModalVisible(false);
                 }} 
-            ></SearchScreen>
+            ></UserSearchScreen>
             
 
             {/* Invite Screen */}
 
-            <InviteScreen 
+            <UserInviteScreen 
                 visible={inviteModalVisible} 
                 onRequestClose={() => {
                     setInviteModalVisible(false);
                 }}
                 updateParty={getPartyList}
-            ></InviteScreen>
+            ></UserInviteScreen>
         </SafeAreaView>
     );
 }

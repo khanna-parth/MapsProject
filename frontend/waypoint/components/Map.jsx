@@ -1,5 +1,5 @@
 import { StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native'
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import MapView, { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 

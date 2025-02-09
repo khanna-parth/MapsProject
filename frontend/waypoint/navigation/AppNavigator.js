@@ -6,7 +6,7 @@ import WelcomeScreen from '../screens/WelcomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import CreateAccountScreen from '../screens/CreateAccount';
 
-import PartyScreen from '../screens/PartyPage';
+import PartyScreen from '../screens/PartyScreen';
 import HomeScreen from '../screens/HomeScreen';
 import NavScreen from '../screens/Navigation';
 import MapSearchScreen from '../screens/MapSearchScreen'

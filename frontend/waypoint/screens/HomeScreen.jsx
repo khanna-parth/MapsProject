@@ -1,13 +1,13 @@
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import {  useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 
 import data from '../utils/defaults/assets.js'
 
-import PartyScreen from './PartyPage';
+import PartyScreen from './PartyScreen';
 import Map from '../components/Map';
-import Searchbar from '../components/Searchbar.jsx';
+import Searchbar from '../components/Searchbar';
 
 const HomeScreen = () => {
     const snapPoints = useMemo(() => ['15%', '20%', '50%', '85%'], [])

@@ -1,5 +1,5 @@
 import { StyleSheet, View, Text, Image, TextInput, FlatList, Modal, TouchableOpacity } from 'react-native';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 import data from '../utils/defaults/assets.js'
 import { storeData, getData, removeData, postRequest } from '../utils/utils.js';

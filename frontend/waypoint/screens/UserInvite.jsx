@@ -1,5 +1,5 @@
 import { StyleSheet, View, Text, Image, TextInput, FlatList, Modal, TouchableOpacity } from 'react-native';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const defaultImage = require("../assets/default-avatar-icon.jpg")
 
