@@ -1,5 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator, CardStyleInterpolators  } from '@react-navigation/stack';
+import { useNavigationState } from '@react-navigation/native';
 
 import WelcomeScreen from '../screens/WelcomeScreen';
 import LoginScreen from '../screens/LoginScreen';
@@ -8,17 +9,25 @@ import CreateAccountScreen from '../screens/CreateAccount';
 import PartyScreen from '../screens/PartyPage';
 import HomeScreen from '../screens/HomeScreen';
 import NavScreen from '../screens/Navigation';
+import MapSearchScreen from '../screens/MapSearchScreen'
+import { useState, useEffect } from 'react';
 
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
+const forFade = ({ current }) => ({
+    cardStyle: {
+        opacity: current.progress,
+    },
+});
+
 const WelcomeStack = () => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
-        <Stack.Screen name="CreateAccount" component={CreateAccountScreen} />
-        <Stack.Screen name="LoginScreen" component={LoginScreen} />
+            <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
+            <Stack.Screen name="CreateAccount" component={CreateAccountScreen} />
+            <Stack.Screen name="LoginScreen" component={LoginScreen} />
         </Stack.Navigator>
     );
 };
@@ -26,15 +35,22 @@ const WelcomeStack = () => {
 const HomeStack = () => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="HomeScreen" component={HomeScreen} />
+            <Stack.Screen 
+                name="HomeScreen" 
+                component={HomeScreen}
+            />
         </Stack.Navigator>
     );
 };
 
-const NavigationStack = () => {
+const NavigationStack = ({ route }) => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="NavigationScreen" component={NavScreen}/>
+            <Stack.Screen 
+                name="NavigationScreen" 
+                component={NavScreen}
+                initialParams={route?.params}
+            />
         </Stack.Navigator>
     )
 }
@@ -42,7 +58,22 @@ const NavigationStack = () => {
 const PartyStack = () => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="ProfileScreen" component={PartyScreen} />
+            <Stack.Screen 
+                name="ProfileScreen" 
+                component={PartyScreen}
+            />
+        </Stack.Navigator>
+    );
+};
+
+const MapSearchStack = ({ route }) => {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen 
+                name="MapSearchScreen" 
+                component={MapSearchScreen}
+                initialParams={route?.params}
+            />
         </Stack.Navigator>
     );
 };
@@ -83,8 +114,7 @@ const RootNavigator = () => {
             <Stack.Screen name="App" component={AppNavigator} />
     
             {/* Screens not apart of the tab navigator */}
-            {/* <Stack.Screen name="Invite" component={InviteStack} />
-            <Stack.Screen name="Search" component={SearchStack} /> */}
+            <Stack.Screen name="MapSearch" component={MapSearchStack} options={{ cardStyleInterpolator: forFade }}/>
         </Stack.Navigator>
     );
 };

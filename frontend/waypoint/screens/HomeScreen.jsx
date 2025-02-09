@@ -1,25 +1,29 @@
-import { StyleSheet, Text, View, Platform, SafeAreaView, Button } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import {  useMemo, useState, useRef } from 'react';
 
 import data from '../utils/defaults/assets.js'
 
-import PartyScreen from './PartyPage.js';
-import Map from '../components/Map.js';
+import PartyScreen from './PartyPage';
+import Map from '../components/Map';
+import Searchbar from '../components/Searchbar.jsx';
 
 const HomeScreen = () => {
-    const snapPoints = useMemo(() => ['18%', '60%', '90%'], [])
+    const snapPoints = useMemo(() => ['15%', '20%', '50%', '85%'], [])
 
     const bottomSheetRef = useRef<BottomSheet>(null);
 
-    const handleSheetChanges = useCallback((index) => {
-        console.log('handleSheetChanges', index);
-    }, []);
+    const [location, setLocation] = useState(null);
+
+    const handleSheetChanges = (index) => {
+        //console.log('handleSheetChanges', index);
+    };
 
     return (
         <View style={styles.container}>
-            <Map/>
+            <Searchbar style={styles.searchbar} location={location}/>
+            <Map location={location} setLocation={setLocation}/>
             <GestureHandlerRootView style={styles.swipeUpContainer}>
                 <BottomSheet
                     useRef={bottomSheetRef}
@@ -41,6 +45,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         //paddingTop: Platform.OS === 'android' ? 25 : 0
+    },
+    searchbar: {
+        position: 'absolute',
+        top: 60,
+        zIndex: 10,
     },
     swipeUpContainer: {
         flex: 1,

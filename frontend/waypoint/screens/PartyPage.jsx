@@ -2,8 +2,9 @@ import { StyleSheet, Text, View, Platform, SafeAreaView, FlatList, Image, TextIn
 import { useState, useEffect } from 'react';
 
 import Box from '../components/Box';
-import SearchScreen from './Search.js';
-import InviteScreen from './Invite.js';
+import SearchScreen from './SearchScreen';
+import InviteScreen from './Invite';
+
 import data from '../utils/defaults/assets.js'
 import { storeData, getData, removeData, postRequest, getRequest } from '../utils/utils.js';
 import { joinParty } from '../utils/userUtils';
@@ -43,6 +44,7 @@ function PartyScreen() {
         }
     };
     
+    // Get the party details of the user and update the list
     const getPartyList = async () => {
         const userID = await getData("userID");
         const partyID = await getData("partyID");
@@ -165,7 +167,7 @@ function PartyScreen() {
                     }
                     ListHeaderComponent={
                         partyList.length > 0 ? ( // Only show header when there's data
-                            <View style={{felx:1}}>
+                            <View style={{flex:1}}>
                                 <View style={styles.listHeaderContainer}>
                                     <Text style={styles.listHeaderText}>Party Members</Text>
                                     <Box 

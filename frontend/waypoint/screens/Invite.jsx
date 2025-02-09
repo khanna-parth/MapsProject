@@ -1,93 +1,95 @@
 import { StyleSheet, View, Text, Image, TextInput, FlatList, Modal, TouchableOpacity } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const defaultImage = require("../assets/default-avatar-icon.jpg")
 
 import data from '../utils/defaults/assets.js'
 import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
-import { getUserFriends, getUsers } from '../utils/userUtils.js';
+import { getUserFriends, joinParty } from '../utils/userUtils.js';
 
-function SearchScreen({ visible, onRequestClose }) {
+function InviteScreen({ visible, onRequestClose, updateParty }) {
     const [username, setUsername] = useState("");
 
-    const [searchList, setSearchList] = useState([]);
+    const [friendList, setFriendList] = useState([]);
 
-    const searchInputChange = async (searchText) => {
-        setUsername(searchText);
+    // Get all friends of logged in user
+    const getFriends = async () => {
+        const usernameData = await getData("username");
+
+        if (usernameData.error) {
+            return {error: true, message: "Error retrieving username."};
+        }
+
+        const friendData = await getUserFriends(usernameData.data);
+
+        if (!friendData.error) {
+            setFriendList(friendData.data);
+        }
+    }
+
+    const inviteButtonPressed = async (invitedUser) => {
+        console.log(`Fetching party data (added ${invitedUser}).`);
         
-        if (searchText.length >= 3) {
-            const currentUser = await getData('username');
+        const userID = await getData('userID');
+        const partyID = await getData('partyID');
 
-            // Get friends of logged in user
-            const friendData = await getUserFriends(currentUser.data);
-            
-            let userFriends = [];
-            if (!friendData.error) {
-                for (let i = 0; i < friendData.data.length; i++) {
-                    userFriends.push(friendData.data[i].username);
-                }
+        if (userID.error) {
+            return {error: true, message: "Error retrieving user or party ID."}
+        }
+        
+        // If user does not have a saved party ID, meaning they have no party
+        if (partyID.error) {
+            const createdPartyData = await postRequest('party/create', {userID: userID.data});
+            console.log(createdPartyData)
+
+            if (!createdPartyData.error) {
+                await joinParty(userID.data, createdPartyData.data);
+                await storeData('partyID', createdPartyData.data);
+                await updateParty();
             }
+            // Invite bruh
 
-            // Get search results
-            const searchData = await getUsers(String(searchText));
-
-            if (!searchData.error) {
-                let returnData = []
-
-                for (let i = 0; i < searchData.data.length; i++) {
-                    if (searchData.data[i] !== currentUser.data) {
-                        returnData.push({username: searchData.data[i], cardID: i, isFriend: userFriends.includes(searchData.data[i])})
-                    }
-                }
-                
-                setSearchList(returnData);
-            } else {
-                setSearchList([]);
-            }
+        // If user already has a saved party ID, meaning they were in party
         } else {
-            setSearchList([]);
+            await joinParty(userID.data, partyID.data);
+
+            await updateParty();
+            // Send invite to bruh
         }
     };
 
-    const addButtonPressed = async (addedUser) => {
-        const currentUser = await getData('username');
-
-        if (currentUser.error) {
-            return {error: true, message: "Error retrieving username."}
+    useEffect(() => {
+        if (visible) {
+            getFriends()
         }
 
-        await postRequest('social/add', {username: currentUser.data, friendUsername: addedUser});
-
-        searchInputChange(username);
-    };
-
+    }, [visible]);
+    
     return (
         <Modal visible={ visible } 
             animationType='slide'
             presentationStyle='pageSheet'
             onRequestClose={ onRequestClose }>
             <View style={styles.modalContainer}>
-                <Text style={styles.modalTitle}>Search User</Text>
+                <Text style={styles.modalTitle}>Invite Friend</Text>
                 <TextInput 
                     style={styles.textInput} 
                     placeholder='Search'
                     value={username}
-                    onChangeText={searchInputChange}
+                    onChangeText={setUsername}
                 />
-                    <FlatList 
-                    data={searchList}
-                    //data={[{ "userID": "7", "username": "Parth Khanna" }, { "userID": "8", "username": "Howard" }]}
+                <FlatList 
+                    data={friendList}
+                    //data={[{ "userID": "7", "username": "Theo" }, { "userID": "8", "username": "Collin" }]}
                     renderItem={({ item }) => {
                         return (
                             <View style={styles.card} key={item.cardID}>
                                 <Image source={defaultImage} style={styles.cardImage}/>
                                 <View style={styles.cardTextArea} key={item.cardID}>
                                     <Text style={styles.cardText}>{item.username}</Text>
-                                    {!item.isFriend && (
-                                        <TouchableOpacity onPress={() => addButtonPressed(item.username)}>
-                                            <Image source={data.images.addFriendIcon} style={styles.cardPlusImage}/>
-                                        </TouchableOpacity>
-                                    )}
+                                    <TouchableOpacity onPress={() => inviteButtonPressed(item.username)}>
+                                        <Image source={data.images.plusIcon} style={styles.cardPlusImage}/>
+                                    </TouchableOpacity>
                                 </View>
                             </View>
                         );
@@ -95,12 +97,12 @@ function SearchScreen({ visible, onRequestClose }) {
                     horizontal={false}
                     keyExtractor={(item) => item.cardID.toString()}
                     ItemSeparatorComponent={<View style={{ height: 16 }} />}
-                    ListEmptyComponent={<Text style={{textAlign: 'center', fontSize: 20,}}>No Users Founds</Text>}
-                    ListHeaderComponent={<Text style={styles.listHeaderText}>Users</Text>}
+                    ListEmptyComponent={<Text style={{textAlign: 'center', fontSize: 20,}}>No Friends Founds</Text>}
+                    ListHeaderComponent={<Text style={styles.listHeaderText}>Friends</Text>}
                 />
                 {/* <Button title='Close' color={data.colors.primaryColor} onPress={() => {
                     setSearchModalVisible(false); 
-                    setUsername("");
+                    setUsername("");getPartyID
                 }} />                 */}
             </View>
         </Modal>
@@ -161,4 +163,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default SearchScreen;
+export default InviteScreen;

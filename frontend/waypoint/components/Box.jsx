@@ -14,14 +14,14 @@ function Box({ children, style, onPress, textStyle, source=null }) {
 const styles = StyleSheet.create({
     box: {
         backgroundColor: data.colors.primaryColor,
-        width: 100,
-        height: 100,
+        width: 120,
+        height: 80,
         justifyContent: 'flex-end',
         borderRadius: 8,
         alignItems: 'center',
     },
     text: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: "bold",
         textAlign: "center",
         color: "white",
@@ -29,8 +29,8 @@ const styles = StyleSheet.create({
         paddingBottom: 5,
     },
     cardImage: {
-        width: 50,
-        height: 50,
+        width: 35,
+        height: 35,
         alignItems: 'center',
         marginBottom: 5,
     },

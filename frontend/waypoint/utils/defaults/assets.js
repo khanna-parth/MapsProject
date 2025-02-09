@@ -4,7 +4,9 @@ const data = {
         inviteButtonIcon: require('../../assets/add-group-icon.png'),
         addFriendIcon: require('../../assets/add-friend-icon.png'),
         searchIcon: require('../../assets/search-icon.png'),
-        plusIcon: require("../../assets/plus.png")
+        plusIcon: require("../../assets/plus.png"),
+        searchIconBlack: require('../../assets/search-icon-black.png'),
+        closeIcon: require('../../assets/close.png'),
     },
     colors: {
         primaryColor: '#3E82FC',

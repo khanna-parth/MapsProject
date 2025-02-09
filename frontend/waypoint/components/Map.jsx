@@ -5,8 +5,8 @@ import * as Location from 'expo-location';
 
 import { getNearbyPlaces, getDistance } from '../utils/mapUtils.js';
 
-const Map = () => {
-    const [location, setLocation] = useState(null);
+const Map = ({ location, setLocation }) => {
+    //const [location, setLocation] = useState(null);
     const [places, setPlaces] = useState([null]);
     const [previousLocation, setPreviousLocation] = useState(null);
     const [timeoutId, setTimeoutId] = useState(null);
@@ -112,7 +112,7 @@ const Map = () => {
     // Display loading screen while waiting for location
     if (!location || !places[0]) {
         return (
-            <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', zIndex: 1000, width: '100%', height: '100%' }}>
                 <ActivityIndicator size="large" animating={true}/>
             </SafeAreaView>
         )
