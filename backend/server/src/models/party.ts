@@ -1,3 +1,4 @@
+import { PartyPolicy } from "./deps/party-deps";
 import { User } from "./user"
 import { Entity, PrimaryColumn, Column, ManyToOne, ManyToMany, JoinTable, BaseEntity, BeforeInsert } from 'typeorm';
 
@@ -8,7 +9,9 @@ class Party extends BaseEntity {
 
     invited: User[] = [];
     connected: Map<string, User> = new Map();
+
     lastEmpty: number = Date.now();
+    policy: PartyPolicy = PartyPolicy.CLOSED;
 
     @ManyToOne(() => User, user => user.hostedParties)
     host!: User;
@@ -30,12 +33,19 @@ class Party extends BaseEntity {
         this.isActive = true;
     }
 
-    invite(user: User): void {
+    async invite(user: User): Promise<{invited: boolean, error?: string}> {
+        if (this.invited.find((invitedUser) => invitedUser.username == user.username)) {
+            return { invited: false, error: `${user.username} is already invited`};
+        }
         this.invited.push(user);
+        await this.save();
+        return {invited: true}
     }
 
-    deinvite(username: string): void {
+    async deinvite(username: string): Promise<{removed: boolean}> {
         this.invited = this.invited.filter(user => user.username !== username)
+        await this.save();
+        return { removed: true }
     }
 
     addUser(user: User, socketID: string): void {

@@ -1,3 +1,5 @@
+import { PartyDB } from "../db/dbparty";
+import { UserDB } from "../db/dbuser";
 import { Party } from "./party";
 import { User } from "./user";
 
@@ -8,6 +10,7 @@ class Pool {
 
     private constructor() {
         this.monitor();
+        this.monitorDB();
     }
 
     static getInstance(): Pool {
@@ -21,18 +24,23 @@ class Pool {
         this.users.push(user);
     }
 
-    userExistsByID(userID: string): User | null {
+    async userExistsByID(userID: string): Promise<User | null> {
         const user = this.users.find(user => user.userID === userID)
-        if (user) {
-            return user;
-        }
+        if (user) return user;
+
+        const dbUser = await UserDB.dbFindID(userID);
+        if (dbUser) return dbUser;
         return null;
     }
     
-    userExistsByName(username: string): User | null {
+    async userExistsByName(username: string): Promise<User | null> {
         const user = this.users.find(user => user.username === username)
-        if (user) {
-            return user;
+        if (user) return user;
+
+        const dbUser = await UserDB.dbFindUsername(username);
+        if (dbUser) {
+            this.registerUser(dbUser);
+            return dbUser;
         }
         return null;
     }
@@ -42,16 +50,26 @@ class Pool {
             throw new Error("Cannot create party. Already exists");
         }
         this.connectionPool.set(partyID, party);
+        console.log(`[Pool] registered ${partyID} in internal map`)
     }
 
-    removeParty(partyID: string): void {
+    async removeParty(partyID: string): Promise<void> {
         this.connectionPool.delete(partyID);
+        await PartyDB.deleteParty(partyID);
     }
 
-    partyExists(partyID: string): Party | null {
+    async partyExists(partyID: string): Promise<Party | null> {
         const party = this.connectionPool.get(partyID)
         if (party) {
-            return party;
+            console.log(`PartyExists found ${partyID} in internal map`)
+            return party
+        }
+
+        const dbParty = await PartyDB.getParty(partyID)
+        if (dbParty) {
+            console.log(`[Pool] Found ${partyID} in DB`)
+            this.registerParty(partyID, dbParty)
+            return dbParty
         }
         return null;
     }
@@ -70,12 +88,18 @@ class Pool {
         setInterval(() => {
             this.connectionPool.forEach((party) => {
                 // console.log(party.connected);
-                if (party.connected.entries().toArray().length === 0 && this.hasElapsedCheck(party.lastEmpty, 100)) {
+                if (party.connected.entries().toArray().length === 0 && this.hasElapsedCheck(party.lastEmpty, 30)) {
                     this.removeParty(party.partyID);
                     console.log(`Party ${party.partyID} was deleted for inactivity`)
                 }
             });
         }, 3000);
+    }
+
+    monitorDB() {
+        setInterval(() => {
+            PartyDB.clean();
+        }, 30000);
     }
 
     broadcastAllParties(message: string): void {
@@ -90,8 +114,8 @@ class Pool {
         });
     }
 
-    connectUser(user: User, partyID: string, socketID: string): {connected: boolean, error?: string} {
-        const party = this.partyExists(partyID)
+    async connectUser(user: User, partyID: string, socketID: string): Promise<{connected: boolean, error?: string}> {
+        const party = await this.partyExists(partyID)
         if (party) {
             party.addUser(user, socketID)
             return {connected: true};

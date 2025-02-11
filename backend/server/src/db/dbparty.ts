@@ -9,7 +9,7 @@ class PartyDB {
         const release = await this.partyMutex.acquire();
         try {
             const party = Party.create({ partyID, host });
-            party.participants = [host];
+            party.participants = [];
             await party.save();
             return party;
         } finally {
@@ -70,6 +70,41 @@ class PartyDB {
             where: { partyID },
             relations: ['host', 'participants']
         });
+    }
+
+    static async deleteParty(partyID: string): Promise<boolean | null> {
+        const parties = await Party.find({
+            where: { partyID }
+        })
+
+        if (parties.length > 0) {
+            Party.remove(parties)
+            return true;
+        }
+
+        return false;
+    }
+
+    static async clean() {
+        const release = await this.partyMutex.acquire()
+        
+        try {
+            const parties = await Party.createQueryBuilder("party")
+            .leftJoinAndSelect("party.participants", "participant")
+            .where("participant.userID IS NULL")
+            .getMany();
+
+            if (parties.length > 0) {
+                await Party.remove(parties);
+                console.log(`Cleaned ${parties.length} parties from database`)
+            }
+        } catch (error) {
+            if (!String(error).trim().includes("DataSource is not set for this entity.")) {
+                console.log(`PartyDB::clean resulted in error: ${error}`)
+            }
+        } finally {
+            release()
+        }
     }
 }
 

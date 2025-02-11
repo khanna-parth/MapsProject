@@ -6,6 +6,7 @@ const ROUTES = {
     GET_FRIENDS: "/social/friends",
     SEARCH_USERS: "/social/search",
     CREATE_PARTY: "/party/create",
+    MODIFY_PARTY: "/party/modify",
     JOIN_PARTY: "/party/join",
     PARTY_STATUS: "/party/status",
     GET_DIRECTIONS: "/routing/fetch",

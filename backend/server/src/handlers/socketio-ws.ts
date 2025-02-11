@@ -53,12 +53,21 @@ export function setupSocketIO(server: HttpServer) {
             return;
         }
 
-        const party = pool.partyExists(partyID);
+        const party = await pool.partyExists(partyID);
         if (!party) {
             console.log("/join request to a non-existent party");
             socket.disconnect();
             return;
         }
+
+        const access = party.invited.find((invitedUsers) => invitedUsers.userID == userID);
+        if (!access && party.host.userID != userID) {
+            console.log(`${userID} has not been invited to party ${partyID}. Denying request`);
+            socket.disconnect();
+            return;
+        }
+
+        console.log(`[Party] ${userID} was found in invited users.`)
 
         const existingParty = pool.isUserConnected(userID);
         if (existingParty) {
@@ -79,13 +88,13 @@ export function setupSocketIO(server: HttpServer) {
         validUser.setConnection(socket, socket.id);
         pool.connectUser(validUser, partyID, socket.id)
 
-        console.log(`Connected user ${userID} to party ${partyID}!`)
+        console.log(`[Party]: Connected user ${userID} to party ${partyID}!`)
 
         socket.emit('connected', `Connected to ${partyID}`);
 
 
-        socket.on('message', (message: string) => {
-            const party = pool.partyExists(partyID);
+        socket.on('message', async (message: string) => {
+            const party = await pool.partyExists(partyID);
             if (party) {
                 const jsonMessage = {
                     userID,

@@ -1,12 +1,12 @@
 import cluster from 'cluster';
 import axios from 'axios';
 import express, { Request, Response } from 'express';
-import { createParty, getParty  } from './handlers/party';
+import { createParty, getParty, modifyParty  } from './handlers/party';
 import ROUTES from './routes/routes';
 import { createUser, loginUser } from './handlers/auth';
 import { connectDB } from './db/client';
 import { addFriend, getFriends, removeFriend, searchUsers } from './handlers/social';
-import { AccessUserRequest, AddFriendsRequest, CreatePartyRequest, DirectionsRequest, SearchNearbyRequest } from './models/connection/requests';
+import { AccessUserRequest, AddFriendsRequest, CreatePartyRequest, DirectionsRequest, PartyModifcationRequest, SearchNearbyRequest } from './models/connection/requests';
 import { setupSocketIO } from './handlers/socketio-ws';
 import { getDirections, nearbyPlaces, searchPlaces } from './ext/gmaps';
 import { Coordinates} from './models/geolocation';
@@ -48,11 +48,7 @@ app.post(ROUTES.CREATE_PARTY, async (req: Request, res: Response) => {
         
         if (result.success) {
             console.log(`Created party ${result.partyID} for host: ${userID}`);
-            res.status(result.code).json({
-                partyID: result.partyID,
-                host: result.host,
-                participants: result.participants
-            });
+            res.status(result.code).json(result.partyID);
         } else {
             console.log(`Failed to create party: ${result.error}`);
             res.status(result.code).json({
@@ -66,6 +62,27 @@ app.post(ROUTES.CREATE_PARTY, async (req: Request, res: Response) => {
         });
     }
 });
+
+app.post(ROUTES.MODIFY_PARTY, async (req: Request, res: Response) => {
+    const {userID, partyID, modification, data}: PartyModifcationRequest = req.body;
+    try {
+        if (data.properties == undefined) {
+            res.status(400).json({'error': 'Party modification properties must be given'})
+            return
+        }
+        const result = await modifyParty(userID, partyID, modification, data.properties)
+
+        if (result.code === 200) {
+            res.status(200).json({'message': `${modification} changed processed`})
+        } else {
+            res.status(result.code).json({'error': result.error})
+        }
+
+    } catch (error) {
+        console.log('Unexpected error modifying party:', error);
+        res.status(500).json({error: 'Internal server error'});
+    }
+})
 
 // PARTY JOIN IN ws.ts
 

@@ -7,4 +7,9 @@ type PartyCreationResult = {
     error?: string;
 };
 
-export { PartyCreationResult };
+interface PartyModificationResponse {
+    code: number;
+    error?: string;
+}
+
+export { PartyCreationResult, PartyModificationResponse };

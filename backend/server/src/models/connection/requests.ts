@@ -1,3 +1,4 @@
+import { PartyModificationData } from "../deps/party-deps";
 import { Coordinates } from "../geolocation";
 
 interface CreatePartyRequest {
@@ -37,4 +38,13 @@ interface SearchNearbyRequest {
     long: number;
   }
 
-export { CreatePartyRequest, AccessUserRequest, AddFriendsRequest, GetFriendsRequest, SearchUsersRequest, DirectionsRequest, SearchNearbyRequest }
+  interface PartyModifcationRequest {
+    userID: string;
+    partyID: string;
+    modification: string;
+    data: {
+        properties: PartyModificationData
+    }
+}
+
+export { CreatePartyRequest, AccessUserRequest, AddFriendsRequest, GetFriendsRequest, SearchUsersRequest, DirectionsRequest, SearchNearbyRequest, PartyModifcationRequest }

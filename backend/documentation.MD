@@ -124,6 +124,8 @@ Group: /social
 
 Group: /party
 
+TODO: Add changable states for party access: RESTRICTED and OPEN
+
 /party/create will be a POST request that will return with a 200 OK response or 400, 500 error codes. Response content is not relevant
     Request data:
         string userID: User identifier for creating party
@@ -140,6 +142,30 @@ Group: /party
         You must connect to the same party using the same partyID within the companion /join endpoint within ~30 second set timeframe.
         If the member count for the party hits 0 at any point in time and at the same time the party monitoring interval has struck, the party object will be deleted and removed from the pool
         This is to prevent tons of empty parties to be allocated/monitored which consumes system resouces
+        Party access is set to restricted
+
+/party/modify will be a POST request that will return with a 200 OK response or 400, 500 error codes. Response content is not relevant
+    Request data:
+        string userID: User identifier to validate user
+        string partyID: Party identifier to validate party
+        string change: Supported change type
+        obj data {
+            string user: username for party access change
+        }
+    Validation:
+        If fields are empty, will return 400 Bad Request error code
+    Task:
+        After verifying that the fields are included, it will make the designated change to the party
+    Use:
+        Used to change access control of a party. Default is closed to all
+    NOTE/BEHAVIOR:
+        Normal HTTP request
+        Party host does not need access control to be changed to allow
+        Pary host or anyone in party can change access control
+        Only 'user' property field is currently supported, will add more later
+        Supported changes are "INVITE", "DEINVITE"
+        Will add "RESTRICTED" and "OPEN" to change party accessibility LATER
+
 
 /party/join will be a SocketIO request that will result in a successful SocketIO connection result or an error
     Request URL parameters:
@@ -156,6 +182,8 @@ Group: /party
         Upon disconnecting from the party, the registerd user provided in this join command will be removed from the party's members.
         If the member count hits 0 at any point of time and at the same time the party monitoring interval has struck, the party object will be deleted and removed from the pool
         If the user (re-)requests this endpoint while already connected, they will be disconnected from the prior connection and added to the new one.
+        Denies if the userID requested was not invited to the party by an authorized party member
+        Party host will override access control restriction
 
     TODO: PROVIDE DOCUMENTATION ON CHANNELS
 
