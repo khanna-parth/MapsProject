@@ -1,12 +1,19 @@
-import { StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native'
-import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native'
+import React, { useState, useEffect, useRef } from 'react';
 import MapView, { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Location from 'expo-location';
 
+import data from '../utils/defaults/assets.js'
 import { getNearbyPlaces, getDistance } from '../utils/mapUtils.js';
+
+import Button from '../components/Button.jsx'
 
 const Map = ({ location, setLocation }) => {
     //const [location, setLocation] = useState(null);
+    const mapRef = useRef(null);
+    const [cameraDirection, setCameraDirection] = useState(0);
+
     const [places, setPlaces] = useState([null]);
     const [previousLocation, setPreviousLocation] = useState(null);
     const [timeoutId, setTimeoutId] = useState(null);
@@ -65,7 +72,7 @@ const Map = ({ location, setLocation }) => {
     };
     
     // When camera moves
-    const handleRegionChangeComplete = (region) => {
+    const handleRegionChangeComplete = async (region) => {
         const distance = getDistance(
             previousLocation.latitude,
             previousLocation.longitude,
@@ -118,45 +125,111 @@ const Map = ({ location, setLocation }) => {
         )
     }
 
-    return (
-        <MapView 
-            style={styles.map}
-            provider={PROVIDER_DEFAULT}
-            showsUserLocation={true}
-            showsMyLocationButton={true}
-            showsPointsOfInterest={false}
-            initialRegion={{
+    // Move to location button
+    const locationPressed = () => {
+        if (location && mapRef.current) {
+            mapRef.current.animateToRegion({
                 latitude: location.latitude,
                 longitude: location.longitude,
-                latitudeDelta: 0.1,
-                longitudeDelta: 0.1,
-            }}
-            onRegionChange={() => {
-                if (timeoutId) {
-                    clearTimeout(timeoutId);
-                    setTimeoutId(null);
-                }
-            }}
-            onRegionChangeComplete={handleRegionChangeComplete}
-        >
-            {
-            places.map((place, index) => (
-                <Marker
-                    key={index}
-                    coordinate={{
-                        latitude: place.coordinates.lat,
-                        longitude: place.coordinates.long,
-                    }}
-                    title={place.address}
-                />
-            ))}
-        </MapView>
+                latitudeDelta: 0.015,
+                longitudeDelta: 0.015,
+            }, 1000);
+        }
+    }
+
+    // Reset camera to north
+    const resetToNorth = () => {
+        if (mapRef.current) {
+            mapRef.current.animateCamera({ heading: 0 }, 500);
+            setCameraDirection(0);
+        }
+    };
+
+    return (
+        <View style={styles.map}>
+            <MapView 
+                style={styles.map}
+                ref={mapRef}
+                provider={PROVIDER_DEFAULT}
+                showsUserLocation={true}
+                //showsMyLocationButton={true}
+                showsPointsOfInterest={true}
+                showsCompass={false}
+                initialRegion={{
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    latitudeDelta: 0.1,
+                    longitudeDelta: 0.1,
+                }}
+                onRegionChange={async () => {
+                    if (timeoutId) {
+                        clearTimeout(timeoutId);
+                        setTimeoutId(null);
+                    }
+
+                    // Camera direction
+                    if (mapRef.current) {
+                        const camera = await mapRef.current.getCamera();
+                        setCameraDirection(camera.heading);
+                    }
+                }}
+                onRegionChangeComplete={handleRegionChangeComplete}
+            >
+                {
+                places.map((place, index) => (
+                    <Marker
+                        key={index}
+                        coordinate={{
+                            latitude: place.coordinates.lat,
+                            longitude: place.coordinates.long,
+                        }}
+                        title={place.address}
+                    />
+                ))}
+            </MapView>
+            <Button icon="location-arrow" iconColor="white" style={{bottom: 150, right: 10}} functionCall={locationPressed}/>
+            {cameraDirection !== 0 && (
+                <Button icon="compass" iconColor="white" style={{bottom: 220, right: 10}} functionCall={resetToNorth} />
+            )}
+        </View>
     )
 };
 
 const styles = StyleSheet.create({
     map: {
         ...StyleSheet.absoluteFillObject,
+    },
+    locationButton: {
+        position: 'absolute',
+        right: 10,
+        top: 120,
+        width: 50,
+        height: 50,
+        backgroundColor: data.colors.primaryColor,
+        borderRadius: 25,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: 'black',
+        shadowOffset: { width: 6, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 10,
+    },
+    compassButton: {
+        position: 'absolute',
+        right: 10,
+        top: 180,
+        width: 50,
+        height: 50,
+        backgroundColor: data.colors.primaryColor,
+        borderRadius: 25,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: 'black',
+        shadowOffset: { width: 6, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 10,
     },
 });
 

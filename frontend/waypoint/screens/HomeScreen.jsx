@@ -10,15 +10,10 @@ import Map from '../components/Map';
 import Searchbar from '../components/Searchbar';
 
 const HomeScreen = () => {
-    const snapPoints = useMemo(() => ['15%', '20%', '50%', '85%'], [])
-
     const bottomSheetRef = useRef<BottomSheet>(null);
+    const bottomSheetSnapPoints = useMemo(() => ['15%', '20%', '50%', '85%'], [])
 
     const [location, setLocation] = useState(null);
-
-    const handleSheetChanges = (index) => {
-        //console.log('handleSheetChanges', index);
-    };
 
     return (
         <View style={styles.container}>
@@ -27,9 +22,8 @@ const HomeScreen = () => {
             <GestureHandlerRootView style={styles.swipeUpContainer}>
                 <BottomSheet
                     useRef={bottomSheetRef}
-                    snapPoints={snapPoints}
+                    snapPoints={bottomSheetSnapPoints}
                     backgroundStyle={{ backgroundColor: data.colors.offWhite }}
-                    onChange={handleSheetChanges}
                     index={0}
                 >
                     <BottomSheetView style={styles.swipeUpContentContainer}>

@@ -10,7 +10,7 @@ const { width, height } = Dimensions.get('window');
 const Searchbar = ({style, location}) => {
     const navigation = useNavigation();
 
-    const searchTouched = () => {
+    const searchbarTouched = () => {
         Keyboard.dismiss();
         navigation.navigate(
             'MapSearch', 
@@ -21,7 +21,7 @@ const Searchbar = ({style, location}) => {
     return (
         <View 
             style={[styles.container, style]}
-            onTouchStart={searchTouched}
+            onTouchStart={searchbarTouched}
         >   
             <View style={styles.textInput}>
                 <Text style={styles.placeHolderText}>Search</Text>
