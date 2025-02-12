@@ -64,13 +64,13 @@ app.post(ROUTES.CREATE_PARTY, async (req: Request, res: Response) => {
 });
 
 app.post(ROUTES.MODIFY_PARTY, async (req: Request, res: Response) => {
-    const {userID, partyID, modification, data}: PartyModifcationRequest = req.body;
+    const {userID, partyID, modification, properties}: PartyModifcationRequest = req.body;
     try {
-        if (data.properties == undefined) {
-            res.status(400).json({'error': 'Party modification properties must be given'})
-            return
-        }
-        const result = await modifyParty(userID, partyID, modification, data.properties)
+        // if (data.user == undefined) {
+        //     res.status(400).json({'error': 'Party modification properties must be given'})
+        //     return
+        // }
+        const result = await modifyParty(userID, partyID, modification, properties)
 
         if (result.code === 200) {
             res.status(200).json({'message': `${modification} changed processed`})

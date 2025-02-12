@@ -10,7 +10,7 @@ class Pool {
 
     private constructor() {
         this.monitor();
-        this.monitorDB();
+        // this.monitorDB();
     }
 
     static getInstance(): Pool {

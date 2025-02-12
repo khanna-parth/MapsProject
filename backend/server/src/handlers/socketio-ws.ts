@@ -55,6 +55,7 @@ export function setupSocketIO(server: HttpServer) {
 
         const party = await pool.partyExists(partyID);
         if (!party) {
+            pool.listPool();
             console.log("/join request to a non-existent party");
             socket.disconnect();
             return;
@@ -62,6 +63,9 @@ export function setupSocketIO(server: HttpServer) {
 
         const access = party.invited.find((invitedUsers) => invitedUsers.userID == userID);
         if (!access && party.host.userID != userID) {
+            console.log(party.invited)
+            console.log(party.connected)
+            console.log(party.host)
             console.log(`${userID} has not been invited to party ${partyID}. Denying request`);
             socket.disconnect();
             return;
@@ -86,7 +90,7 @@ export function setupSocketIO(server: HttpServer) {
         }
 
         validUser.setConnection(socket, socket.id);
-        pool.connectUser(validUser, partyID, socket.id)
+        await pool.connectUser(validUser, partyID, socket.id)
 
         console.log(`[Party]: Connected user ${userID} to party ${partyID}!`)
 

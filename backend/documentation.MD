@@ -142,7 +142,7 @@ TODO: Add changable states for party access: RESTRICTED and OPEN
         You must connect to the same party using the same partyID within the companion /join endpoint within ~30 second set timeframe.
         If the member count for the party hits 0 at any point in time and at the same time the party monitoring interval has struck, the party object will be deleted and removed from the pool
         This is to prevent tons of empty parties to be allocated/monitored which consumes system resouces
-        Party access is set to restricted
+        All party access is set to restricted
 
 /party/modify will be a POST request that will return with a 200 OK response or 400, 500 error codes. Response content is not relevant
     Request data:

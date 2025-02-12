@@ -4,8 +4,8 @@ import io from 'socket.io-client';
 import axios from 'axios';
 
 const data = {
-    // "userID": "32ba5ef2-c7ce-42fe-b1e9-1cfcf7397f70"
-    "userID": "230a7b59-ba46-4972-9a73-eec7baa7b4bc"
+    "userID": "32ba5ef2-c7ce-42fe-b1e9-1cfcf7397f70"
+    // "userID": "230a7b59-ba46-4972-9a73-eec7baa7b4bc"
 }
 // const resp = await axios.post("http://localhost:3010/party/create", data);
 
@@ -21,7 +21,7 @@ const socket = io('http://localhost:3010', {
     query: {
         userID: data.userID,
         // partyID: resp.data
-        partyID: "861046",
+        partyID: "365704",
     }
 });
 

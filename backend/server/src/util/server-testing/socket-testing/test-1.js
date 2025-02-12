@@ -4,7 +4,8 @@ import io from 'socket.io-client';
 import axios from 'axios';
 
 const data = {
-    "userID": "32ba5ef2-c7ce-42fe-b1e9-1cfcf7397f70"
+    // "userID": "32ba5ef2-c7ce-42fe-b1e9-1cfcf7397f70"
+    "userID": "461f03fa-c407-466c-b0db-069c195e5e62"
 }
 const resp = await axios.post("http://localhost:3010/party/create", data);
 

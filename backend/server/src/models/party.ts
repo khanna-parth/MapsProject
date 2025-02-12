@@ -48,10 +48,12 @@ class Party extends BaseEntity {
         return { removed: true }
     }
 
-    addUser(user: User, socketID: string): void {
-        this.connected= this.connected.set(socketID, user)
+    async addUser(user: User, socketID: string): Promise<void> {
+        this.connected = this.connected.set(socketID, user)
         // this.connected.push(user);
         this.checkUpdateEmpty();
+        await this.save();
+
     }
 
     removeUser(socketID: string): void {

@@ -42,9 +42,7 @@ interface SearchNearbyRequest {
     userID: string;
     partyID: string;
     modification: string;
-    data: {
-        properties: PartyModificationData
-    }
+    properties: PartyModificationData
 }
 
 export { CreatePartyRequest, AccessUserRequest, AddFriendsRequest, GetFriendsRequest, SearchUsersRequest, DirectionsRequest, SearchNearbyRequest, PartyModifcationRequest }

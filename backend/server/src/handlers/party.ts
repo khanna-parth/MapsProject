@@ -103,9 +103,6 @@ const modifyParty = async (userID: string, partyID: string, change: string, data
     }
     const modifications = Object.values(PartyModification).map((mod) => mod.toString());
 
-    console.log(modifications);
-    console.log(change)
-    console.log(data)
     if (modifications.includes(change)) {
         switch (change) {
             case PartyModification.DEINVITE:
