@@ -11,6 +11,7 @@ import { setupSocketIO } from './handlers/socketio-ws';
 import { getDirections, nearbyPlaces, searchPlaces } from './ext/gmaps';
 import { Coordinates} from './models/geolocation';
 import { error } from 'console';
+import { UserDB } from './db/dbuser';
 
 const app = express();
 
@@ -221,6 +222,11 @@ app.get("/ping", async (req: Request, res: Response) => {
     res.status(200).json({
         "message": "pong"
     })
+})
+
+app.get("/users/all", async (req: Request, res: Response) => {
+    const users = await UserDB.dbAllUsers();
+    res.status(200).json(users);
 })
 
 if (cluster.isPrimary) {

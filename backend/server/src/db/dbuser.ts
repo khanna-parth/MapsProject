@@ -34,6 +34,12 @@ class UserDB {
         });
         return users.map(user => user.username);
     }
+
+    static async dbAllUsers(): Promise<User[]> {
+        const users = await User.find({})
+
+        return users;
+    }
 }
 
 export { UserDB }
