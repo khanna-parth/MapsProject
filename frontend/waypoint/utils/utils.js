@@ -2,11 +2,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Keychain from 'react-native-keychain';
 
 import { LOCAL_HOST } from '@env';
-//const LOCALHOST = process.env.LOCAL_HOST
+
+let storedData = [];
+
+export const cleanupData = async () => {
+    for (let i = 0; i < storedData.length; i++) {
+        try {
+            await AsyncStorage.removeItem(storedData[i]);
+        } catch (e) {
+            
+        }
+    }
+}
 
 export const storeData = async (key, value) => {
     try {
         await AsyncStorage.setItem(String(key), String(value));
+        storedData.push(String(key));
         return { error: false, message: "Created successfully." }
     } catch (e) {
         return { error: true, message: "Error writing to key." }

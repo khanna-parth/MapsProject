@@ -49,6 +49,7 @@ export const getUsers = async (prompt) => {
 };
 
 export const joinParty = async (userID, partyID) => {
+    console.log(`Joining party with ${userID}, ${partyID}.`);
     try {
         return new Promise((resolve, reject) => {
             const socket = io(`http://${LOCAL_HOST}`, {
