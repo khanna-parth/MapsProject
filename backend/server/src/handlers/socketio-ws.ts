@@ -116,6 +116,11 @@ export function setupSocketIO(server: HttpServer) {
             }
         });
 
+        socket.on('location', async (locationData) => {
+            socket.emit('location', locationData);
+            // console.log(`[Party] Received location from ${userID}:`, locationData);
+        });
+
         socket.on('disconnect', async () => {
             console.log(`User ${userID} disconnected from party ${partyID}`);
             pool.disconnectBySocketID(socket.id)
