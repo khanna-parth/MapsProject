@@ -97,6 +97,8 @@ export function setupSocketIO(server: HttpServer) {
 
         console.log(`[Party]: Connected user ${userID} to party ${partyID}!`)
 
+        socket.emit('partyUpdate', `Someone joined the party.`); // Added this to update party list - Grant
+
         socket.emit('connected', `Connected to ${partyID}`);
 
 
@@ -116,6 +118,7 @@ export function setupSocketIO(server: HttpServer) {
             }
         });
 
+        // Added this to send location to all party members - Grant
         socket.on('location', async (locationData) => {
             socket.emit('location', locationData);
             // console.log(`[Party] Received location from ${userID}:`, locationData);
@@ -123,6 +126,7 @@ export function setupSocketIO(server: HttpServer) {
 
         socket.on('disconnect', async () => {
             console.log(`User ${userID} disconnected from party ${partyID}`);
+            socket.emit('partyUpdate', `Someone has left the party.`); // Added this to update party list - Grant
             pool.disconnectBySocketID(socket.id)
             await PartyDB.leaveParty(partyID, validUser);
         });
