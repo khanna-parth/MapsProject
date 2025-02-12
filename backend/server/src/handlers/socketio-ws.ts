@@ -63,9 +63,12 @@ export function setupSocketIO(server: HttpServer) {
 
         const access = party.invited.find((invitedUsers) => invitedUsers.userID == userID);
         if (!access && party.host.userID != userID) {
-            console.log(party.invited)
-            console.log(party.connected)
-            console.log(party.host)
+            console.log("Invited")
+            console.log(party.invited.map((user) => user.username))
+            console.log("Connected:")
+            console.log(party.connected.values().map((user) => user.username))
+            console.log("Host:")
+            console.log(party.host.username)
             console.log(`${userID} has not been invited to party ${partyID}. Denying request`);
             socket.disconnect();
             return;
@@ -111,6 +114,11 @@ export function setupSocketIO(server: HttpServer) {
                 socket.emit('error', errorMessage);
                 socket.disconnect();
             }
+        });
+
+        socket.on('location', async (locationData) => {
+            socket.emit('location', locationData);
+            // console.log(`[Party] Received location from ${userID}:`, locationData);
         });
 
         socket.on('disconnect', async () => {
