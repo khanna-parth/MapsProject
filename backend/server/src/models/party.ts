@@ -63,7 +63,16 @@ class Party extends BaseEntity {
     }
 
     userExists(userID: string): boolean {
-        return this.connected.get(userID) != undefined
+        const found = this.connected.values().find((user) => user.userID === userID);
+        if (found) {
+            return true;
+        }
+        return false;
+        // return this.connected.some(user => user.userID === userID)
+    }
+
+    userExistsBySocketID(socketID: string): boolean {
+        return this.connected.get(socketID) != undefined
         // return this.connected.some(user => user.userID === userID)
     }
 

@@ -7,13 +7,21 @@ import { PartyDB } from "../db/dbparty";
 import { UserDB } from "../db/dbuser";
 import { PartyModification, PartyModificationData } from "../models/deps/party-deps";
 
+// interface PartyDisplay {
+//     partyID: string;
+//     connected: Partial<User>[];
+//     lastEmpty: number;
+//     host?: string;
+//     participants?: string[];
+// }
+
 interface PartyDisplay {
-    partyID: string;
-    connected: Partial<User>[];
-    lastEmpty: number;
-    host?: string;
-    participants?: string[];
-}
+        partyID: string;
+        connected: string[];
+        lastEmpty: number;
+        host?: string;
+        participants?: string[];
+    }
 
 const createParty = async (userID: string): Promise<PartyCreationResult> => {
     if (!checkValidString(userID)) {
@@ -38,7 +46,6 @@ const createParty = async (userID: string): Promise<PartyCreationResult> => {
         const partyIDString = partyID.toString();
 
         // Create database record
-        console.log('Creating')
         const dbParty = await PartyDB.createParty(partyIDString, user);
 
         pool.registerParty(partyIDString, dbParty);
@@ -72,6 +79,7 @@ const getParty = (userID: string, partyID: string): { party?: PartyDisplay, code
     const existingParty = pool.listPool().find(party => party.partyID === partyID);
     if (existingParty) {
         if (!existingParty.userExists(userID)) {
+            console.log(pool.listPool())
             return { code: 403, error: `You do not have access to this party` };
         }
 
@@ -80,7 +88,7 @@ const getParty = (userID: string, partyID: string): { party?: PartyDisplay, code
 
         const partyDisplay: PartyDisplay = {
             partyID: existingParty.partyID,
-            connected: connectedUsers,
+            connected: connectedUsers.map((user) => user.username ?? ""),
             lastEmpty: existingParty.lastEmpty,
             host: existingParty.host?.username,
             participants: existingParty.participants?.map(p => p.username)

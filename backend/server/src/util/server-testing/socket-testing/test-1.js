@@ -4,8 +4,7 @@ import io from 'socket.io-client';
 import axios from 'axios';
 
 const data = {
-    // "userID": "32ba5ef2-c7ce-42fe-b1e9-1cfcf7397f70"
-    "userID": "461f03fa-c407-466c-b0db-069c195e5e62"
+    "userID": "32ba5ef2-c7ce-42fe-b1e9-1cfcf7397f70"
 }
 const resp = await axios.post("http://localhost:3010/party/create", data);
 
@@ -16,6 +15,7 @@ if (resp.status !== 201) {
 
 console.log(`Connecting`)
 const socket = io('http://localhost:3010', {
+// const socket = io('http://192.168.1.20:3010', {
     path: "/party/join",
     transports: ['websocket'],  // Force WebSocket transport
     query: {
