@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, Image, TextInput, FlatList, Modal, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, Image, TextInput, FlatList, Modal, TouchableOpacity, SafeAreaView } from 'react-native';
 import React, { useState, useEffect } from 'react';
 
 const defaultImage = require("../assets/default-avatar-icon.jpg")
@@ -7,7 +7,7 @@ import data from '../utils/defaults/assets.js'
 import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
 import { getUserFriends, joinParty } from '../utils/userUtils.js';
 
-function InviteScreen({ visible, onRequestClose, updateParty }) {
+function InviteScreen({ visible, onRequestClose, updateParty, setPartySocket }) {
     const [username, setUsername] = useState("");
 
     const [friendList, setFriendList] = useState([]);
@@ -40,21 +40,23 @@ function InviteScreen({ visible, onRequestClose, updateParty }) {
         // If user does not have a saved party ID, meaning they have no party
         if (partyID.error) {
             const createdPartyData = await postRequest('party/create', {userID: userID.data});
-            console.log(createdPartyData)
 
             if (!createdPartyData.error) {
-                await joinParty(userID.data, createdPartyData.data);
+                // const partySocket = await joinParty(userID.data, createdPartyData.data);
+                // setPartySocket(partySocket);
                 await storeData('partyID', createdPartyData.data);
                 await updateParty();
+                await postRequest('party/modify', {userID: userID.data, partyID: createdPartyData.data, modification: "invite", properties: {user: invitedUser}});
+                
             }
-            // Invite bruh
 
-        // If user already has a saved party ID, meaning they were in party
+        // If user already has a saved party ID, meaning they were in party, join it
         } else {
-            await joinParty(userID.data, partyID.data);
-
+            // const partySocket = await joinParty(userID.data, partyID.data);
+            // setPartySocket(partySocket);
             await updateParty();
-            // Send invite to bruh
+            await postRequest('party/modify', {userID: userID.data, partyID: partyID.data, modification: "invite", properties: {user: invitedUser}});
+            
         }
     };
 
@@ -70,41 +72,43 @@ function InviteScreen({ visible, onRequestClose, updateParty }) {
             animationType='slide'
             presentationStyle='pageSheet'
             onRequestClose={ onRequestClose }>
-            <View style={styles.modalContainer}>
-                <Text style={styles.modalTitle}>Invite Friend</Text>
-                <TextInput 
-                    style={styles.textInput} 
-                    placeholder='Search'
-                    value={username}
-                    onChangeText={setUsername}
-                />
-                <FlatList 
-                    data={friendList}
-                    //data={[{ "userID": "7", "username": "Theo" }, { "userID": "8", "username": "Collin" }]}
-                    renderItem={({ item }) => {
-                        return (
-                            <View style={styles.card} key={item.cardID}>
-                                <Image source={defaultImage} style={styles.cardImage}/>
-                                <View style={styles.cardTextArea} key={item.cardID}>
-                                    <Text style={styles.cardText}>{item.username}</Text>
-                                    <TouchableOpacity onPress={() => inviteButtonPressed(item.username)}>
-                                        <Image source={data.images.plusIcon} style={styles.cardPlusImage}/>
-                                    </TouchableOpacity>
+            <SafeAreaView style={styles.modalContainer}>
+                <View style={styles.modalViewContainer}>
+                    <Text style={styles.modalTitle}>Invite Friend</Text>
+                    <TextInput 
+                        style={styles.textInput} 
+                        placeholder='Search'
+                        value={username}
+                        onChangeText={setUsername}
+                    />
+                    <FlatList 
+                        data={friendList}
+                        //data={[{ "userID": "7", "username": "Theo" }, { "userID": "8", "username": "Collin" }]}
+                        renderItem={({ item }) => {
+                            return (
+                                <View style={styles.card} key={item.cardID}>
+                                    <Image source={defaultImage} style={styles.cardImage}/>
+                                    <View style={styles.cardTextArea} key={item.cardID}>
+                                        <Text style={styles.cardText}>{item.username}</Text>
+                                        <TouchableOpacity onPress={() => inviteButtonPressed(item.username)}>
+                                            <Image source={data.images.plusIcon} style={styles.cardPlusImage}/>
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
-                            </View>
-                        );
-                    }}
-                    horizontal={false}
-                    keyExtractor={(item) => item.cardID.toString()}
-                    ItemSeparatorComponent={<View style={{ height: 16 }} />}
-                    ListEmptyComponent={<Text style={{textAlign: 'center', fontSize: 20,}}>No Friends Founds</Text>}
-                    ListHeaderComponent={<Text style={styles.listHeaderText}>Friends</Text>}
-                />
-                {/* <Button title='Close' color={data.colors.primaryColor} onPress={() => {
-                    setSearchModalVisible(false); 
-                    setUsername("");getPartyID
-                }} />                 */}
-            </View>
+                            );
+                        }}
+                        horizontal={false}
+                        keyExtractor={(item) => item.cardID.toString()}
+                        ItemSeparatorComponent={<View style={{ height: 16 }} />}
+                        ListEmptyComponent={<Text style={{textAlign: 'center', fontSize: 20,}}>No Friends Founds</Text>}
+                        ListHeaderComponent={<Text style={styles.listHeaderText}>Friends</Text>}
+                    />
+                    {/* <Button title='Close' color={data.colors.primaryColor} onPress={() => {
+                        setSearchModalVisible(false); 
+                        setUsername("");getPartyID
+                    }} />                 */}
+                </View>
+            </SafeAreaView>
         </Modal>
     );
 }
@@ -113,6 +117,9 @@ const styles = StyleSheet.create({
     modalContainer: {
         flex: 1,
         backgroundColor: data.colors.offWhite,
+    },
+    modalViewContainer: {
+        flex: 1,
         padding: 16,
         paddingBottom: 0,
     },

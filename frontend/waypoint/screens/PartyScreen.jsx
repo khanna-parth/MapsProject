@@ -6,7 +6,7 @@ import UserSearchScreen from './UserSearch';
 import UserInviteScreen from './UserInvite';
 
 import data from '../utils/defaults/assets.js'
-import { storeData, getData, removeData, postRequest, getRequest } from '../utils/utils.js';
+import { storeData, getData, removeData, postRequest, getRequest, cleanupData } from '../utils/utils.js';
 import { joinParty } from '../utils/userUtils';
 
 function PartyScreen() {
@@ -14,7 +14,7 @@ function PartyScreen() {
     const test = async () => {
         //await removeData('partyID');
 
-        const loginData = await postRequest('auth/login', {username: "admin", password: "admin"});
+        const loginData = await postRequest('auth/login', {username: "test", password: "test"});
 
         if (!loginData.error) {
             await storeData("username", loginData.data.username);
@@ -35,14 +35,7 @@ function PartyScreen() {
 
     const [partyList, setPartyList] = useState([]);
     const [partyID, setPartyID] = useState();
-
-    const getPartyID = async () => {
-        const partyID = await getData('partyID');
-
-        if (!partyID.error) {
-            setPartyID(partyID.data);
-        }
-    };
+    const [partySocket, setPartySocket] = useState();
     
     // Get the party details of the user and update the list
     const getPartyList = async () => {
@@ -55,10 +48,18 @@ function PartyScreen() {
             return {error: true, message: "User not in party."}
         }
 
+        if (!partySocket) {
+            const partySocketData = await joinParty(userID.data, partyID.data);
+            setPartySocket(partySocketData);
+        }
+
         const partyData = await postRequest('party/status', {userID: userID.data, partyID: partyID.data});
+
+        console.log(partyData)
 
         if (partyData.error) {
             removeData('partyID');
+            setPartySocket();
             return {error: true, message: "User does not have permission to join party."}
         } else {
             let partyMembers = []
@@ -67,7 +68,7 @@ function PartyScreen() {
                 partyMembers.push({username: partyData.data.connected[i].username, userID: i});
             }
 
-            getPartyID();
+            setPartyID(partyID.data)
             setPartyList(partyMembers);
             return {error: false, message: "Party members successfully retrieved"};
         }
@@ -79,8 +80,9 @@ function PartyScreen() {
         const userID = await getData('userID');
 
         if (!partyID.error && !userID.error) {
-            const socketConnection = await joinParty(userID.data, partyID.data);
-            await socketConnection.disconnect();
+            //const socketConnection = await joinParty(userID.data, partyID.data);
+            await partySocket.disconnect();
+            setPartySocket();
             console.log('Party left.');
         } else {
 
@@ -135,10 +137,8 @@ function PartyScreen() {
             {/* List of party members */}
 
             <View style={styles.wrapper}>
-                {/* <Text style={styles.listHeaderText}>Party Members</Text> */}
                 <FlatList 
                     data={partyList}
-                    //data={[{ "userID": "7", "username": "Theo" }, { "userID": "8", "username": "Collin" }]}
                     renderItem={({ item }) => {
                         return (
                             <View style={styles.card} key={item.userID}>
@@ -154,7 +154,6 @@ function PartyScreen() {
                     ItemSeparatorComponent={<View style={{ height: 16 }} />}
                     ListEmptyComponent={
                         <View style={styles.listEmptyContainer}>
-                            {/* <Text style={{textAlign: 'center', fontSize: 24,}}>Join Party: </Text> */}
                             <TextInput 
                                 style={styles.textInput}
                                 keyboardType="numeric" 
@@ -203,6 +202,7 @@ function PartyScreen() {
                     setInviteModalVisible(false);
                 }}
                 updateParty={getPartyList}
+                setPartySocket={setPartySocket}
             ></UserInviteScreen>
         </SafeAreaView>
     );

@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, Image, TextInput, FlatList, Modal, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, Image, TextInput, FlatList, Modal, TouchableOpacity, SafeAreaView } from 'react-native';
 import React, { useState } from 'react';
 
 import data from '../utils/defaults/assets.js'
@@ -64,43 +64,44 @@ function SearchScreen({ visible, onRequestClose }) {
             animationType='slide'
             presentationStyle='pageSheet'
             onRequestClose={ onRequestClose }>
-            <View style={styles.modalContainer}>
-                <Text style={styles.modalTitle}>Search User</Text>
-                <TextInput 
-                    style={styles.textInput} 
-                    placeholder='Search'
-                    value={username}
-                    onChangeText={searchInputChange}
-                />
-                    <FlatList 
-                    data={searchList}
-                    //data={[{ "userID": "7", "username": "Parth Khanna" }, { "userID": "8", "username": "Howard" }]}
-                    renderItem={({ item }) => {
-                        return (
-                            <View style={styles.card} key={item.cardID}>
-                                <Image source={data.images.defaultImage} style={styles.cardImage}/>
-                                <View style={styles.cardTextArea} key={item.cardID}>
-                                    <Text style={styles.cardText}>{item.username}</Text>
-                                    {!item.isFriend && (
-                                        <TouchableOpacity onPress={() => addButtonPressed(item.username)}>
-                                            <Image source={data.images.addFriendIcon} style={styles.cardPlusImage}/>
-                                        </TouchableOpacity>
-                                    )}
+            <SafeAreaView style={styles.modalContainer}>
+                <View style={styles.modalViewContainer}>
+                    <Text style={styles.modalTitle}>Search User</Text>
+                    <TextInput 
+                        style={styles.textInput} 
+                        placeholder='Search'
+                        value={username}
+                        onChangeText={searchInputChange}
+                    />
+                        <FlatList 
+                        data={searchList}
+                        renderItem={({ item }) => {
+                            return (
+                                <View style={styles.card} key={item.cardID}>
+                                    <Image source={data.images.defaultAvatar} style={styles.cardImage}/>
+                                    <View style={styles.cardTextArea} key={item.cardID}>
+                                        <Text style={styles.cardText}>{item.username}</Text>
+                                        {!item.isFriend && (
+                                            <TouchableOpacity onPress={() => addButtonPressed(item.username)}>
+                                                <Image source={data.images.addFriendIcon} style={styles.cardPlusImage}/>
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
                                 </View>
-                            </View>
-                        );
-                    }}
-                    horizontal={false}
-                    keyExtractor={(item) => item.cardID.toString()}
-                    ItemSeparatorComponent={<View style={{ height: 16 }} />}
-                    ListEmptyComponent={<Text style={{textAlign: 'center', fontSize: 20,}}>No Users Founds</Text>}
-                    ListHeaderComponent={<Text style={styles.listHeaderText}>Users</Text>}
-                />
-                {/* <Button title='Close' color={data.colors.primaryColor} onPress={() => {
-                    setSearchModalVisible(false); 
-                    setUsername("");
-                }} />                 */}
-            </View>
+                            );
+                        }}
+                        horizontal={false}
+                        keyExtractor={(item) => item.cardID.toString()}
+                        ItemSeparatorComponent={<View style={{ height: 16 }} />}
+                        ListEmptyComponent={<Text style={{textAlign: 'center', fontSize: 20}}>No Users Founds</Text>}
+                        ListHeaderComponent={<Text style={styles.listHeaderText}>Users</Text>}
+                    />
+                    {/* <Button title='Close' color={data.colors.primaryColor} onPress={() => {
+                        setSearchModalVisible(false); 
+                        setUsername("");
+                    }} />                 */}
+                </View>
+            </SafeAreaView>
         </Modal>
     );
 }
@@ -109,6 +110,9 @@ const styles = StyleSheet.create({
     modalContainer: {
         flex: 1,
         backgroundColor: data.colors.offWhite,
+    },
+    modalViewContainer: {
+        flex: 1,
         padding: 16,
         paddingBottom: 0,
     },

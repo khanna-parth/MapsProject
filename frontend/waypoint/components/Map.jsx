@@ -188,7 +188,7 @@ const Map = ({ location, setLocation }) => {
                 ))}
             </MapView>
             <Button icon="location-arrow" iconColor="white" style={{bottom: 150, right: 10}} functionCall={locationPressed}/>
-            {cameraDirection !== 0 && (
+            {cameraDirection < 355 && cameraDirection > 5 && (
                 <Button icon="compass" iconColor="white" style={{bottom: 220, right: 10}} functionCall={resetToNorth} />
             )}
         </View>
