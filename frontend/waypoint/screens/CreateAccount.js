@@ -3,7 +3,11 @@ import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StyleShee
 
 import { storeData, postRequest } from '../utils/utils.js';
 
+import { useNavigation } from '@react-navigation/native';
+
 function CreateAccountScreen() {
+    const navigation = useNavigation();
+
     // Actual Data
     const [form, setForm] = useState({
         firstName: '',
@@ -62,12 +66,31 @@ function CreateAccountScreen() {
 
         // Create Account
         try {
-            const response = await postRequest('auth/create', { firstName, lastName, username, password });
-
+            const response = await postRequest('auth/create', { username: username, password: password });
+        
             if (!response.error) {
-                const userData = response.data;
-                console.log('Account created successfully:', userData);
+                console.log('Account created successfully:', response.data);
 
+                try {
+                    const response = await postRequest('auth/login', { username: username, password: password });
+        
+                    if (!response.error) {
+                        const userData = response.data;
+                        console.log('Login successful:', userData);
+
+                        setForm()
+        
+                        navigation.navigate('Home');
+                
+                    } else {
+                        console.error('Login failed:', response.message);
+                        alert('Invalid username or password. Please try again.');
+                    }
+
+                } catch (error) {
+                    console.error('Error during login process:', error);
+                    alert('An error occurred. Please try again later.');
+                }
             } else {
                 console.error('Account creation failed:', response.message);
                 alert('Error creating account. Please try again.');
@@ -76,6 +99,7 @@ function CreateAccountScreen() {
             console.error('Error during account creation:', error);
             alert('An error occurred. Please try again later.');
         }
+        
     };
 
     return (
