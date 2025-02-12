@@ -1,13 +1,8 @@
+import React, { useState, useEffect, useRef } from 'react';
 import * as utils from './utils.js';
 import { io } from "socket.io-client";
 
 import { LOCAL_HOST } from '@env';
-
-let partyID = 0
-export const getPartyID = () => {
-    partyID += 1;
-    return String(partyID);
-}
 
 export const getUserFriends = async (currentUser) => {
     const usernameData = await utils.getData("username");
@@ -64,8 +59,12 @@ export const joinParty = async (userID, partyID) => {
             socket.on("connect", () => {
                 console.log("Connected to socket server");
                 resolve(socket);
+            });   
+
+            socket.on("partyUpdate", (socketData) => {
+                console.log(socketData);
             });
-            
+
             socket.on("disconnect", () => {
                 console.log("Disconnected from socket server");
             });

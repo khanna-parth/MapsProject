@@ -1,22 +1,24 @@
-import { StyleSheet, View, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native'
+import { StyleSheet, View, SafeAreaView, ActivityIndicator, Keyboard, Pressable } from 'react-native'
 import React, { useState, useEffect, useRef } from 'react';
 import MapView, { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
-import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Location from 'expo-location';
 
 import data from '../utils/defaults/assets.js'
+import { useGlobalState } from './GlobalStateContext';
 import { getNearbyPlaces, getDistance } from '../utils/mapUtils.js';
+import { getData } from '../utils/utils.js';
 
 import Button from '../components/Button.jsx'
 
-const Map = ({ location, setLocation }) => {
-    //const [location, setLocation] = useState(null);
+const Map = () => {
+    const { userLocation, setUserLocation, partySocket } = useGlobalState();
     const mapRef = useRef(null);
     const [cameraDirection, setCameraDirection] = useState(0);
 
     const [places, setPlaces] = useState([null]);
     const [previousLocation, setPreviousLocation] = useState(null);
     const [timeoutId, setTimeoutId] = useState(null);
+    const locationTimeout = useRef(null);
 
     // Location stuff
     useEffect(() => {
@@ -33,7 +35,7 @@ const Map = ({ location, setLocation }) => {
             const currentLocation = await Location.getCurrentPositionAsync({
                 accuracy: Location.Accuracy.High,
             });
-            setLocation(currentLocation.coords);
+            setUserLocation(currentLocation.coords);
             setPreviousLocation(currentLocation.coords);
 
             // Location updates
@@ -44,7 +46,7 @@ const Map = ({ location, setLocation }) => {
                     distanceInterval: 1, // Moved 1m
                 },
                 (newLocation) => {
-                    setLocation(newLocation.coords);
+                    setUserLocation(newLocation.coords);
                     //setPreviousLocation(currentLocation.coords);
                 }
             );
@@ -63,7 +65,6 @@ const Map = ({ location, setLocation }) => {
     // Get places from coordinates
     const fetchPlaces = async(latitude, longitude) => {
         //const placeData = await getNearbyPlaces(latitude, longitude); // Uncomment when done
-
         const placeData = {error: false, data: [{address: "Pizza My Heart", coordinates: {lat: 36.972285, long: -122.02541699999999}, details: {formattedAddress: "1116 Pacific Ave, Santa Cruz, CA 95060, USA", primaryType: "pizza_restaurant", types: ["pizza_restaurant", "italian_restaurant", "meal_takeaway", "restaurant", "food", "point_of_interest", "establishment"]}}]}
 
         if (!placeData.error) {
@@ -109,28 +110,11 @@ const Map = ({ location, setLocation }) => {
         }
     };
 
-    // Get first stuff on map
-    useEffect(() => {
-        if (location) {
-            fetchPlaces(location.latitude, location.longitude);
-        }
-    }, [location]);
-
-    // Display loading screen while waiting for location
-    if (!location || !places[0]) {
-        return (
-            <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', zIndex: 1000, width: '100%', height: '100%' }}>
-                <ActivityIndicator size="large" animating={true}/>
-            </SafeAreaView>
-        )
-    }
-
-    // Move to location button
     const locationPressed = () => {
-        if (location && mapRef.current) {
+        if (userLocation && mapRef.current) {
             mapRef.current.animateToRegion({
-                latitude: location.latitude,
-                longitude: location.longitude,
+                latitude: userLocation.latitude,
+                longitude: userLocation.longitude,
                 latitudeDelta: 0.015,
                 longitudeDelta: 0.015,
             }, 1000);
@@ -145,53 +129,108 @@ const Map = ({ location, setLocation }) => {
         }
     };
 
-    return (
-        <View style={styles.map}>
-            <MapView 
-                style={styles.map}
-                ref={mapRef}
-                provider={PROVIDER_DEFAULT}
-                showsUserLocation={true}
-                //showsMyLocationButton={true}
-                showsPointsOfInterest={true}
-                showsCompass={false}
-                initialRegion={{
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                    latitudeDelta: 0.1,
-                    longitudeDelta: 0.1,
-                }}
-                onRegionChange={async () => {
-                    if (timeoutId) {
-                        clearTimeout(timeoutId);
-                        setTimeoutId(null);
-                    }
+    // Send location every 5 seconds if updated
+    useEffect(() => {
+        const sendLocation = async () => {
+            const currentUsername = await getData('username');
+            
+            partySocket.emit('location', {
+                username: currentUsername.data,
+                lat: userLocation.latitude,
+                long: userLocation.longitude
+            });
+        }
 
-                    // Camera direction
-                    if (mapRef.current) {
-                        const camera = await mapRef.current.getCamera();
-                        setCameraDirection(camera.heading);
-                    }
-                }}
-                onRegionChangeComplete={handleRegionChangeComplete}
-            >
-                {
-                places.map((place, index) => (
-                    <Marker
-                        key={index}
-                        coordinate={{
-                            latitude: place.coordinates.lat,
-                            longitude: place.coordinates.long,
-                        }}
-                        title={place.address}
-                    />
-                ))}
-            </MapView>
-            <Button icon="location-arrow" iconColor="white" style={{bottom: 150, right: 10}} functionCall={locationPressed}/>
-            {cameraDirection < 355 && cameraDirection > 5 && (
-                <Button icon="compass" iconColor="white" style={{bottom: 220, right: 10}} functionCall={resetToNorth} />
-            )}
-        </View>
+        if (userLocation) {
+            fetchPlaces(userLocation.latitude, userLocation.longitude);
+        }
+
+        if (partySocket) {
+            if (!locationTimeout.current) {
+                sendLocation();
+        
+                // Prevent further calls for 5 seconds
+                locationTimeout.current = setTimeout(() => {
+                    locationTimeout.current = null; // Reset after timeout
+                }, 5000);
+            }
+        }
+
+    }, [userLocation]);
+
+    // Get locations sent by other users
+    useEffect(() => {
+        if (partySocket) {
+            const handleLocationUpdate = (socketData) => {
+                console.log('Received location update:', socketData);
+            };
+    
+            partySocket.on("location", handleLocationUpdate);
+    
+            return () => {
+                partySocket.off("location", handleLocationUpdate);
+            };
+        }
+    }, [partySocket]);
+
+    // Display loading screen while waiting for location
+    if (!userLocation || !places[0]) {
+        return (
+            <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', zIndex: 1000, width: '100%', height: '100%' }}>
+                <ActivityIndicator size="large" animating={true}/>
+            </SafeAreaView>
+        )
+    }
+
+    return (
+        <Pressable style={{...StyleSheet.absoluteFillObject,}} onPress={() => Keyboard.dismiss()}>
+            <View style={styles.map}>
+                <MapView 
+                    style={styles.map}
+                    ref={mapRef}
+                    provider={PROVIDER_DEFAULT}
+                    showsUserLocation={true}
+                    //showsMyLocationButton={true}
+                    showsPointsOfInterest={true}
+                    showsCompass={false}
+                    initialRegion={{
+                        latitude: userLocation.latitude,
+                        longitude: userLocation.longitude,
+                        latitudeDelta: 0.1,
+                        longitudeDelta: 0.1,
+                    }}
+                    onRegionChange={async () => {
+                        if (timeoutId) {
+                            clearTimeout(timeoutId);
+                            setTimeoutId(null);
+                        }
+
+                        // Camera direction
+                        if (mapRef.current) {
+                            const camera = await mapRef.current.getCamera();
+                            setCameraDirection(camera.heading);
+                        }
+                    }}
+                    onRegionChangeComplete={handleRegionChangeComplete}
+                >
+                    {
+                    places.map((place, index) => (
+                        <Marker
+                            key={index}
+                            coordinate={{
+                                latitude: place.coordinates.lat,
+                                longitude: place.coordinates.long,
+                            }}
+                            title={place.address}
+                        />
+                    ))}
+                </MapView>
+                <Button icon="location-arrow" iconColor="white" style={{bottom: 150, right: 10}} functionCall={locationPressed}/>
+                {cameraDirection < 355 && cameraDirection > 5 && (
+                    <Button icon="compass" iconColor="white" style={{bottom: 220, right: 10}} functionCall={resetToNorth} />
+                )}
+            </View>
+        </Pressable>
     )
 };
 

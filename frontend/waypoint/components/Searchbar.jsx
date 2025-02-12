@@ -4,17 +4,20 @@ import React, { useEffect, useState, useRef } from 'react'
 import { useNavigation } from '@react-navigation/native';
 
 import data from '../utils/defaults/assets.js';
+import { useGlobalState } from './GlobalStateContext';
 
 const { width, height } = Dimensions.get('window');
 
-const Searchbar = ({style, location}) => {
+const Searchbar = ({style}) => {
     const navigation = useNavigation();
+
+    const { userLocation, setUserLocation } = useGlobalState();
 
     const searchbarTouched = () => {
         Keyboard.dismiss();
         navigation.navigate(
             'MapSearch', 
-            {location},
+            {userLocation},
         );
     }
 

@@ -4,10 +4,13 @@ import React, { useState, useEffect } from 'react';
 const defaultImage = require("../assets/default-avatar-icon.jpg")
 
 import data from '../utils/defaults/assets.js'
+import { useGlobalState } from '../components/GlobalStateContext';
 import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
 import { getUserFriends, joinParty } from '../utils/userUtils.js';
 
-function InviteScreen({ visible, onRequestClose, updateParty, setPartySocket }) {
+function InviteScreen({ visible, onRequestClose, updateParty }) {
+    const { setPartySocket } = useGlobalState();
+
     const [username, setUsername] = useState("");
 
     const [friendList, setFriendList] = useState([]);
@@ -42,21 +45,20 @@ function InviteScreen({ visible, onRequestClose, updateParty, setPartySocket }) 
             const createdPartyData = await postRequest('party/create', {userID: userID.data});
 
             if (!createdPartyData.error) {
-                // const partySocket = await joinParty(userID.data, createdPartyData.data);
-                // setPartySocket(partySocket);
+                const partySocketData = await joinParty(userID.data, createdPartyData.data);
+                setPartySocket(partySocketData);
                 await storeData('partyID', createdPartyData.data);
-                await updateParty();
                 await postRequest('party/modify', {userID: userID.data, partyID: createdPartyData.data, modification: "invite", properties: {user: invitedUser}});
+                await updateParty();
                 
             }
 
         // If user already has a saved party ID, meaning they were in party, join it
         } else {
-            // const partySocket = await joinParty(userID.data, partyID.data);
-            // setPartySocket(partySocket);
-            await updateParty();
+            const partySocketData = await joinParty(userID.data, partyID.data);
+            setPartySocket(partySocketData);
             await postRequest('party/modify', {userID: userID.data, partyID: partyID.data, modification: "invite", properties: {user: invitedUser}});
-            
+            await updateParty();
         }
     };
 

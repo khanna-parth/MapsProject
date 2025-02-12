@@ -85,13 +85,15 @@ function LoginScreen() {
             if (!response.error) {
                 const userData = response.data;
                 console.log('Login successful:', userData);
-    
-                const storeCredentials = await storeKeychainData(username, password);
-                if (storeCredentials.error) {
-                    console.error('Ignore for now - Error storing credentials:', storeCredentials.message);
-                } else {
-                    console.log('User credentials stored successfully');
-                }
+                
+                await storeData('username', userData.username);
+                await storeData('userID', userData.userID);
+                // const storeCredentials = await storeKeychainData(username, password);
+                // if (storeCredentials.error) {
+                //     console.error('Ignore for now - Error storing credentials:', storeCredentials.message);
+                // } else {
+                //     console.log('User credentials stored successfully');
+                // }
 
                 navigation.navigate('Home');
         

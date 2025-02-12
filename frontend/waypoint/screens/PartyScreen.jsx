@@ -1,32 +1,34 @@
 import { StyleSheet, Text, View, Platform, SafeAreaView, FlatList, Image, TextInput } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import Box from '../components/Box';
 import UserSearchScreen from './UserSearch';
 import UserInviteScreen from './UserInvite';
 
 import data from '../utils/defaults/assets.js'
+import { useGlobalState } from '../components/GlobalStateContext';
 import { storeData, getData, removeData, postRequest, getRequest, cleanupData } from '../utils/utils.js';
 import { joinParty } from '../utils/userUtils';
 
 function PartyScreen() {
     // Function to always log in admin user by default, will be removed when log in fully complete
-    const test = async () => {
-        //await removeData('partyID');
+    // const test = async () => {
+    //     //await removeData('partyID');
 
-        const loginData = await postRequest('auth/login', {username: "test", password: "test"});
+    //     const loginData = await postRequest('auth/login', {username: "admin", password: "admin"});
 
-        if (!loginData.error) {
-            await storeData("username", loginData.data.username);
-            await storeData("userID", loginData.data.userID);
+    //     if (!loginData.error) {
+    //         await storeData("username", loginData.data.username);
+    //         await storeData("userID", loginData.data.userID);
 
-            console.log('done logging in');
-        }
-    }
-    useEffect(() => {
-        test();
+    //         console.log('done logging in');
+    //     }
+    // }
+    // useEffect(() => {
+    //     test();
 
-    }, []);
+    // }, []);
+    const { partySocket, setPartySocket } = useGlobalState();
 
     const [searchModalVisible, setSearchModalVisible] = useState(false);
     const [inviteModalVisible, setInviteModalVisible] = useState(false);
@@ -35,7 +37,6 @@ function PartyScreen() {
 
     const [partyList, setPartyList] = useState([]);
     const [partyID, setPartyID] = useState();
-    const [partySocket, setPartySocket] = useState();
     
     // Get the party details of the user and update the list
     const getPartyList = async () => {
@@ -48,14 +49,7 @@ function PartyScreen() {
             return {error: true, message: "User not in party."}
         }
 
-        if (!partySocket) {
-            const partySocketData = await joinParty(userID.data, partyID.data);
-            setPartySocket(partySocketData);
-        }
-
         const partyData = await postRequest('party/status', {userID: userID.data, partyID: partyID.data});
-
-        console.log(partyData)
 
         if (partyData.error) {
             removeData('partyID');
@@ -65,7 +59,7 @@ function PartyScreen() {
             let partyMembers = []
 
             for (let i = 0; i < partyData.data.connected.length; i++) {
-                partyMembers.push({username: partyData.data.connected[i].username, userID: i});
+                partyMembers.push({username: partyData.data.connected[i], userID: i});
             }
 
             setPartyID(partyID.data)
@@ -73,7 +67,7 @@ function PartyScreen() {
             return {error: false, message: "Party members successfully retrieved"};
         }
     }
-    
+
     // Press leave button
     const handleLeave = async () => {
         const partyID = await getData('partyID');
@@ -202,7 +196,6 @@ function PartyScreen() {
                     setInviteModalVisible(false);
                 }}
                 updateParty={getPartyList}
-                setPartySocket={setPartySocket}
             ></UserInviteScreen>
         </SafeAreaView>
     );

@@ -4,6 +4,7 @@ import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import React, { useMemo, useState, useRef } from 'react';
 
 import data from '../utils/defaults/assets.js'
+import { useGlobalState } from '../components/GlobalStateContext';
 
 import PartyScreen from './PartyScreen';
 import Map from '../components/Map';
@@ -13,12 +14,12 @@ const HomeScreen = () => {
     const bottomSheetRef = useRef<BottomSheet>(null);
     const bottomSheetSnapPoints = useMemo(() => ['15%', '20%', '50%', '85%'], [])
 
-    const [location, setLocation] = useState(null);
+    const { userLocation, setUserLocation } = useGlobalState();
 
     return (
         <View style={styles.container}>
-            <Searchbar style={styles.searchbar} location={location}/>
-            <Map location={location} setLocation={setLocation}/>
+            <Searchbar style={styles.searchbar}/>
+            <Map/>
             <GestureHandlerRootView style={styles.swipeUpContainer}>
                 <BottomSheet
                     useRef={bottomSheetRef}
