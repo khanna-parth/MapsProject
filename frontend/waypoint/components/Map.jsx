@@ -11,7 +11,7 @@ import { getData } from '../utils/utils.js';
 import Button from '../components/Button.jsx'
 
 const Map = () => {
-    const { userLocation, setUserLocation, partySocket } = useGlobalState();
+    const { userLocation, setUserLocation, partySocket, userSentLocation, setUserSentLocation } = useGlobalState();
     const mapRef = useRef(null);
     const [cameraDirection, setCameraDirection] = useState(0);
 
@@ -158,20 +158,13 @@ const Map = () => {
 
     }, [userLocation]);
 
-    // Get locations sent by other users
     useEffect(() => {
-        if (partySocket) {
-            const handleLocationUpdate = (socketData) => {
-                console.log('Received location update:', socketData);
-            };
-    
-            partySocket.on("location", handleLocationUpdate);
-    
-            return () => {
-                partySocket.off("location", handleLocationUpdate);
-            };
+        if (userSentLocation) {
+            console.log(userSentLocation);
+            setUserSentLocation();
         }
-    }, [partySocket]);
+
+    }, [userSentLocation]);
 
     // Display loading screen while waiting for location
     if (!userLocation || !places[0]) {

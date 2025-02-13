@@ -28,7 +28,7 @@ function PartyScreen() {
     //     test();
 
     // }, []);
-    const { partySocket, setPartySocket } = useGlobalState();
+    const { partySocket, setPartySocket, userPartyChange, setUserPartyChange } = useGlobalState();
 
     const [searchModalVisible, setSearchModalVisible] = useState(false);
     const [inviteModalVisible, setInviteModalVisible] = useState(false);
@@ -112,10 +112,15 @@ function PartyScreen() {
         setPartySearch("");
     };
 
+    // Update user party when someone joins
     useEffect(() => {
-        getPartyList();
+        if (userPartyChange) {
+            console.log('Party list updated');
+            setUserPartyChange(false);
+            getPartyList();
+        }
 
-    }, []);
+    }, [userPartyChange]);
 
     return (
         <SafeAreaView style={styles.safeContainer}>
@@ -195,7 +200,6 @@ function PartyScreen() {
                 onRequestClose={() => {
                     setInviteModalVisible(false);
                 }}
-                updateParty={getPartyList}
             ></UserInviteScreen>
         </SafeAreaView>
     );

@@ -61,12 +61,13 @@ export const joinParty = async (userID, partyID) => {
                 resolve(socket);
             });   
 
-            socket.on("partyUpdate", (socketData) => {
-                console.log(socketData);
-            });
+            // socket.on("partyUpdate", (socketData) => {
+            //     console.log('hello', socketData);
+            // });
 
             socket.on("disconnect", () => {
                 console.log("Disconnected from socket server");
+                utils.removeData('partyID');
             });
 
             //return socket;

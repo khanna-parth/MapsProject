@@ -97,7 +97,9 @@ export function setupSocketIO(server: HttpServer) {
 
         console.log(`[Party]: Connected user ${userID} to party ${partyID}!`)
 
-        socket.emit('partyUpdate', `Someone joined the party.`); // Added this to update party list - Grant
+        setTimeout(() => {
+            socket.emit('partyUpdate', `Someone joined the party.`); // Added this to update party list - Grant
+        }, 1000);
 
         socket.emit('connected', `Connected to ${partyID}`);
 

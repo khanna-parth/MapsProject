@@ -8,7 +8,7 @@ import { useGlobalState } from '../components/GlobalStateContext';
 import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
 import { getUserFriends, joinParty } from '../utils/userUtils.js';
 
-function InviteScreen({ visible, onRequestClose, updateParty }) {
+function InviteScreen({ visible, onRequestClose }) {
     const { setPartySocket } = useGlobalState();
 
     const [username, setUsername] = useState("");
@@ -49,8 +49,9 @@ function InviteScreen({ visible, onRequestClose, updateParty }) {
                 setPartySocket(partySocketData);
                 await storeData('partyID', createdPartyData.data);
                 await postRequest('party/modify', {userID: userID.data, partyID: createdPartyData.data, modification: "invite", properties: {user: invitedUser}});
-                await updateParty();
-                
+                //await updateParty();
+            } else {
+                removeData('partyID');
             }
 
         // If user already has a saved party ID, meaning they were in party, join it
@@ -58,7 +59,7 @@ function InviteScreen({ visible, onRequestClose, updateParty }) {
             const partySocketData = await joinParty(userID.data, partyID.data);
             setPartySocket(partySocketData);
             await postRequest('party/modify', {userID: userID.data, partyID: partyID.data, modification: "invite", properties: {user: invitedUser}});
-            await updateParty();
+            //await updateParty();
         }
     };
 
