@@ -110,13 +110,18 @@ class Party extends BaseEntity {
         }, 3000);
     }
 
-    broadcast(broadcastChannel: string, message: string, senderID: string, systemMessage?: boolean): void {
+    broadcast(broadcastChannel: string, message: string, senderID: string, systemMessage?: boolean, includeSenderID?: boolean): void {
         if (!systemMessage) { systemMessage = false }
         this.connected.forEach((user) => {
             if (user.ws && user.ws.connected === true) {
                 if (!systemMessage) {
-                    user.ws.emit(broadcastChannel, `${senderID}: ${message}`)
-                    console.log(`${senderID} sent a message on ${broadcastChannel} channel`)
+                    if (includeSenderID) {
+                        user.ws.emit(broadcastChannel, `${senderID}: ${message}`)
+                        console.log(`${senderID} sent a message on ${broadcastChannel} channel`)
+                    } else {
+                        user.ws.emit(broadcastChannel, message)
+                        console.log(`${senderID} sent a message on ${broadcastChannel} channel`)
+                    }
                 } else {
                     user.ws.emit(broadcastChannel, `SYSTEM: ${message}`)
                     console.log(`System broadcasted a message on ${broadcastChannel} channel`)
