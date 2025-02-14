@@ -1,4 +1,4 @@
-import { StyleSheet, View, SafeAreaView, ActivityIndicator, Keyboard, Pressable } from 'react-native'
+import { StyleSheet, View, SafeAreaView, ActivityIndicator, Keyboard, Pressable, Image } from 'react-native'
 import React, { useState, useEffect, useRef } from 'react';
 import MapView, { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
@@ -11,7 +11,7 @@ import { getData } from '../utils/utils.js';
 import Button from '../components/Button.jsx'
 
 const Map = () => {
-    const { userLocation, setUserLocation, partySocket, userSentLocation, setUserSentLocation } = useGlobalState();
+    const { currentUser, userLocation, setUserLocation, partySocket, userSentLocation, setUserSentLocation, partyMemberLocation, setPartyMemberLocation } = useGlobalState();
     const mapRef = useRef(null);
     const [cameraDirection, setCameraDirection] = useState(0);
 
@@ -132,10 +132,8 @@ const Map = () => {
     // Send location every 5 seconds if updated
     useEffect(() => {
         const sendLocation = async () => {
-            const currentUsername = await getData('username');
-            
             partySocket.emit('location', {
-                username: currentUsername.data,
+                username: currentUser,
                 lat: userLocation.latitude,
                 long: userLocation.longitude
             });
@@ -160,8 +158,27 @@ const Map = () => {
 
     useEffect(() => {
         if (userSentLocation) {
-            console.log(userSentLocation);
-            setUserSentLocation();
+            const objectSentLocation = JSON.parse(userSentLocation);
+
+            if (objectSentLocation.username != currentUser) {
+                if (partyMemberLocation.length > 0) {
+                    for (let i = 0; i < partyMemberLocation.length; i++) {
+                        const currentMember = partyMemberLocation[i];
+        
+                        if (objectSentLocation.username == currentMember.username) {
+                            setPartyMemberLocation(prevState => {
+                                let newState = [...prevState];
+                                newState[i] = objectSentLocation;
+                                return newState;
+                            });
+                        } else {
+                            setPartyMemberLocation(prevState => [...prevState, objectSentLocation]);
+                        }
+                    }
+                } else {
+                    setPartyMemberLocation(prevState => [...prevState, objectSentLocation]);
+                }
+            }
         }
 
     }, [userSentLocation]);
@@ -217,6 +234,21 @@ const Map = () => {
                             title={place.address}
                         />
                     ))}
+                    {partyMemberLocation.map((member, index) => (
+                        <Marker
+                            key={index}
+                            coordinate={{
+                                latitude: member.lat,
+                                longitude: member.long
+                            }}
+                            title={member.username}  // Show username as marker title
+                        >
+                            <View style={{ width: 30, height: 30 }} >
+                                <Image style={{ width: '100%', height: '100%', borderRadius: 15 }} source={data.images.defaultAvatar}/>
+                            </View>
+                        </Marker>
+                    ))}
+
                 </MapView>
                 <Button icon="location-arrow" iconColor="white" style={{bottom: 150, right: 10}} functionCall={locationPressed}/>
                 {cameraDirection < 355 && cameraDirection > 5 && (

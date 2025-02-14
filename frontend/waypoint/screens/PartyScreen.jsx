@@ -8,7 +8,6 @@ import UserInviteScreen from './UserInvite';
 import data from '../utils/defaults/assets.js'
 import { useGlobalState } from '../components/GlobalStateContext';
 import { storeData, getData, removeData, postRequest, getRequest, cleanupData } from '../utils/utils.js';
-import { joinParty } from '../utils/userUtils';
 
 function PartyScreen() {
     // Function to always log in admin user by default, will be removed when log in fully complete
@@ -28,7 +27,7 @@ function PartyScreen() {
     //     test();
 
     // }, []);
-    const { partySocket, setPartySocket, userPartyChange, setUserPartyChange } = useGlobalState();
+    const { partySocket, setPartySocket, userPartyChange, setUserPartyChange, joinParty } = useGlobalState();
 
     const [searchModalVisible, setSearchModalVisible] = useState(false);
     const [inviteModalVisible, setInviteModalVisible] = useState(false);
@@ -56,10 +55,10 @@ function PartyScreen() {
             setPartySocket();
             return {error: true, message: "User does not have permission to join party."}
         } else {
-            let partyMembers = []
+            let partyMembers = [];
 
             for (let i = 0; i < partyData.data.connected.length; i++) {
-                partyMembers.push({username: partyData.data.connected[i], userID: i});
+                partyMembers.push({username: partyData.data.connected[i].username, userID: i});
             }
 
             setPartyID(partyID.data)
@@ -73,17 +72,14 @@ function PartyScreen() {
         const partyID = await getData('partyID');
         const userID = await getData('userID');
 
+        await removeData('partyID');
+        await setPartyList([]);
+
         if (!partyID.error && !userID.error) {
-            //const socketConnection = await joinParty(userID.data, partyID.data);
             await partySocket.disconnect();
             setPartySocket();
             console.log('Party left.');
-        } else {
-
         }
-        
-        removeData('partyID');
-        setPartyList([]);
     };
 
     // Press search button
@@ -102,6 +98,9 @@ function PartyScreen() {
 
     const handleJoinParty = async (partyID) => {
         await storeData('partyID', partyID);
+        const userID = await getData("userID");
+
+        await joinParty(userID.data, partyID);
         
         const joinPartyData = await getPartyList();
 
@@ -128,7 +127,6 @@ function PartyScreen() {
             {/* Top Button Row */}
 
             <View style={styles.topButtons}>
-                {/* <Box style={{ backgroundColor: data.colors.red}} onPress={handleLeave}>Leave</Box> */}
                 <Box source={data.images.searchIcon} onPress={handleSearch}>Search</Box>
                 <Box source={data.images.inviteButtonIcon} onPress={handleInvite}>Invite</Box>
             </View>
