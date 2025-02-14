@@ -1,4 +1,5 @@
 import { PartyPolicy } from "./deps/party-deps";
+import { DirectionsResult } from "./geolocation";
 import { User } from "./user"
 import { Entity, PrimaryColumn, Column, ManyToOne, ManyToMany, JoinTable, BaseEntity, BeforeInsert } from 'typeorm';
 
@@ -26,11 +27,20 @@ class Party extends BaseEntity {
     @Column({ default: true })
     isActive!: boolean;
 
+    routes: Map<string, DirectionsResult> = new Map();
+
     @BeforeInsert()
     setDefaults() {
         this.connected = new Map();
         this.lastEmpty = Date.now();
         this.isActive = true;
+    }
+
+    async setRoute(userID: string, route: DirectionsResult, broadcast: boolean) {
+        this.routes.set(userID, route);
+        if (broadcast) {
+            this.broadcast('directions', JSON.stringify(route.data), 'SYSTEM', true)
+        }
     }
 
     async invite(user: User): Promise<{invited: boolean, error?: string}> {

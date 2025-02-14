@@ -82,12 +82,13 @@ const searchPlaces = async (query: string, coords: Coordinates): Promise<PlacesR
         const headers = {
             "Content-Type": "application/json",
             "X-Goog-Api-Key": process.env.GMAPS_API,
-            "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.priceLevel"
+            "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.priceLevel,places.location"
         }
 
         const response = await axios.post("https://places.googleapis.com/v1/places:searchText", data, {headers: headers});
         if (response.status === 200) {
             const placesData = response.data['places']
+            console.log(placesData);
             let places: PlacesResult = {
                 code: 200,
                 data: {places: [],}
@@ -96,7 +97,8 @@ const searchPlaces = async (query: string, coords: Coordinates): Promise<PlacesR
             placesData.map((place: any) => {
                 places.data?.places.push({
                     name: place['displayName']['text'],
-                    address: place['formattedAddress']
+                    address: place['formattedAddress'],
+                    coordinates: new Coordinates(place['location']['latitude'], place['location']['longitude'])
                 })
             })
             return places;
