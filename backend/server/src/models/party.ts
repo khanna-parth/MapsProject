@@ -11,7 +11,7 @@ class Party extends BaseEntity {
     connected: Map<string, User> = new Map();
 
     lastEmpty: number = Date.now();
-    policy: PartyPolicy = PartyPolicy.CLOSED;
+    policy: PartyPolicy = PartyPolicy.OPEN;
 
     @ManyToOne(() => User, user => user.hostedParties)
     host!: User;

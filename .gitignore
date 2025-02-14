@@ -8,3 +8,4 @@ dist
 # **/Dockerfile
 bun-server
 .DS_Store
+socket-testing/*.js

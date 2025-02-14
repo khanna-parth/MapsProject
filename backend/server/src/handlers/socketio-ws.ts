@@ -1,9 +1,10 @@
 import { Server as HttpServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { pool } from '../models/pool';
-import { checkValidString } from '../util/util';
+import { checkValidString, VerifyLocationData } from '../util/util';
 import { UserDB } from '../db/dbuser';
 import { PartyDB } from '../db/dbparty';
+import { PartyPolicy } from '../models/deps/party-deps';
 
 export function setupSocketIO(server: HttpServer) {
     const io = new SocketIOServer(server, {
@@ -56,33 +57,40 @@ export function setupSocketIO(server: HttpServer) {
         const party = await pool.partyExists(partyID);
         if (!party) {
             pool.listPool();
-            console.log("/join request to a non-existent party");
+            console.log("[Party] /join request to a non-existent party");
             socket.disconnect();
             return;
         }
 
         const access = party.invited.find((invitedUsers) => invitedUsers.userID == userID);
-        if (!access && party.host.userID != userID) {
-            console.log("Invited")
-            console.log(party.invited.map((user) => user.username))
-            console.log("Connected:")
-            console.log(party.connected.values().map((user) => user.username))
-            console.log("Host:")
-            console.log(party.host.username)
-            console.log(`${userID} has not been invited to party ${partyID}. Denying request`);
-            socket.disconnect();
-            return;
-        }
+        if (party.policy == PartyPolicy.CLOSED) {
+            if (!access && party.host.userID != userID) {
+                console.log("Invited")
+                console.log(party.invited.map((user) => user.username))
+                console.log("Connected:")
+                console.log(party.connected.values().map((user) => user.username))
+                console.log("Host:")
+                console.log(party.host.username)
+                console.log(`${userID} has not been invited to party ${partyID}. Denying request`);
+                socket.disconnect();
+                return;
+            }
+        }   
 
         console.log(`[Party] ${userID} was found in invited users.`)
 
         const existingParty = pool.isUserConnected(userID);
         if (existingParty) {
-            console.log(`Disconnecting ${userID} from existing party: ${existingParty.partyID}`);
+            if (existingParty.partyID === partyID) {
+                console.log(`[Party] Join request to party ${partyID} where user is present. Denying`);
+                socket.disconnect();
+                return;
+            }
+            console.log(`[Party] Disconnecting ${userID} from existing party: ${existingParty.partyID}`);
             pool.disconnectUser(userID, "You were disconnected because you joined from somewhere else");
             existingParty.removeUser(userID);
         } else {
-            console.log(`Did not find existing party for user: ${userID}`);
+            console.log(`[Party] Did not find existing party for user: ${userID}`);
         }
 
         const joinResult = await PartyDB.joinParty(partyID, validUser);
@@ -96,12 +104,9 @@ export function setupSocketIO(server: HttpServer) {
         await pool.connectUser(validUser, partyID, socket.id)
 
         console.log(`[Party]: Connected user ${userID} to party ${partyID}!`)
-
-        setTimeout(() => {
-            socket.emit('partyUpdate', `Someone joined the party.`); // Added this to update party list - Grant
-        }, 1000);
-
-        socket.emit('connected', `Connected to ${partyID}`);
+        
+        socket.emit("connection", `You joined party ${partyID}`)
+        party.broadcast('connections', `${validUser.username} joined`, '', true);
 
 
         socket.on('message', async (message: string) => {
@@ -120,16 +125,22 @@ export function setupSocketIO(server: HttpServer) {
             }
         });
 
-        // Added this to send location to all party members - Grant
         socket.on('location', async (locationData) => {
-            socket.emit('location', locationData);
+            const validLocationData = VerifyLocationData(locationData);
+            if (validLocationData) {
+            party.broadcast('location', JSON.stringify(locationData), validUser.username, false);
+            validUser.coordinates = locationData;
             // console.log(`[Party] Received location from ${userID}:`, locationData);
+            } else {
+                console.log(`[Party -> location] Invalid data ${locationData} from ${userID}`)
+            }
         });
 
         socket.on('disconnect', async () => {
-            console.log(`User ${userID} disconnected from party ${partyID}`);
-            socket.emit('partyUpdate', `Someone has left the party.`); // Added this to update party list - Grant
+            // console.log(`User ${userID} disconnected from party ${partyID}`);
+            console.log(`[Party] User ${userID} disconnected from party ${partyID}`);
             pool.disconnectBySocketID(socket.id)
+            party.broadcast('connections', `${validUser.username} disconnected`, validUser.username, true);
             await PartyDB.leaveParty(partyID, validUser);
         });
 

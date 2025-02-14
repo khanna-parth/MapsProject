@@ -12,6 +12,12 @@ class User extends BaseEntity {
     @PrimaryGeneratedColumn('uuid')
     userID: string;
 
+    @Column({nullable: true})
+    firstName: string;
+
+    @Column({nullable: true})
+    lastName: string;
+
     @Column()
     username: string;
 
@@ -44,6 +50,8 @@ class User extends BaseEntity {
         super();
         this.userID = uuidv4();
         this.username = ""
+        this.firstName = ""
+        this.lastName = ""
         this.password = ""
         this.coordinates = {long: 0, lat: 0}
     }

@@ -3,24 +3,25 @@
 import io from 'socket.io-client';
 import axios from 'axios';
 
-const data = {
-    "userID": "32ba5ef2-c7ce-42fe-b1e9-1cfcf7397f70"
-}
-const resp = await axios.post("http://localhost:3010/party/create", data);
+const args = process.argv.slice(2);
 
-if (resp.status !== 201) {
-    console.log(`Failed to create party to test socket: ${resp.status} ${resp.data} ${resp.error}`);
+const partyIDArg = args[0];
+if (!partyIDArg || partyIDArg.length == 0) {
+    console.log(`Invalid partyID argument: '${partyIDArg}'`);
     process.exit(0);
+}
+
+const data = {
+    "userID": "461f03fa-c407-466c-b0db-069c195e5e62"
 }
 
 console.log(`Connecting`)
 const socket = io('http://localhost:3010', {
-// const socket = io('http://192.168.1.20:3010', {
     path: "/party/join",
-    transports: ['websocket'],  // Force WebSocket transport
+    transports: ['websocket'],
     query: {
         userID: data.userID,
-        partyID: resp.data
+        partyID: partyIDArg,
     }
 });
 
@@ -31,13 +32,24 @@ socket.on('connect', () => {
     socket.emit('message', 'Hello, I am testing a message!');
 });
 
-socket.on('connected', (msg) => {
-    console.log("Connected")
+socket.on('connections', (msg) => {
+    console.log(msg);
+});
+
+socket.on('connections', (msg) => {
     console.log(msg);
 });
 
 socket.on('message', (msg) => {
     console.log('Message from server:', msg);
+});
+
+socket.on('location', (msg) => {
+    console.log('New location event:', msg);
+});
+
+socket.on('INTERNAL', (msg) => {
+    console.log('INTERNAL alert:', msg);
 });
 
 socket.on('ALERT', (msg) => {

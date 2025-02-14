@@ -89,7 +89,6 @@ app.post(ROUTES.MODIFY_PARTY, async (req: Request, res: Response) => {
 
 app.post(ROUTES.PARTY_STATUS, async (req: Request, res: Response) => {
     const { partyID, userID }: CreatePartyRequest = req.body;
-
     const result = getParty(userID, partyID)
     if (result.party) {
         res.status(200).json(result.party)

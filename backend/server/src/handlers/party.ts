@@ -17,9 +17,9 @@ import { PartyModification, PartyModificationData } from "../models/deps/party-d
 
 interface PartyDisplay {
         partyID: string;
-        connected: string[];
+        connected: Partial<User>[];
         lastEmpty: number;
-        host?: string;
+        host?: string; 
         participants?: string[];
     }
 
@@ -88,7 +88,13 @@ const getParty = (userID: string, partyID: string): { party?: PartyDisplay, code
 
         const partyDisplay: PartyDisplay = {
             partyID: existingParty.partyID,
-            connected: connectedUsers.map((user) => user.username ?? ""),
+            connected: connectedUsers.map((user) => {
+                const partialUser: Partial<User> = {};
+                partialUser.username = user.username ?? "";
+                partialUser.firstName = user.firstName ?? "";
+                partialUser.lastName = user.lastName ?? "";
+                return partialUser;
+            }),
             lastEmpty: existingParty.lastEmpty,
             host: existingParty.host?.username,
             participants: existingParty.participants?.map(p => p.username)
