@@ -1,6 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
 import * as utils from './utils.js';
-import { io } from "socket.io-client";
 
 import { LOCAL_HOST } from '@env';
 
@@ -42,39 +40,3 @@ export const getUsers = async (prompt) => {
         return {error: true, message: `Returned with error: ${error}`};
     }
 };
-
-export const joinParty = async (userID, partyID) => {
-    console.log(`Joining party with ${userID}, ${partyID}.`);
-    try {
-        return new Promise((resolve, reject) => {
-            const socket = io(`http://${LOCAL_HOST}`, {
-                path: "/party/join",
-                transports: ['websocket'],  // Force WebSocket transport
-                query: {
-                    userID: String(userID),
-                    partyID: String(partyID)
-                }
-            });
-
-            socket.on("connect", () => {
-                console.log("Connected to socket server");
-                resolve(socket);
-            });   
-
-            // socket.on("partyUpdate", (socketData) => {
-            //     console.log('hello', socketData);
-            // });
-
-            socket.on("disconnect", () => {
-                console.log("Disconnected from socket server");
-                utils.removeData('partyID');
-            });
-
-            //return socket;
-        });
-    } catch (error) {
-        console.error("Socket connection error: ", error);
-        return null;
-    }
-    
-}

@@ -3,10 +3,13 @@ import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StyleShee
 import { useNavigation } from '@react-navigation/native';
 
 import { storeData, postRequest, storeKeychainData, getKeychainData } from '../utils/utils.js';
+import { useGlobalState } from '../components/GlobalStateContext';
 
 
 function LoginScreen() {
     const navigation = useNavigation();
+
+    const { setCurrentUser } = useGlobalState();
 
     //Actual Data
     const [form, setForm] = useState({
@@ -86,6 +89,7 @@ function LoginScreen() {
                 const userData = response.data;
                 console.log('Login successful:', userData);
                 
+                setCurrentUser(userData.username);
                 await storeData('username', userData.username);
                 await storeData('userID', userData.userID);
                 // const storeCredentials = await storeKeychainData(username, password);

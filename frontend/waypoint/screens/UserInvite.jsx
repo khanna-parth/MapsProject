@@ -6,10 +6,10 @@ const defaultImage = require("../assets/default-avatar-icon.jpg")
 import data from '../utils/defaults/assets.js'
 import { useGlobalState } from '../components/GlobalStateContext';
 import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
-import { getUserFriends, joinParty } from '../utils/userUtils.js';
+import { getUserFriends } from '../utils/userUtils.js';
 
 function InviteScreen({ visible, onRequestClose }) {
-    const { setPartySocket } = useGlobalState();
+    const { joinParty } = useGlobalState();
 
     const [username, setUsername] = useState("");
 
@@ -45,9 +45,9 @@ function InviteScreen({ visible, onRequestClose }) {
             const createdPartyData = await postRequest('party/create', {userID: userID.data});
 
             if (!createdPartyData.error) {
-                const partySocketData = await joinParty(userID.data, createdPartyData.data);
-                setPartySocket(partySocketData);
                 await storeData('partyID', createdPartyData.data);
+                await joinParty(userID.data, createdPartyData.data);
+                //setPartySocket(partySocketData); 
                 await postRequest('party/modify', {userID: userID.data, partyID: createdPartyData.data, modification: "invite", properties: {user: invitedUser}});
                 //await updateParty();
             } else {
@@ -56,9 +56,9 @@ function InviteScreen({ visible, onRequestClose }) {
 
         // If user already has a saved party ID, meaning they were in party, join it
         } else {
-            const partySocketData = await joinParty(userID.data, partyID.data);
-            setPartySocket(partySocketData);
+            //setPartySocket(partySocketData);
             await postRequest('party/modify', {userID: userID.data, partyID: partyID.data, modification: "invite", properties: {user: invitedUser}});
+            await joinParty(userID.data, partyID.data);
             //await updateParty();
         }
     };
