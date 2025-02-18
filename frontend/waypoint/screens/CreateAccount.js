@@ -77,10 +77,14 @@ function CreateAccountScreen() {
         
                     if (!response.error) {
                         const userData = response.data;
-                        navigation.navigate('Home');
+
+                        setCurrentUser(userData.username);
+                        await storeData('username', userData.username);
+                        await storeData('userID', userData.userID);
 
                         console.log('Login successful:', userData);
-                
+                        navigation.navigate('Home');
+                        
                     } else {
                         console.error('Login failed:', response.message);
                         alert('Invalid username or password. Please try again.');

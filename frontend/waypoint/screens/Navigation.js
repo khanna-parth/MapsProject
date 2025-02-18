@@ -5,7 +5,7 @@ import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { getRoute } from '../utils/mapUtils.js';
+import { getRoute, getDistance } from '../utils/mapUtils.js';
 
 import data from '../utils/defaults/assets.js'
 import MapView, { PROVIDER_DEFAULT, Polyline } from 'react-native-maps';
@@ -23,13 +23,17 @@ const NavScreen = () => {
     const [loadingRoute, setLoadingRoute] = useState(false);
 
     const [showNewButtons, setShowNewButtons] = useState(false);
-    const [notifications, setNotifications] = useState([]);
+
+    const [directions, setDirections] = useState([]);
+    const [nextDirection, setNextDirection] = useState(null);
 
     const [eta, setEta] = useState("");
     const [remainingTime, setRemainingTime] = useState("");
 
     const snapPoints = useMemo(() => ['25%', '50%', '90%'], [])
     const bottomSheetRef = useRef<BottomSheet>(null);
+
+    const [routeRequested, setRouteRequested] = useState(false);
 
     const handleSheetChanges = useCallback((index) => {
         console.log('handleSheetChanges', index);
@@ -47,14 +51,19 @@ const NavScreen = () => {
     //Fetch User Route
     useEffect(() => {
         const fetchRoute = async () => {
-            if (!location) return;
-    
-            setLoadingRoute(true);
+            if (!location || routeRequested) return;
+
+            setRouteRequested(true);
+            setLoadingRoute(true);  
+
             const routeData = await getRoute(location.latitude, location.longitude);
             
             //console.log(JSON.stringify(routeData, null, 2))
     
             if (!routeData.error && routeData.data.directions) {
+                setDirections(routeData.data.directions);
+                setNextDirection(routeData.data.directions[0]);
+
                 const routeCoordinates = routeData.data.directions.flatMap((step) => {
                     return decodePolyline(step.polyline);
                 });
@@ -79,6 +88,7 @@ const NavScreen = () => {
                 console.error("Failed to fetch route:", routeData.message);
             }
             setLoadingRoute(false);
+            setRouteRequested(false);
         };
     
         fetchRoute();
@@ -121,6 +131,26 @@ const NavScreen = () => {
             }
         };
     }, []);
+
+    //Directions
+    useEffect(() => {
+        if (!location || directions.length === 0) return;
+        
+        for (let i = 0; i < directions.length; i++) {
+            const step = directions[i];
+            const distanceToStep = getDistance(
+                location.latitude, location.longitude, 
+                step.origin.lat, step.origin.long
+            );
+    
+            //5 meters thresh
+            if (distanceToStep < 5) {
+                setNextDirection(directions[i + 1] || null);
+                console.log("Next Direction:", directions[i + 1]);
+                break;
+            }
+        }
+    }, [location, directions]); 
 
     //Zoom to user or zoom out to route
     const toggleZoom = () => {
@@ -202,6 +232,12 @@ const NavScreen = () => {
 
     return (
         <View style={styles.container}>
+            {nextDirection && (
+                <View style={styles.directionBar}>
+                    <Text style={styles.directionText}>{nextDirection.description}</Text>
+                </View>
+            )}
+
             <MapView 
                 ref={mapRef}
                 style={styles.map}
@@ -362,6 +398,23 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 2,
+    },
+    directionBar: {
+        position: 'absolute',
+        top: 50,
+        left: 20,
+        right: 20,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        padding: 10,
+        borderRadius: 10,
+        alignItems: 'center',
+        zIndex: 1000,
+        elevation: 5,
+    },
+    directionText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
     }
 })
 
