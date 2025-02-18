@@ -19,10 +19,18 @@ app.use(express.json());
 
 const PORT = process.env.SERVER_PORT || 3010;
 
-app.post(ROUTES.CREATE_USER, async (req: Request, res: Response) => {
-    const { username, password }: AccessUserRequest = req.body;
+interface CreateUserReqeust {
+    firstName: string;
+    lastName: string;
+    email: string;
+    username: string;
+    password: string;
+}
 
-    const result = await createUser(username, password);
+app.post(ROUTES.CREATE_USER, async (req: Request, res: Response) => {
+    const { firstName, lastName, email, username, password }: CreateUserReqeust = req.body;
+
+    const result = await createUser(firstName, lastName, email, username, password);
     if (result.success) {
         res.status(result.code).json(result.user)
     } else {
