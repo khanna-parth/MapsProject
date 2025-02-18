@@ -31,6 +31,7 @@ function CreateAccountScreen() {
         let hasError = false;
 
         console.log("Create Account Clicked");
+        console.log(firstName);
 
         if (!firstName.trim()) {
             setPlaceholders(prev => ({ ...prev, firstName: 'First Name Required' }));
@@ -76,11 +77,9 @@ function CreateAccountScreen() {
         
                     if (!response.error) {
                         const userData = response.data;
-                        console.log('Login successful:', userData);
-
-                        setForm()
-        
                         navigation.navigate('Home');
+
+                        console.log('Login successful:', userData);
                 
                     } else {
                         console.error('Login failed:', response.message);
