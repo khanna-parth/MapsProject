@@ -88,6 +88,7 @@ export function setupSocketIO(server: HttpServer) {
             }
             console.log(`[Party] Disconnecting ${userID} from existing party: ${existingParty.partyID}`);
             pool.disconnectUser(userID, "You were disconnected because you joined from somewhere else");
+            existingParty.broadcast("connections", `${validUser.username} disconnected`, 'SYSTEM', true);
             existingParty.removeUser(userID);
         } else {
             console.log(`[Party] Did not find existing party for user: ${userID}`);
@@ -140,7 +141,7 @@ export function setupSocketIO(server: HttpServer) {
             // console.log(`User ${userID} disconnected from party ${partyID}`);
             console.log(`[Party] User ${userID} disconnected from party ${partyID}`);
             pool.disconnectBySocketID(socket.id)
-            party.broadcast('connections', `${validUser.username} disconnected`, validUser.username, true);
+            party.broadcast('connections', `${validUser.username} disconnected`, validUser.username, true, false);
             await PartyDB.leaveParty(partyID, validUser);
         });
 

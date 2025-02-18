@@ -7,14 +7,20 @@ Group /auth
 
 /auth/create will be a POST request that will return a 201 Created response or 400 error codes. Response content will be the resultant user as a json object.
     Request data:
+        string firstName: First name of account holder
+        string lastName: Last name of account holder
+        string email: Email of account holder
         string username: Username of the account
         string password: Password of the account
     Return data:
         {
             "username": "johndoe",
             "userID": "abcd0123",
-            "long": 0,
-            "lat": 0
+            "coordinates": {
+                "long": 0,
+                "lat": 0,
+            },
+            "friends": [FRIENDS_USERNAMES]
         }
     Validation:
         If the fields are empty, will return 400 Bad Request error code
@@ -38,7 +44,8 @@ Group /auth
             "coordinates": {
                 "long": 0,
                 "lat": 0
-            }
+            },
+            "friends": [FRIENDS_USERNAMES]
         }
     Validation:
         If the fields are empty, will return 400 Bad Request error code

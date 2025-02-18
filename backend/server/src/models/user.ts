@@ -18,6 +18,9 @@ class User extends BaseEntity {
     @Column({nullable: true})
     lastName: string;
 
+    @Column({nullable: true})
+    email: string;
+
     @Column()
     username: string;
 
@@ -52,14 +55,18 @@ class User extends BaseEntity {
         this.username = ""
         this.firstName = ""
         this.lastName = ""
+        this.email = ""
         this.password = ""
         this.coordinates = {long: 0, lat: 0}
     }
 
-    static CreateUser(username: string, password: string): User {
+    static CreateUser(firstName: string, lastName: string, email: string, username: string, password: string): User {
         const user = new User();
         user.username = username;
         user.password = password;
+        user.firstName = firstName;
+        user.lastName = lastName;
+        user.email = email;
         user.sessionID = uuidv4();
         user.friends = [];
 

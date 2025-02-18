@@ -17,13 +17,20 @@ interface AccessUserResult {
     error?: string;
 }
 
-const createUser = async (username: string, password: string): Promise<AccessUserResult> => {
-    if (!checkValidString(username)) {
-        return {success: false, code: 400, error: "partyID must be properly specified"}
-    }
+const createUser = async (firstName: string, lastName: string, email: string, username: string, password: string): Promise<AccessUserResult> => {
+    const fields = ['firstName', 'lastName', 'email', 'username', 'password'];
+    const values = [firstName, lastName, email, username, password];
 
-    if (!checkValidString(password)) {
-        return {success: false, code: 400, error: "userID must be properly specified"}
+    // Get more familiar with .reduce as a cleaner way of checking invalid fields. Suggestion on stackoverflow
+    const invalidFields = fields.reduce<string[]>((acc, field, index) => {
+        if (!checkValidString(values[index])) {
+            acc.push(`Invalid field value for ${field}: ${values[index]}`);
+        }
+        return acc;
+    }, []);
+
+    if (invalidFields.length > 0) {
+        return { success: false, code: 400, error: invalidFields[0]}
     }
 
     const exists = await UserDB.dbFindUsername(username)
@@ -33,7 +40,7 @@ const createUser = async (username: string, password: string): Promise<AccessUse
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = User.CreateUser(username, hashedPassword);
+    const user = User.CreateUser(firstName, lastName, email, username, hashedPassword);
     pool.registerUser(user);
     await user.syncDB();
     console.log(`Created user with id: ${user.userID}`)
