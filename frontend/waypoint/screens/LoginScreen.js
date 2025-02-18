@@ -23,6 +23,7 @@ function LoginScreen() {
         password: '',
     });
 
+    //Error box
     const [errorBorders, setErrorBorders] = useState({
         username: 0,
         password: 0,

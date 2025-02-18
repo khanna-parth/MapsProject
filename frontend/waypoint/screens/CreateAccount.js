@@ -12,6 +12,7 @@ function CreateAccountScreen() {
     const [form, setForm] = useState({
         firstName: '',
         lastName: '',
+        email: '',
         username: '',
         password: '',
         reenterPassword: '',
@@ -21,45 +22,90 @@ function CreateAccountScreen() {
     const [placeholders, setPlaceholders] = useState({
         firstName: '',
         lastName: '',
+        email: '',
         username: '',
         password: '',
         reenterPassword: '',
     });
 
+    // Error Box
+    const [errorBorders, setErrorBorders] = useState({
+        firstName: 0,
+        lastName: 0,
+        email: 0,
+        username: 0,
+        password: 0,
+        reenterPassword: 0,
+    });
+    
     const handleCreateAccount = async () => {
-        const { firstName, lastName, username, password, reenterPassword } = form;
+        const { firstName, lastName, email, username, password, reenterPassword } = form;
         let hasError = false;
-
+    
         console.log("Create Account Clicked");
-        console.log(firstName);
-
+    
         if (!firstName.trim()) {
             setPlaceholders(prev => ({ ...prev, firstName: 'First Name Required' }));
+            setErrorBorders(prev => ({ ...prev, firstName: 1 }));
             hasError = true;
+        } else {
+            setErrorBorders(prev => ({ ...prev, firstName: 0 }));
+            setPlaceholders(prev => ({ ...prev, firstName: '' }));
         }
-
+    
         if (!lastName.trim()) {
             setPlaceholders(prev => ({ ...prev, lastName: 'Last Name Required' }));
+            setErrorBorders(prev => ({ ...prev, lastName: 1 }));
             hasError = true;
+        } else {
+            setErrorBorders(prev => ({ ...prev, lastName: 0 }));
+            setPlaceholders(prev => ({ ...prev, lastName: '' }));
         }
-
+    
+        if (!email.trim()) {
+            setPlaceholders(prev => ({ ...prev, email: 'Email Required' }));
+            setErrorBorders(prev => ({ ...prev, email: 1 }));
+            hasError = true;
+        } else if (!/\S+@\S+\.\S+/.test(email)) {
+            setPlaceholders(prev => ({ ...prev, email: 'Invalid Email' }));
+            setErrorBorders(prev => ({ ...prev, email: 1 }));
+            hasError = true;
+        } else {
+            setErrorBorders(prev => ({ ...prev, email: 0 }));
+            setPlaceholders(prev => ({ ...prev, email: '' }));
+        }
+    
         if (!username.trim()) {
             setPlaceholders(prev => ({ ...prev, username: 'Username Required' }));
+            setErrorBorders(prev => ({ ...prev, username: 1 }));
             hasError = true;
+        } else {
+            setErrorBorders(prev => ({ ...prev, username: 0 }));
+            setPlaceholders(prev => ({ ...prev, username: '' }));
         }
-
+    
         if (!password.trim()) {
             setPlaceholders(prev => ({ ...prev, password: 'Password Required' }));
+            setErrorBorders(prev => ({ ...prev, password: 1 }));
             hasError = true;
+        } else {
+            setErrorBorders(prev => ({ ...prev, password: 0 }));
+            setPlaceholders(prev => ({ ...prev, password: '' }));
         }
-
-        if (password !== reenterPassword) {
+    
+        if (!reenterPassword.trim()) {
+            setPlaceholders(prev => ({ ...prev, reenterPassword: 'Re-enter Password' }));
+            setErrorBorders(prev => ({ ...prev, reenterPassword: 1 }));
+            hasError = true;
+        } else if (password !== reenterPassword) {
             setPlaceholders(prev => ({ ...prev, reenterPassword: 'Passwords do not match' }));
-            setForm(prev => ({ ...prev, reenterPassword: '' })); // Clear the input
-            reenterPasswordInputRef.current.blur(); // Unfocus the input
+            setErrorBorders(prev => ({ ...prev, reenterPassword: 1 }));
             hasError = true;
+        } else {
+            setErrorBorders(prev => ({ ...prev, reenterPassword: 0 }));
+            setPlaceholders(prev => ({ ...prev, reenterPassword: '' }));
         }
-
+    
         if (hasError) {
             console.log('Invalid Fields');
             return;
@@ -67,7 +113,8 @@ function CreateAccountScreen() {
 
         // Create Account
         try {
-            const response = await postRequest('auth/create', { username: username, password: password });
+            const response = await postRequest('auth/create', 
+                { username: username, password: password, email: email, firstName: firstName, lastName: lastName});
         
             if (!response.error) {
                 console.log('Account created successfully:', response.data);
@@ -78,7 +125,6 @@ function CreateAccountScreen() {
                     if (!response.error) {
                         const userData = response.data;
 
-                        setCurrentUser(userData.username);
                         await storeData('username', userData.username);
                         await storeData('userID', userData.userID);
 
@@ -110,7 +156,7 @@ function CreateAccountScreen() {
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-                <ScrollView contentContainerStyle={styles.container}>
+                <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
                     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
                         <View style={styles.header}>
                             <Image
@@ -131,14 +177,17 @@ function CreateAccountScreen() {
 
                                     <TextInput
                                         placeholder={placeholders.firstName}
+                                        placeholderTextColor="#FF0000"
                                         autoCapitalize='words'
                                         clearButtonMode="while-editing"
                                         autoCorrect={false}
-                                        style={styles.inputControl}
+                                        style={[styles.inputControl, { borderWidth: errorBorders.firstName }]}
                                         value={form.firstName}
-                                        onChangeText={firstName =>
-                                            setForm(prev => ({ ...prev, firstName }))
-                                        }
+                                        onChangeText={firstName => {
+                                            setForm(prev => ({ ...prev, firstName }));
+                                            setErrorBorders(prev => ({ ...prev, firstName: 0 }));
+                                            setPlaceholders(prev => ({ ...prev, firstName: '' }));
+                                        }}
                                     />
                                 </View>
                             </View>
@@ -149,14 +198,37 @@ function CreateAccountScreen() {
 
                                     <TextInput
                                         placeholder={placeholders.lastName}
+                                        placeholderTextColor="#FF0000"
                                         autoCapitalize='words'
                                         clearButtonMode="while-editing"
                                         autoCorrect={false}
-                                        style={styles.inputControl}
+                                        style={[styles.inputControl, { borderWidth: errorBorders.lastName }]}
                                         value={form.lastName}
-                                        onChangeText={lastName =>
-                                            setForm(prev => ({ ...prev, lastName }))
-                                        }
+                                        onChangeText={lastName => {
+                                            setForm(prev => ({ ...prev, lastName }));
+                                            setErrorBorders(prev => ({ ...prev, lastName: 0 }));
+                                            setPlaceholders(prev => ({ ...prev, lastName: '' }));
+                                        }}
+                                    />
+                                </View>
+                            </View>
+
+                            <View style={styles.form}>
+                                <View style={styles.input}>
+                                    <Text style={styles.inputLabel}>Email</Text>
+                                    <TextInput
+                                        placeholder={placeholders.email}
+                                        placeholderTextColor="#FF0000"
+                                        keyboardType='email-address'
+                                        clearButtonMode="while-editing"
+                                        autoCorrect={false}
+                                        style={[styles.inputControl, { borderWidth: errorBorders.email }]}
+                                        value={form.email}
+                                        onChangeText={email => {
+                                            setForm(prev => ({ ...prev, email }));
+                                            setErrorBorders(prev => ({ ...prev, email: 0 }));
+                                            setPlaceholders(prev => ({ ...prev, email: '' }));
+                                        }}
                                     />
                                 </View>
                             </View>
@@ -167,17 +239,20 @@ function CreateAccountScreen() {
 
                                     <TextInput
                                         placeholder={placeholders.username}
+                                        placeholderTextColor="#FF0000"
                                         clearButtonMode="while-editing"
-                                        style={styles.inputControl}
+                                        style={[styles.inputControl, { borderWidth: errorBorders.username }]}
                                         value={form.username}
-                                        onChangeText={username =>
-                                            setForm(prev => ({ ...prev, username }))
-                                        }
+                                        onChangeText={username => {
+                                            setForm(prev => ({ ...prev, username }));
+                                            setErrorBorders(prev => ({ ...prev, username: 0 }));
+                                            setPlaceholders(prev => ({ ...prev, username: '' }));
+                                        }}
                                         onFocus={() =>
                                             setPlaceholders(prev => ({ ...prev, username: 'Used to Sign-In' }))
                                         }
                                         onBlur={() =>
-                                            setPlaceholders(prev => ({ ...prev, username: '' })) //Makes it go away on un-focus
+                                            setPlaceholders(prev => ({ ...prev, username: '' })) // Makes it go away on un-focus
                                         }
                                     />
                                 </View>
@@ -189,14 +264,17 @@ function CreateAccountScreen() {
 
                                     <TextInput
                                         placeholder={placeholders.password}
+                                        placeholderTextColor="#FF0000"
                                         secureTextEntry={true}
                                         autoCorrect={false}
                                         clearButtonMode="while-editing"
-                                        style={styles.inputControl}
+                                        style={[styles.inputControl, { borderWidth: errorBorders.password }]}
                                         value={form.password}
-                                        onChangeText={password =>
-                                            setForm(prev => ({ ...prev, password }))
-                                        }
+                                        onChangeText={password => {
+                                            setForm(prev => ({ ...prev, password }));
+                                            setErrorBorders(prev => ({ ...prev, password: 0 }));
+                                            setPlaceholders(prev => ({ ...prev, password: '' }));
+                                        }}
                                     />
                                 </View>
                             </View>
@@ -207,14 +285,17 @@ function CreateAccountScreen() {
 
                                     <TextInput
                                         placeholder={placeholders.reenterPassword}
+                                        placeholderTextColor="#FF0000"
                                         secureTextEntry={true}
                                         autoCorrect={false}
                                         clearButtonMode="while-editing"
-                                        style={styles.inputControl}
+                                        style={[styles.inputControl, { borderWidth: errorBorders.password }]}
                                         value={form.reenterPassword}
-                                        onChangeText={reenterPassword =>
-                                            setForm(prev => ({ ...prev, reenterPassword }))
-                                        }
+                                        onChangeText={reenterPassword => {
+                                            setForm(prev => ({ ...prev, reenterPassword }));
+                                            setErrorBorders(prev => ({ ...prev, reenterPassword: 0 }));
+                                            setPlaceholders(prev => ({ ...prev, reenterPassword: '' }));
+                                        }}
                                     />
                                 </View>
                             </View>
@@ -280,6 +361,8 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         fontWeight: '500',
         color: '#222',
+        borderColor: '#FF0000',
+        borderWidth: 0,
     },
     btn: {
         flexDirection: 'row',
