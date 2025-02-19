@@ -12,7 +12,7 @@ import Searchbar from '../components/Searchbar';
 
 const HomeScreen = () => {
     const bottomSheetRef = useRef<BottomSheet>(null);
-    const bottomSheetSnapPoints = useMemo(() => ['15%', '20%', '50%', '85%'], [])
+    const bottomSheetSnapPoints = useMemo(() => [115, 200, '50%', '85%'], [])
 
     const { userLocation, setUserLocation } = useGlobalState();
 

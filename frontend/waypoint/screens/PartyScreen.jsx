@@ -10,24 +10,7 @@ import { useGlobalState } from '../components/GlobalStateContext';
 import { storeData, getData, removeData, postRequest, getRequest, cleanupData } from '../utils/utils.js';
 
 function PartyScreen() {
-    // Function to always log in admin user by default, will be removed when log in fully complete
-    // const test = async () => {
-    //     //await removeData('partyID');
-
-    //     const loginData = await postRequest('auth/login', {username: "admin", password: "admin"});
-
-    //     if (!loginData.error) {
-    //         await storeData("username", loginData.data.username);
-    //         await storeData("userID", loginData.data.userID);
-
-    //         console.log('done logging in');
-    //     }
-    // }
-    // useEffect(() => {
-    //     test();
-
-    // }, []);
-    const { partySocket, setPartySocket, userPartyChange, setUserPartyChange, joinParty } = useGlobalState();
+    const { partySocket, setPartySocket, userPartyChange, setUserPartyChange, joinParty, disconnectedUser, setDisconnectedUser, setPartyMemberLocation } = useGlobalState();
 
     const [searchModalVisible, setSearchModalVisible] = useState(false);
     const [inviteModalVisible, setInviteModalVisible] = useState(false);
@@ -113,13 +96,29 @@ function PartyScreen() {
 
     // Update user party when someone joins
     useEffect(() => {
+        // Update party list when connection changed
         if (userPartyChange) {
             console.log('Party list updated');
             setUserPartyChange(false);
             getPartyList();
         }
 
+        // Remove disconnected user from map
+        if (disconnectedUser) {
+            setPartyMemberLocation((prevLocations) =>
+                prevLocations.filter((member) => member.username !== disconnectedUser)
+            );
+
+            setDisconnectedUser("");
+        }
+
     }, [userPartyChange]);
+
+    // Log into party if in one on boot
+    useEffect(() => {
+        getPartyList();
+
+    }, []);
 
     return (
         <SafeAreaView style={styles.safeContainer}>

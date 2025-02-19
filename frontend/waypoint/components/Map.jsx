@@ -156,21 +156,27 @@ const Map = () => {
 
     }, [userLocation]);
 
+    // Update friend location's
     useEffect(() => {
         if (userSentLocation) {
             const objectSentLocation = JSON.parse(userSentLocation);
 
+            // If sent location is yourself
             if (objectSentLocation.username != currentUser) {
+
+                // If list has entries
                 if (partyMemberLocation.length > 0) {
                     for (let i = 0; i < partyMemberLocation.length; i++) {
                         const currentMember = partyMemberLocation[i];
         
+                        // If user location already there
                         if (objectSentLocation.username == currentMember.username) {
                             setPartyMemberLocation(prevState => {
                                 let newState = [...prevState];
                                 newState[i] = objectSentLocation;
                                 return newState;
                             });
+                        // Add to locations
                         } else {
                             setPartyMemberLocation(prevState => [...prevState, objectSentLocation]);
                         }
@@ -179,6 +185,8 @@ const Map = () => {
                     setPartyMemberLocation(prevState => [...prevState, objectSentLocation]);
                 }
             }
+
+            setUserSentLocation(false);
         }
 
     }, [userSentLocation]);

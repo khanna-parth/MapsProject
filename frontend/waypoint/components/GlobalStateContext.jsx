@@ -14,6 +14,7 @@ export const GlobalStateProvider = ({ children }) => {
     const [userPartyChange, setUserPartyChange] = useState(false);
     const [partyMemberLocation, setPartyMemberLocation] = useState([]);
     const [currentUser, setCurrentUser] = useState("");
+    const [disconnectedUser, setDisconnectedUser] = useState("");
 
     const joinParty = async (userID, partyID) => {
         console.log(`Joining party with ${userID}, ${partyID}.`);
@@ -27,13 +28,25 @@ export const GlobalStateProvider = ({ children }) => {
                         partyID: String(partyID)
                     }
                 });
-    
+                
                 socket.on("connect", () => {
                     console.log("Connected to socket server");
                     setPartySocket(socket);
                     setUserPartyChange(true);
                     resolve(socket);
-                });   
+                });
+                
+                socket.on("connections", (socketData) => {
+                    let connections = socketData.split(" ")
+                    if (connections[2] == 'disconnected') {
+                        setDisconnectedUser(connections[1]);
+                        setUserPartyChange(true);
+                    }
+                    
+                    if (connections[2] != currentUser) {
+                        setUserPartyChange(true);
+                    }
+                });
     
                 socket.on("location", (socketData) => {
                     setUserSentLocation(socketData);
@@ -62,6 +75,7 @@ export const GlobalStateProvider = ({ children }) => {
             userPartyChange, setUserPartyChange,
             partyMemberLocation, setPartyMemberLocation,
             currentUser, setCurrentUser,
+            disconnectedUser, setDisconnectedUser,
             joinParty
         }}>
             {children}

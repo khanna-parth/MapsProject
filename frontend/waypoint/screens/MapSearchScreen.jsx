@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
+import { useGlobalState } from '../components/GlobalStateContext';
 import data from '../utils/defaults/assets.js';
 import { postRequest } from '../utils/utils.js';
 
@@ -12,8 +13,7 @@ const { width, height } = Dimensions.get('window');
 const Searchbar = ({ route }) => {
     const navigation = useNavigation();
 
-    const {location} = route.params;
-
+    const { userLocation } = useGlobalState();
     const [searchString, setSearchString] = useState("");
     const [typingTimeout, setTypingTimeout] = useState(null);
     const [placeList, setPlaceList] = useState([]);
@@ -27,9 +27,10 @@ const Searchbar = ({ route }) => {
 
         setIsLoading(true);
 
-        const searchData = await postRequest('routing/search', {query: searchString, lat: location.latitude, long: location.longitude});
-        
+        const searchData = await postRequest('routing/search', {query: searchString, lat: userLocation.latitude, long: userLocation.longitude});
+
         if (!searchData.error) {
+            
             let returnData = [];
 
             // Check once latitude and longitude are added
@@ -81,7 +82,8 @@ const Searchbar = ({ route }) => {
 
     // User clicked on destination
     const destinationPressed = (coordinates) => {
-
+        console.log(coordinates)
+        // Send to navigation
     }
 
     return (
@@ -107,7 +109,7 @@ const Searchbar = ({ route }) => {
                     data={placeList}
                     renderItem={({ item }) => {
                         return (
-                            <TouchableOpacity onPress={() => destinationPressed(item.address)}>
+                            <TouchableOpacity onPress={() => destinationPressed(item.coordinates)}>
                                 <View style={styles.card} key={item.cardID}>
                                     <View style={styles.cardTextArea} key={item.cardID}>
                                         <Text style={styles.cardText}>{item.name}</Text>
