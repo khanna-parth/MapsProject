@@ -91,11 +91,12 @@ export function setupSocketIO(server: HttpServer) {
             existingParty.broadcast("connections", `${validUser.username} disconnected`, 'SYSTEM', true);
             existingParty.removeUser(userID);
         } else {
-            console.log(`[Party] Did not find existing party for user: ${userID}`);
+            console.log(`[Party] Check passed: user is currently not connected in any parties`)
         }
 
         const joinResult = await PartyDB.joinParty(partyID, validUser);
         if (!joinResult.success) {
+            console.log(`[Party] INTERNAL ERROR: DATABASE COULD NOT BE UPDATED TO INCLUDE USER JOIN`)
             socket.emit('error', joinResult.error);
             socket.disconnect();
             return;

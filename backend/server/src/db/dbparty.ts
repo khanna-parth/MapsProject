@@ -25,7 +25,14 @@ class PartyDB {
                 relations: ['participants']
             });
     
-            if (!party) return { success: false, error: 'Party not found' };
+            if (!party) { 
+                const allParties = await Party.find({
+                        where: {}
+                    }
+                );
+                console.log(allParties);
+                return { success: false, error: 'Party not found' };
+            }
             if (party.participants.some(p => p.userID === user.userID)) {
                 return { success: true };
             }
@@ -53,9 +60,10 @@ class PartyDB {
             party.participants = party.participants.filter(p => p.userID !== user.userID);
             await party.save();
             
-            if (party.participants.length === 0) {
-                await party.remove();
-            }
+            // if (party.participants.length === 0 && party.connected.entries.length === 0) {
+            //     console.log(`REMOVING PARTY FROM 0 PARTICIPANTS`)
+            //     await party.remove();
+            // }
             
             return { success: true };
         } catch (error) {
@@ -79,6 +87,7 @@ class PartyDB {
 
         if (parties.length > 0) {
             Party.remove(parties)
+            console.log(`Deleted party with id ${partyID}`)
             return true;
         }
 
