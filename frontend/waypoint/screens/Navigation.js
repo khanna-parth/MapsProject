@@ -49,82 +49,116 @@ const NavScreen = () => {
 
     
     //Fetch User Route
-    useEffect(() => {
-        const fetchRoute = async () => {
-            if (!location || routeRequested) return;
-
-            setRouteRequested(true);
-            setLoadingRoute(true);  
-
-            const routeData = await getRoute(location.latitude, location.longitude);
-            
-            //console.log(JSON.stringify(routeData, null, 2))
+    const fetchRoute = useCallback(async (forceReroute = false) => {
+        if (!location || (!forceReroute && routeRequested)) return;
     
-            if (!routeData.error && routeData.data.directions) {
-                setDirections(routeData.data.directions);
-                setNextDirection(routeData.data.directions[0]);
-
-                const routeCoordinates = routeData.data.directions.flatMap((step) => {
-                    return decodePolyline(step.polyline);
-                });
+        setRouteRequested(true);
+        setLoadingRoute(true);
     
-                setRoute(routeCoordinates);
+        console.log(forceReroute ? "Re-routing user..." : "Fetching initial route...");
     
-                if (routeData.data.duration) {
-                    const durationInSeconds = routeData.data.duration.value;
-                    const durationInMinutes = Math.round(durationInSeconds / 60);
+        const routeData = await getRoute(location.latitude, location.longitude);
     
-                    // Convert seconds to hours & minutes
-                    const hours = Math.floor(durationInMinutes / 60);
-                    const minutes = durationInMinutes % 60;
-                    setRemainingTime(`${hours} Hours ${minutes} Minutes`);
+        if (!routeData.error && routeData.data.directions) {
+            setDirections(routeData.data.directions);
+            setNextDirection(routeData.data.directions[0]);
     
-                    // Get ETA
-                    let arrivalTime = new Date();
-                    arrivalTime.setSeconds(arrivalTime.getSeconds() + durationInSeconds);
-                    setEta(arrivalTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-                }
-            } else {
-                console.error("Failed to fetch route:", routeData.message);
+            const routeCoordinates = routeData.data.directions.flatMap((step) => {
+                return decodePolyline(step.polyline);
+            });
+    
+            setRoute(routeCoordinates);
+    
+            if (routeData.data.duration) {
+                const durationInSeconds = routeData.data.duration.value;
+                const durationInMinutes = Math.round(durationInSeconds / 60);
+    
+                const hours = Math.floor(durationInMinutes / 60);
+                const minutes = durationInMinutes % 60;
+                setRemainingTime(`${hours} Hours ${minutes} Minutes`);
+    
+                let arrivalTime = new Date();
+                arrivalTime.setSeconds(arrivalTime.getSeconds() + durationInSeconds);
+                setEta(arrivalTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
             }
-            setLoadingRoute(false);
-            setRouteRequested(false);
-        };
+        } else {
+            console.error("Failed to fetch route:", routeData.message);
+        }
     
+        setLoadingRoute(false);
+        setRouteRequested(false);
+    }, [location, routeRequested]);
+    
+    // Initial fetch
+    useEffect(() => {
         fetchRoute();
     }, [location]);
-
+    
+    // Off Route, Reroute
+    useEffect(() => {
+        if (!location || !route || route.length === 0) return;
+    
+        const checkIfOffRoute = () => {
+            let closestDistance = Infinity;
+    
+            for (let i = 0; i < route.length; i++) {
+                const point = route[i];
+                const distance = getDistance(location.latitude, location.longitude, point.latitude, point.longitude);
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                }
+            }
+    
+            // Meters off route - needs fine tuning
+            if (closestDistance > 10000) {
+                console.log("Recalculating...");
+                setTimeout(() => fetchRoute(true), 3000);
+            }
+        };
+    
+        checkIfOffRoute();
+    }, [location, route, fetchRoute]);
 
     //Location
     useEffect(() => {
         let locationSubscription = null;
-
+    
         const requestLocationPermission = async () => {
             let { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
                 alert('Permission to access location was denied');
                 return;
             }
-
+    
             const currentLocation = await Location.getCurrentPositionAsync({
                 accuracy: Location.Accuracy.High,
             });
             setLocation(currentLocation.coords);
-
+    
             locationSubscription = await Location.watchPositionAsync(
                 {
                     accuracy: Location.Accuracy.High,
-                    timeInterval: 1000000000000000000000,
-                    distanceInterval: 10000000000000000000000000,
+                    timeInterval: 5000, // Update every 5s
+                    distanceInterval: 10, // Update every 10 meters
                 },
                 (newLocation) => {
                     setLocation(newLocation.coords);
+    
+                    if (isZoomedIn && mapRef.current) {
+                        mapRef.current.animateToRegion({
+                            latitude: newLocation.coords.latitude,
+                            longitude: newLocation.coords.longitude,
+                            latitudeDelta: 0.004,
+                            longitudeDelta: 0.004,
+                        }, 1000);
+                    }
                 }
             );
+            console.log("User Location Checked");
         };
-
+    
         requestLocationPermission();
-
+    
         return () => {
             if (locationSubscription) {
                 locationSubscription.remove();
@@ -178,6 +212,11 @@ const NavScreen = () => {
         }
         
         setIsZoomedIn(prev => !prev)
+    };
+
+    const handleRegionChange = () => {
+        // Set isZoomedIn to false if user moves the map
+        setIsZoomedIn(false);
     };
 
     //Uses the polyline objects given by parths api 🪄🪄
@@ -251,6 +290,8 @@ const NavScreen = () => {
                     latitudeDelta: 0.004,
                     longitudeDelta: 0.004,
                 }}
+
+                onRegionChangeComplete={handleRegionChange}
             >
                 {route && (
                     <Polyline
