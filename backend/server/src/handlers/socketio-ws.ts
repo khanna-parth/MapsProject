@@ -1,10 +1,11 @@
 import { Server as HttpServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { pool } from '../models/pool';
-import { checkValidString, VerifyLocationData } from '../util/util';
+import { checkValidString, VerifyLocationData, generateUniqueId } from '../util/util';
 import { UserDB } from '../db/dbuser';
 import { PartyDB } from '../db/dbparty';
 import { PartyPolicy } from '../models/deps/party-deps';
+import { SharedDestination } from '../models/geolocation';
 
 export function setupSocketIO(server: HttpServer) {
     const io = new SocketIOServer(server, {
@@ -110,6 +111,31 @@ export function setupSocketIO(server: HttpServer) {
         socket.emit("connection", `You joined party ${partyID}`)
         party.broadcast('connections', `${validUser.username} joined`, '', true);
 
+        socket.on('add-destination', async (destination: Omit<SharedDestination, 'id' | 'addedAt'>) => {
+            const party = await pool.partyExists(partyID);
+            if (party) {
+                const newDestination: SharedDestination = {
+                    ...destination,
+                    id: generateUniqueId(),
+                    addedAt: new Date()
+                };
+                await party.addSharedDestination(newDestination);
+            }
+        });
+
+        socket.on('remove-destination', async (destinationId: string) => {
+            const party = await pool.partyExists(partyID);
+            if (party) {
+                await party.removeSharedDestination(destinationId);
+            }
+        });
+
+        socket.on('set-current-destination', async (destinationId: string) => {
+            const party = await pool.partyExists(partyID);
+            if (party) {
+                await party.setCurrentDestination(destinationId);
+            }
+        });
 
         socket.on('message', async (message: string) => {
             const party = await pool.partyExists(partyID);

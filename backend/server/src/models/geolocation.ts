@@ -1,4 +1,3 @@
-
 interface BaseCoordinates {
     lat: number
     long: number
@@ -84,4 +83,18 @@ interface PlacesResult {
     error?: string
 }
 
-export { Coordinates, ReverseGeocodeResult, DirectionsDistance, DirectionsDuration, DirectionsResult, Directions, PlacesResult, Location }
+interface SharedDestination {
+    id: string;
+    name: string;
+    address: string;
+    coordinates: Coordinates;
+    addedBy: string;
+    addedAt: Date;
+}
+
+interface SharedDestinationList {
+    destinations: SharedDestination[];
+    currentDestination?: SharedDestination;
+}
+
+export { Coordinates, ReverseGeocodeResult, DirectionsDistance, DirectionsDuration, DirectionsResult, Directions, PlacesResult, Location, SharedDestination, SharedDestinationList }

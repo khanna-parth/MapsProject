@@ -1,5 +1,5 @@
 import { PartyPolicy } from "./deps/party-deps";
-import { DirectionsResult } from "./geolocation";
+import { DirectionsResult, SharedDestination, SharedDestinationList } from "./geolocation";
 import { User } from "./user"
 import { Entity, PrimaryColumn, Column, ManyToOne, ManyToMany, JoinTable, BaseEntity, BeforeInsert } from 'typeorm';
 
@@ -28,12 +28,38 @@ class Party extends BaseEntity {
     isActive!: boolean;
 
     routes: Map<string, DirectionsResult> = new Map();
+    
+    @Column('simple-json', { nullable: true })
+    sharedDestinations: SharedDestinationList = { destinations: [] };
 
     @BeforeInsert()
     setDefaults() {
         this.connected = new Map();
         this.lastEmpty = Date.now();
         this.isActive = true;
+        this.sharedDestinations = { destinations: [] };
+    }
+
+    async addSharedDestination(destination: SharedDestination): Promise<void> {
+        this.sharedDestinations.destinations.push(destination);
+        await this.save();
+        this.broadcast('shared-destinations', JSON.stringify(this.sharedDestinations), 'SYSTEM', true);
+    }
+
+    async removeSharedDestination(destinationId: string): Promise<void> {
+        this.sharedDestinations.destinations = this.sharedDestinations.destinations.filter(
+            d => d.id !== destinationId
+        );
+        await this.save();
+        this.broadcast('shared-destinations', JSON.stringify(this.sharedDestinations), 'SYSTEM', true);
+    }
+
+    async setCurrentDestination(destinationId: string): Promise<void> {
+        this.sharedDestinations.currentDestination = this.sharedDestinations.destinations.find(
+            d => d.id === destinationId
+        );
+        await this.save();
+        this.broadcast('shared-destinations', JSON.stringify(this.sharedDestinations), 'SYSTEM', true);
     }
 
     async setRoute(userID: string, route: DirectionsResult, broadcast: boolean) {
