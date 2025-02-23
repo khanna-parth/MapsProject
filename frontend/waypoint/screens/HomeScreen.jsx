@@ -4,7 +4,7 @@ import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import React, { useMemo, useEffect, useRef, useState } from 'react';
 import { useGlobalState } from '../components/GlobalStateContext';
 
-import data from '../utils/defaults/assets.js'
+import data from '../utils/defaults/assets.js';
 
 import PartyScreen from './PartyScreen';
 import Map from '../components/Map';
@@ -12,11 +12,12 @@ import Searchbar from '../components/Searchbar';
 
 const HomeScreen = () => {
     const { isCameraMoving } = useGlobalState();
-    const bottomSheetRef = useRef<BottomSheet>(null);
+    const bottomSheetRef = useRef(null);
     const bottomSheetSnapPoints = useMemo(() => [155, 215, '50%', '85%'], []);
     const [isLayoutReady, setIsLayoutReady] = useState(false);
 
     const opacity = useRef(new Animated.Value(isCameraMoving ? 0 : 1)).current;
+
     useEffect(() => {
         Animated.timing(opacity, {
             toValue: isCameraMoving ? 0 : 1,
@@ -24,20 +25,13 @@ const HomeScreen = () => {
             useNativeDriver: true,
         }).start();
     }, [isCameraMoving]);
-    
+
+    // Ensuring layout is ready before showing the bottom sheet
     const handleLayout = () => {
         setIsLayoutReady(true);
     };
 
-    useEffect(() => {
-        if (isLayoutReady && bottomSheetRef.current) {
-            const timeout = setTimeout(() => {
-                bottomSheetRef.current.snapToIndex(0);
-            }, 100);
-            return () => clearTimeout(timeout);
-        }
-    }, [isLayoutReady]);
-
+    // Ensuring the bottom sheet always snaps correctly after mount
     useEffect(() => {
         if (isLayoutReady && bottomSheetRef.current) {
             const timeout = setTimeout(() => {
@@ -52,13 +46,12 @@ const HomeScreen = () => {
             <Animated.View style={[{ opacity }, styles.searchbar]}>
                 <Searchbar />
             </Animated.View>
-            {/* <Searchbar style={styles.searchbar}/> */}
-            <Map/>
+            <Map />
             <GestureHandlerRootView style={styles.swipeUpContainer}>
                 <View style={styles.bottomOverlay} />
                 {isLayoutReady && (
                     <BottomSheet
-                        useRef={bottomSheetRef}
+                        ref={bottomSheetRef}
                         snapPoints={bottomSheetSnapPoints}
                         backgroundStyle={{ 
                             backgroundColor: data.colors.offWhite, 
@@ -70,19 +63,18 @@ const HomeScreen = () => {
                         index={0}
                     >
                         <BottomSheetView style={styles.swipeUpContentContainer}>
-                            <PartyScreen style={{flex: 1}}/>
+                            <PartyScreen style={{ flex: 1 }} />
                         </BottomSheetView>
                     </BottomSheet>
                 )}
             </GestureHandlerRootView>
         </View>
-    )
-}
+    );
+};
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        //paddingTop: Platform.OS === 'android' ? 25 : 0
     },
     searchbar: {
         position: 'absolute',
@@ -92,7 +84,6 @@ const styles = StyleSheet.create({
     },
     swipeUpContainer: {
         flex: 1,
-        
     },
     swipeUpContentContainer: {
         flex: 1,
@@ -105,6 +96,6 @@ const styles = StyleSheet.create({
         backgroundColor: data.colors.offWhite,
         zIndex: 10,
     },
-})
+});
 
 export default HomeScreen;
