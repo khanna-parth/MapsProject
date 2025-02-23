@@ -31,25 +31,22 @@ export const getNearbyPlaces = async (latitude, longitude, preferences=['restaur
     return {error: false, data: nearbyPlaces.data.places, message: "Retrieved places successfully."};
 }
 
-export const getRoute = async (latitude, longitude) => {
-    //Temp Hard Code 
-
-    /*
-        Will need to get from the search for directions
-    */
+export const getRoute = async (userLatitude, userLongitude, destLatitude, destLongitude) => {
+    console.log("getRoute run");
+    
     const destination = {
-        lat: "37.76741612078479",
-        long: "-122.23997872905375"
+        lat: destLatitude,
+        long: destLongitude
     };
 
-    if (!latitude || !longitude) {
+    if (!userLatitude || !userLongitude) {
         return { error: true, message: "Origin coordinates must be provided." };
     }
 
     const requestData = {
         origin: {
-            lat: latitude.toString(),
-            long: longitude.toString()
+            lat: userLatitude.toString(),
+            long: userLongitude.toString()
         },
         destination: destination
     };
@@ -60,12 +57,11 @@ export const getRoute = async (latitude, longitude) => {
         //console.log(requestData);
         //console.log("RouteResponse");
         //console.log(JSON.stringify(routeResponse, null, 2));
+        //console.log(routeResponse.data.duration
 
         if (routeResponse.error) {
             return { error: true, message: "Error retrieving route." };
         }
-        
-        //console.log(routeResponse.data.duration);
 
         return {
             error: false,

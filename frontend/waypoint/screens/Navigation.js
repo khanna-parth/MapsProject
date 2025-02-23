@@ -1,6 +1,6 @@
-import { StyleSheet, Text, View, Platform, SafeAreaView, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
@@ -13,6 +13,9 @@ import * as Location from 'expo-location';
 
 const NavScreen = () => {
     const navigation = useNavigation();
+
+    const screenRoute = useRoute();
+    const { coordinates } = screenRoute.params || {};
 
     const mapRef = useRef(null);
     const [isZoomedIn, setIsZoomedIn] = useState(true);
@@ -46,7 +49,6 @@ const NavScreen = () => {
         setRoute(null);
         navigation.navigate("Home");
     }
-
     
     //Fetch User Route
     const fetchRoute = useCallback(async (forceReroute = false) => {
@@ -54,10 +56,11 @@ const NavScreen = () => {
     
         setRouteRequested(true);
         setLoadingRoute(true);
-    
-        console.log(forceReroute ? "Re-routing user..." : "Fetching initial route...");
-    
-        const routeData = await getRoute(location.latitude, location.longitude);
+
+        console.log("Destination:", coordinates);
+        console.log(forceReroute ? "Re-Routing..." : "Loading route...");
+
+        const routeData = await getRoute(location.latitude, location.longitude, coordinates.lat, coordinates.long);
     
         if (!routeData.error && routeData.data.directions) {
             setDirections(routeData.data.directions);
