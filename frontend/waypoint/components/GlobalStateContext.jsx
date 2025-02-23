@@ -15,6 +15,7 @@ export const GlobalStateProvider = ({ children }) => {
     const [partyMemberLocation, setPartyMemberLocation] = useState([]);
     const [currentUser, setCurrentUser] = useState("");
     const [disconnectedUser, setDisconnectedUser] = useState("");
+    const [isCameraMoving, setIsCameraMoving] = useState(false);
 
     const joinParty = async (userID, partyID) => {
         console.log(`Joining party with ${userID}, ${partyID}.`);
@@ -76,6 +77,7 @@ export const GlobalStateProvider = ({ children }) => {
             partyMemberLocation, setPartyMemberLocation,
             currentUser, setCurrentUser,
             disconnectedUser, setDisconnectedUser,
+            isCameraMoving, setIsCameraMoving,
             joinParty
         }}>
             {children}

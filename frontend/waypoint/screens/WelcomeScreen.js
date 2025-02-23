@@ -1,11 +1,39 @@
 import { StyleSheet, Text, View, Button, Platform, SafeAreaView, Image } from 'react-native';
+import { useEffect } from 'react';
 
 import { useNavigation } from '@react-navigation/native';
+import { useGlobalState } from '../components/GlobalStateContext';
 
+import { postRequest, getData } from '../utils/utils.js';
 import data from '../utils/defaults/assets.js'
 
 function WelcomeScreen() {
     const navigation = useNavigation();
+
+    const { setCurrentUser } = useGlobalState();
+
+    useEffect(() => {
+        const attemptAutoLogin = async () => {
+            const username = await getData('username');
+            const password = await getData('password');
+
+            if (!username.error && !password.error) {
+                const response = await postRequest('auth/login', { username: username.data, password: password.data });
+
+
+                if (!response.error) {
+                    console.log('Login successful:', username.data);
+                    
+                    setCurrentUser(username.data);
+    
+                    navigation.navigate('Home');
+                }
+            }
+
+        };
+
+        attemptAutoLogin();
+    }, []);
 
     // Login button pressed
     const handleLogIn = () => {

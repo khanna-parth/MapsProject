@@ -1,37 +1,30 @@
-import { Text, StyleSheet, View, Image, Dimensions, TouchableOpacity, Keyboard } from 'react-native'
-import React, { useEffect, useState, useRef } from 'react'
+import { Text, StyleSheet, View, Dimensions, Keyboard } from 'react-native'
+import React from 'react'
+import Icon from 'react-native-vector-icons/AntDesign'
 
 import { useNavigation } from '@react-navigation/native';
 
 import data from '../utils/defaults/assets.js';
-import { useGlobalState } from './GlobalStateContext';
 
 const { width, height } = Dimensions.get('window');
 
 const Searchbar = ({style}) => {
     const navigation = useNavigation();
 
-    const { userLocation, setUserLocation } = useGlobalState();
-
     const searchbarTouched = () => {
         Keyboard.dismiss();
-        navigation.navigate(
-            'MapSearch', 
-            {userLocation},
-        );
+        navigation.navigate('MapSearch');
     }
 
     return (
         <View 
             style={[styles.container, style]}
-            onTouchStart={searchbarTouched}
+            onTouchEnd={searchbarTouched}
         >   
             <View style={styles.textInput}>
                 <Text style={styles.placeHolderText}>Search</Text>
             </View>
-            <TouchableOpacity>
-                <Image source={data.images.searchIconBlack} style={styles.searchImage}/>
-            </TouchableOpacity>
+            <Icon name='search1' size={25} color='black' />
         </View>
     );
 }
@@ -43,16 +36,14 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         alignSelf: 'center',
-        width: '90%',
+        width: width - 32,
         height: 50,
         backgroundColor: data.colors.offWhite,
-        //borderColor: data.colors.primaryColor,
-        //borderWidth: 1,
-        borderRadius: 25,
+        borderRadius: 20,
         shadowColor: 'black',
-        shadowOffset: { width: 6, height: 6 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
+        shadowOpacity: 0.2,
+        shadowOffset: { width: 4, height: 4 },
+        shadowRadius: 2,
         elevation: 10,
     },
     searchImage: {
@@ -63,8 +54,6 @@ const styles = StyleSheet.create({
         height: '100%',
         width: (width - (width*.15)) - 30,
         justifyContent: 'center',
-        //backgroundColor: 'white',
-        
     },
     placeHolderText: {
         color: '#999',

@@ -1,36 +1,79 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Animated } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useEffect, useRef, useState } from 'react';
+import { useGlobalState } from '../components/GlobalStateContext';
 
 import data from '../utils/defaults/assets.js'
-import { useGlobalState } from '../components/GlobalStateContext';
 
 import PartyScreen from './PartyScreen';
 import Map from '../components/Map';
 import Searchbar from '../components/Searchbar';
 
 const HomeScreen = () => {
+    const { isCameraMoving } = useGlobalState();
     const bottomSheetRef = useRef<BottomSheet>(null);
-    const bottomSheetSnapPoints = useMemo(() => [115, 200, '50%', '85%'], [])
+    const bottomSheetSnapPoints = useMemo(() => [155, 215, '50%', '85%'], []);
+    const [isLayoutReady, setIsLayoutReady] = useState(false);
 
-    const { userLocation, setUserLocation } = useGlobalState();
+    const opacity = useRef(new Animated.Value(isCameraMoving ? 0 : 1)).current;
+    useEffect(() => {
+        Animated.timing(opacity, {
+            toValue: isCameraMoving ? 0 : 1,
+            duration: 200,
+            useNativeDriver: true,
+        }).start();
+    }, [isCameraMoving]);
+    
+    const handleLayout = () => {
+        setIsLayoutReady(true);
+    };
+
+    useEffect(() => {
+        if (isLayoutReady && bottomSheetRef.current) {
+            const timeout = setTimeout(() => {
+                bottomSheetRef.current.snapToIndex(0);
+            }, 100);
+            return () => clearTimeout(timeout);
+        }
+    }, [isLayoutReady]);
+
+    useEffect(() => {
+        if (isLayoutReady && bottomSheetRef.current) {
+            const timeout = setTimeout(() => {
+                bottomSheetRef.current.snapToIndex(0);
+            }, 100);
+            return () => clearTimeout(timeout);
+        }
+    }, [isLayoutReady]);
 
     return (
-        <View style={styles.container}>
-            <Searchbar style={styles.searchbar}/>
+        <View style={styles.container} onLayout={handleLayout}>
+            <Animated.View style={[{ opacity }, styles.searchbar]}>
+                <Searchbar />
+            </Animated.View>
+            {/* <Searchbar style={styles.searchbar}/> */}
             <Map/>
             <GestureHandlerRootView style={styles.swipeUpContainer}>
-                <BottomSheet
-                    useRef={bottomSheetRef}
-                    snapPoints={bottomSheetSnapPoints}
-                    backgroundStyle={{ backgroundColor: data.colors.offWhite }}
-                    index={0}
-                >
-                    <BottomSheetView style={styles.swipeUpContentContainer}>
-                        <PartyScreen style={{flex: 1}}/>
-                    </BottomSheetView>
-                </BottomSheet>
+                <View style={styles.bottomOverlay} />
+                {isLayoutReady && (
+                    <BottomSheet
+                        useRef={bottomSheetRef}
+                        snapPoints={bottomSheetSnapPoints}
+                        backgroundStyle={{ 
+                            backgroundColor: data.colors.offWhite, 
+                            shadowColor: 'black',
+                            shadowOpacity: 0.2,
+                            shadowRadius: 5,
+                            elevation: 10, 
+                        }}
+                        index={0}
+                    >
+                        <BottomSheetView style={styles.swipeUpContentContainer}>
+                            <PartyScreen style={{flex: 1}}/>
+                        </BottomSheetView>
+                    </BottomSheet>
+                )}
             </GestureHandlerRootView>
         </View>
     )
@@ -43,14 +86,24 @@ const styles = StyleSheet.create({
     },
     searchbar: {
         position: 'absolute',
+        alignSelf: 'center',
         top: 60,
         zIndex: 10,
     },
     swipeUpContainer: {
         flex: 1,
+        
     },
     swipeUpContentContainer: {
         flex: 1,
+    },
+    bottomOverlay: {
+        position: 'absolute',
+        bottom: 0,
+        width: '100%',
+        height: 25,
+        backgroundColor: data.colors.offWhite,
+        zIndex: 10,
     },
 })
 

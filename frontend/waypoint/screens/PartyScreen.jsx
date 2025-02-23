@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Platform, SafeAreaView, FlatList, Image, TextInput } from 'react-native';
+import { StyleSheet, Text, View, Platform, SafeAreaView, FlatList, Image, TextInput, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 
 import Box from '../components/Box';
@@ -7,10 +7,10 @@ import UserInviteScreen from './UserInvite';
 
 import data from '../utils/defaults/assets.js'
 import { useGlobalState } from '../components/GlobalStateContext';
-import { storeData, getData, removeData, postRequest, getRequest, cleanupData } from '../utils/utils.js';
+import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
 
 function PartyScreen() {
-    const { partySocket, setPartySocket, userPartyChange, setUserPartyChange, joinParty, disconnectedUser, setDisconnectedUser, setPartyMemberLocation } = useGlobalState();
+    const { partySocket, setPartySocket, userPartyChange, setUserPartyChange, joinParty, disconnectedUser, setDisconnectedUser, setPartyMemberLocation, currentUser } = useGlobalState();
 
     const [searchModalVisible, setSearchModalVisible] = useState(false);
     const [inviteModalVisible, setInviteModalVisible] = useState(false);
@@ -44,7 +44,7 @@ function PartyScreen() {
                 partyMembers.push({username: partyData.data.connected[i].username, userID: i});
             }
 
-            setPartyID(partyID.data)
+            setPartyID(partyID.data);
             setPartyList(partyMembers);
             return {error: false, message: "Party members successfully retrieved"};
         }
@@ -80,6 +80,8 @@ function PartyScreen() {
     };
 
     const handleJoinParty = async (partyID) => {
+        await removeData('partyID');
+
         await storeData('partyID', partyID);
         const userID = await getData("userID");
 
@@ -116,89 +118,113 @@ function PartyScreen() {
 
     // Log into party if in one on boot
     useEffect(() => {
-        getPartyList();
+        const autoJoin = async () => {
+            const userID = await getData("userID");
+            const partyID = await getData("partyID");
 
+            if (userID.error || partyID.error) {
+                removeData('partyID');
+                return;
+            } else if (!partyID.data) {
+                removeData('partyID');
+                return;
+            }
+
+            await joinParty(userID.data, partyID.data);
+
+            getPartyList();
+        }
+        
+        autoJoin();
     }, []);
 
     return (
-        <SafeAreaView style={styles.safeContainer}>
-            
-            {/* Top Button Row */}
+        <TouchableWithoutFeedback style={styles.notSearch} onPressIn={() => Keyboard.dismiss()}>
+            <SafeAreaView style={styles.safeContainer}>
+                
+                {/* Top Button Row */}
 
-            <View style={styles.topButtons}>
-                <Box source={data.images.searchIcon} onPress={handleSearch}>Search</Box>
-                <Box source={data.images.inviteButtonIcon} onPress={handleInvite}>Invite</Box>
-            </View>
+                <View style={styles.topButtons}>
+                    <Box source={data.images.searchIcon} onPress={handleSearch}>Search</Box>
+                    <Box source={data.images.inviteButtonIcon} onPress={handleInvite}>Invite</Box>
+                </View>
 
-            {/* List of party members */}
+                {/* List of party members */}
 
-            <View style={styles.wrapper}>
-                <FlatList 
-                    data={partyList}
-                    renderItem={({ item }) => {
-                        return (
-                            <View style={styles.card} key={item.userID}>
-                                <Image source={data.images.defaultAvatar} style={styles.cardImage}/>
-                                <View style={styles.cardTextArea} key={item.userID}>
-                                    <Text style={styles.cardText}>{item.username}</Text>
+                <View style={styles.wrapper}>
+                    <FlatList
+                        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, paddingHorizontal: 16, paddingTop: 5 }}
+                        data={partyList}
+                        renderItem={({ item }) => {
+                            return (
+                                <View style={styles.card} key={item.userID}>
+                                    <View style={styles.cardImage}>
+                                        <Image source={data.images.defaultAvatar} style={styles.cardImage}/>
+                                    </View>
+                                    
+                                    <View style={styles.cardTextArea} key={item.userID}>
+                                        <Text style={styles.cardText}>{item.username}</Text>
+                                    </View>
+                                </View>
+                            );
+                        }}
+                        horizontal={false}
+                        keyExtractor={(item) => item.userID.toString()}
+                        ItemSeparatorComponent={<View style={{ height: 16 }} />}
+                        ListEmptyComponent={
+                            <View style={styles.listEmptyContainer}>
+                                <View style={styles.joinPartyContainer}>
+                                    <TextInput 
+                                        style={styles.textInput}
+                                        keyboardType="numeric" 
+                                        placeholder='Party ID'
+                                        value={partySearch}
+                                        onChangeText={setPartySearch}
+                                    />
+                                    <Box style={{width: 150, height: 50, justifyContent: 'center'}} textStyle={{fontSize: 16, paddingBottom: 0}} onPress={() => handleJoinParty(partySearch)}>Join Party</Box>
                                 </View>
                             </View>
-                        );
+                        }
+                        ListHeaderComponent={
+                            partyList.length > 0 ? ( // Only show header when there's data
+                                <View style={{flex:1}}>
+                                    <View style={styles.listHeaderContainer}>
+                                        <Text style={styles.listHeaderText}>Your Party</Text>
+                                        <Box 
+                                            style={{ backgroundColor: data.colors.red, width: 70, height: 30, justifyContent: 'center'}} 
+                                            textStyle={{ fontSize: 16, paddingBottom: 0 }} 
+                                            onPress={handleLeave}
+                                        >
+                                            Leave
+                                        </Box>
+                                    </View>  
+                                    <Text style={styles.partyIDText}>PartyID: {partyID}</Text>
+                                </View> 
+                            ) : null  
+                        }
+                    />
+                </View>
+
+                {/* Search Screen */}
+
+                <UserSearchScreen 
+                    visible={searchModalVisible} 
+                    onRequestClose={() => {
+                        setSearchModalVisible(false);
+                    }} 
+                ></UserSearchScreen>
+                
+
+                {/* Invite Screen */}
+
+                <UserInviteScreen 
+                    visible={inviteModalVisible} 
+                    onRequestClose={() => {
+                        setInviteModalVisible(false);
                     }}
-                    horizontal={false}
-                    keyExtractor={(item) => item.userID.toString()}
-                    ItemSeparatorComponent={<View style={{ height: 16 }} />}
-                    ListEmptyComponent={
-                        <View style={styles.listEmptyContainer}>
-                            <TextInput 
-                                style={styles.textInput}
-                                keyboardType="numeric" 
-                                placeholder='Party ID'
-                                value={partySearch}
-                                onChangeText={setPartySearch}
-                            />
-                            <Box style={{width: 150, height: 50, justifyContent: 'center'}} textStyle={{fontSize: 16, paddingBottom: 0}} onPress={() => handleJoinParty(partySearch)}>Join Party</Box>
-                        </View>
-                    }
-                    ListHeaderComponent={
-                        partyList.length > 0 ? ( // Only show header when there's data
-                            <View style={{flex:1}}>
-                                <View style={styles.listHeaderContainer}>
-                                    <Text style={styles.listHeaderText}>Party Members</Text>
-                                    <Box 
-                                        style={{ backgroundColor: data.colors.red, width: 70, height: 30, justifyContent: 'center'}} 
-                                        textStyle={{ fontSize: 16, paddingBottom: 0 }} 
-                                        onPress={handleLeave}
-                                    >
-                                        Leave
-                                    </Box>
-                                </View>  
-                                <Text style={styles.listHeaderText}>PartyID: {partyID}</Text>
-                            </View> 
-                        ) : null  
-                    }
-                />
-            </View>
-
-            {/* Search Screen */}
-
-            <UserSearchScreen 
-                visible={searchModalVisible} 
-                onRequestClose={() => {
-                    setSearchModalVisible(false);
-                }} 
-            ></UserSearchScreen>
-            
-
-            {/* Invite Screen */}
-
-            <UserInviteScreen 
-                visible={inviteModalVisible} 
-                onRequestClose={() => {
-                    setInviteModalVisible(false);
-                }}
-            ></UserInviteScreen>
-        </SafeAreaView>
+                ></UserInviteScreen>
+            </SafeAreaView>
+        </TouchableWithoutFeedback>
     );
 }
 
@@ -220,7 +246,12 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: 'white',
         padding: 16,
-        borderRadius: 8,
+        borderRadius: 20,
+        shadowColor: 'black',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 4, height: 4 },
+        shadowRadius: 2,
+        elevation: 10,
         //marginBottom: 16
     },
     cardImage: {
@@ -235,40 +266,28 @@ const styles = StyleSheet.create({
     },
     listHeaderText: {
         fontSize: 20,
+        // marginBottom: 12,
+    },
+    partyIDText: {
+        fontSize: 16,
         marginBottom: 12,
+        color: '#999',
     },
     topButtons: {
         justifyContent: "space-evenly",
         flexDirection: 'row',
-        paddingBottom: 16
-    },
-    modalContainer: {
-        flex: 1,
-        backgroundColor: data.colors.offWhite,
-        padding: 16,
-        paddingBottom: 0,
-    },
-    modalTitle: {
-        textAlign: 'center',
         paddingBottom: 16,
-        fontSize: 20,
-        fontWeight: 'bold'
-    },
-    textInput: {
-        height: 40,
-        backgroundColor: 'white',
-        marginBottom: 15,
-        padding: 10,
-        borderRadius: 5
+        paddingTop: 5
     },
     listHeaderContainer: {
         flex: 1,
         justifyContent: "space-between",
         flexDirection: 'row',
-        paddingBottom: 16
     },
     listEmptyContainer: {
         flex: 1,
+    },
+    joinPartyContainer: {
         justifyContent: 'space-evenly',
         flexDirection: 'row',
         rowGap: 20,
@@ -279,7 +298,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         marginBottom: 15,
         padding: 10,
-        borderRadius: 5
+        borderRadius: 20,
     },
 });
 

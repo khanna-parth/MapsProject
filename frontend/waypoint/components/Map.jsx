@@ -1,4 +1,4 @@
-import { StyleSheet, View, SafeAreaView, ActivityIndicator, Keyboard, Pressable, Image } from 'react-native'
+import { StyleSheet, View, SafeAreaView, ActivityIndicator, Keyboard, Pressable, Image, Animated } from 'react-native'
 import React, { useState, useEffect, useRef } from 'react';
 import MapView, { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
@@ -11,7 +11,7 @@ import { getData } from '../utils/utils.js';
 import Button from '../components/Button.jsx'
 
 const Map = () => {
-    const { currentUser, userLocation, setUserLocation, partySocket, userSentLocation, setUserSentLocation, partyMemberLocation, setPartyMemberLocation } = useGlobalState();
+    const { currentUser, userLocation, setUserLocation, partySocket, userSentLocation, setUserSentLocation, partyMemberLocation, setPartyMemberLocation, isCameraMoving, setIsCameraMoving } = useGlobalState();
     const mapRef = useRef(null);
     const [cameraDirection, setCameraDirection] = useState(0);
 
@@ -19,6 +19,15 @@ const Map = () => {
     const [previousLocation, setPreviousLocation] = useState(null);
     const [timeoutId, setTimeoutId] = useState(null);
     const locationTimeout = useRef(null);
+
+    const opacity = useRef(new Animated.Value(isCameraMoving ? 0 : 1)).current;
+    useEffect(() => {
+        Animated.timing(opacity, {
+            toValue: isCameraMoving ? 0 : 1,
+            duration: 200,
+            useNativeDriver: true,
+        }).start();
+    }, [isCameraMoving]);
 
     // Location stuff
     useEffect(() => {
@@ -33,7 +42,7 @@ const Map = () => {
 
             // Initial location
             const currentLocation = await Location.getCurrentPositionAsync({
-                accuracy: Location.Accuracy.High,
+                accuracy: Location.Accuracy.Balanced,
             });
             setUserLocation(currentLocation.coords);
             setPreviousLocation(currentLocation.coords);
@@ -71,9 +80,44 @@ const Map = () => {
             setPlaces(placeData.data);
         }
     };
+
+    // While camera is moving
+    const handleRegionChange = async (region) => {
+        if (!isCameraMoving) {
+            const distance = getDistance(
+                userLocation.latitude,
+                userLocation.longitude,
+                region.latitude,
+                region.longitude
+            );
     
-    // When camera moves
+            const threshold = 100; // Meters
+
+            if (distance > threshold) {
+                setIsCameraMoving(true);
+            } 
+        }
+
+        if (timeoutId) {
+            clearTimeout(timeoutId);
+            setTimeoutId(null);
+        }
+
+        // Camera direction
+        if (mapRef.current) {
+            const camera = await mapRef.current.getCamera();
+            setCameraDirection(camera.heading);
+        }
+    };
+    
+    // When camera is done moving
     const handleRegionChangeComplete = async (region) => {
+        setTimeout(() => {
+            if (isCameraMoving) {
+                setIsCameraMoving(false);
+            }
+        }, 500);
+
         const distance = getDistance(
             previousLocation.latitude,
             previousLocation.longitude,
@@ -110,6 +154,7 @@ const Map = () => {
         }
     };
 
+    // Move camera to where user is
     const locationPressed = () => {
         if (userLocation && mapRef.current) {
             mapRef.current.animateToRegion({
@@ -217,18 +262,7 @@ const Map = () => {
                         latitudeDelta: 0.1,
                         longitudeDelta: 0.1,
                     }}
-                    onRegionChange={async () => {
-                        if (timeoutId) {
-                            clearTimeout(timeoutId);
-                            setTimeoutId(null);
-                        }
-
-                        // Camera direction
-                        if (mapRef.current) {
-                            const camera = await mapRef.current.getCamera();
-                            setCameraDirection(camera.heading);
-                        }
-                    }}
+                    onRegionChange={handleRegionChange}
                     onRegionChangeComplete={handleRegionChangeComplete}
                 >
                     {
@@ -251,16 +285,30 @@ const Map = () => {
                             }}
                             title={member.username}  // Show username as marker title
                         >
-                            <View style={{ width: 30, height: 30 }} >
+                            <View style={styles.partyMemberLocation} >
                                 <Image style={{ width: '100%', height: '100%', borderRadius: 15 }} source={data.images.defaultAvatar}/>
                             </View>
                         </Marker>
                     ))}
 
                 </MapView>
-                <Button icon="location-arrow" iconColor="white" style={{bottom: 150, right: 10}} functionCall={locationPressed}/>
+                <Animated.View style={{ opacity }}>
+                    <Button
+                        icon="location-arrow"
+                        boxStyle={{ top: 130, right: 16 }}
+                        iconColor={data.colors.primaryColor}
+                        functionCall={locationPressed}
+                    />
+                </Animated.View>
                 {cameraDirection < 355 && cameraDirection > 5 && (
-                    <Button icon="compass" iconColor="white" style={{bottom: 220, right: 10}} functionCall={resetToNorth} />
+                    <Animated.View style={{ opacity }}>
+                        <Button
+                            icon="compass"
+                            boxStyle={{ top: 190, right: 16 }}
+                            iconColor={data.colors.primaryColor}
+                            functionCall={resetToNorth}
+                        />
+                    </Animated.View>
                 )}
             </View>
         </Pressable>
@@ -271,38 +319,17 @@ const styles = StyleSheet.create({
     map: {
         ...StyleSheet.absoluteFillObject,
     },
-    locationButton: {
-        position: 'absolute',
-        right: 10,
-        top: 120,
-        width: 50,
-        height: 50,
-        backgroundColor: data.colors.primaryColor,
-        borderRadius: 25,
-        justifyContent: 'center',
-        alignItems: 'center',
+    partyMemberLocation: {
+        width: 30,
+        height: 30,
+        borderWidth: 1,
+        borderColor: data.colors.primaryColor,
+        borderRadius: 15,
         shadowColor: 'black',
-        shadowOffset: { width: 6, height: 6 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.2,
         shadowRadius: 5,
         elevation: 10,
-    },
-    compassButton: {
-        position: 'absolute',
-        right: 10,
-        top: 180,
-        width: 50,
-        height: 50,
-        backgroundColor: data.colors.primaryColor,
-        borderRadius: 25,
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: 'black',
-        shadowOffset: { width: 6, height: 6 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 10,
-    },
+    }
 });
 
 export default Map

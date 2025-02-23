@@ -1,5 +1,6 @@
-import { StyleSheet, View, Text, Image, TextInput, FlatList, Modal, TouchableOpacity, SafeAreaView } from 'react-native';
+import { StyleSheet, View, Text, Image, TextInput, FlatList, Modal, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import React, { useState, useEffect } from 'react';
+import Icon from 'react-native-vector-icons/Ionicons'
 
 const defaultImage = require("../assets/default-avatar-icon.jpg")
 
@@ -10,9 +11,6 @@ import { getUserFriends } from '../utils/userUtils.js';
 
 function InviteScreen({ visible, onRequestClose }) {
     const { joinParty } = useGlobalState();
-
-    const [username, setUsername] = useState("");
-
     const [friendList, setFriendList] = useState([]);
 
     // Get all friends of logged in user
@@ -30,6 +28,7 @@ function InviteScreen({ visible, onRequestClose }) {
         }
     }
 
+    // Invited user to party
     const inviteButtonPressed = async (invitedUser) => {
         console.log(`Fetching party data (added ${invitedUser}).`);
         
@@ -74,19 +73,20 @@ function InviteScreen({ visible, onRequestClose }) {
         <Modal visible={ visible } 
             animationType='slide'
             presentationStyle='pageSheet'
-            onRequestClose={ onRequestClose }>
+            onRequestClose={ onRequestClose }
+        >
+            <StatusBar
+                barStyle="light-content"
+            />
             <SafeAreaView style={styles.modalContainer}>
                 <View style={styles.modalViewContainer}>
-                    <Text style={styles.modalTitle}>Invite Friend</Text>
-                    <TextInput 
-                        style={styles.textInput} 
-                        placeholder='Search'
-                        value={username}
-                        onChangeText={setUsername}
-                    />
+                    <TouchableOpacity style={{zIndex: 10}} onPress={onRequestClose}>
+                        <Icon name='chevron-back' size={24} color='black' style={{ position: 'absolute', width: 50, height: 50}}/>
+                    </TouchableOpacity>
+                    <Text style={styles.modalTitle}>Invite to Party</Text>
                     <FlatList 
+                        style={{ position: 'absolute', top: 60, left: 0, right: 0, bottom: 0, paddingHorizontal: 16 }}
                         data={friendList}
-                        //data={[{ "userID": "7", "username": "Theo" }, { "userID": "8", "username": "Collin" }]}
                         renderItem={({ item }) => {
                             return (
                                 <View style={styles.card} key={item.cardID}>
@@ -103,13 +103,13 @@ function InviteScreen({ visible, onRequestClose }) {
                         horizontal={false}
                         keyExtractor={(item) => item.cardID.toString()}
                         ItemSeparatorComponent={<View style={{ height: 16 }} />}
-                        ListEmptyComponent={<Text style={{textAlign: 'center', fontSize: 20,}}>No Friends Founds</Text>}
-                        ListHeaderComponent={<Text style={styles.listHeaderText}>Friends</Text>}
+                        ListEmptyComponent={<Text style={{textAlign: 'center', fontSize: 20,}}>No Friends Found</Text>}
+                        ListHeaderComponent={
+                            friendList.length != 0 && (
+                                <Text style={styles.listHeaderText}>Friends</Text>
+                            )
+                        }
                     />
-                    {/* <Button title='Close' color={data.colors.primaryColor} onPress={() => {
-                        setSearchModalVisible(false); 
-                        setUsername("");getPartyID
-                    }} />                 */}
                 </View>
             </SafeAreaView>
         </Modal>
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     },
     modalTitle: {
         textAlign: 'center',
-        paddingBottom: 16,
+        paddingBottom: 14,
         fontSize: 24,
         fontWeight: 'bold'
     },
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         marginBottom: 15,
         padding: 10,
-        borderRadius: 5
+        borderRadius: 20
     },
     listHeaderText: {
         fontSize: 20,
@@ -153,7 +153,11 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         backgroundColor: 'white',
         padding: 16,
-        borderRadius: 8,
+        borderRadius: 20,
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 4, height: 4 },
+        shadowRadius: 2,
+        elevation: 10,
         //marginBottom: 16
     },
     cardImage: {

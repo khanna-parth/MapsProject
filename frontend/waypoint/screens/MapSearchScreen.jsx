@@ -1,5 +1,6 @@
-import { ActivityIndicator, Text, FlatList, TouchableWithoutFeedback, StyleSheet, View, TextInput, Image, Dimensions, TouchableOpacity, Keyboard, Platform } from 'react-native'
+import { ActivityIndicator, Text, FlatList, TouchableWithoutFeedback, StyleSheet, View, TextInput, Dimensions, TouchableOpacity, Keyboard, Platform } from 'react-native'
 import React, { useState } from 'react'
+import Icon from 'react-native-vector-icons/AntDesign'
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -10,7 +11,7 @@ import { postRequest } from '../utils/utils.js';
 
 const { width, height } = Dimensions.get('window');
 
-const Searchbar = ({ route }) => {
+const Searchbar = () => {
     const navigation = useNavigation();
 
     const { userLocation } = useGlobalState();
@@ -83,7 +84,7 @@ const Searchbar = ({ route }) => {
     // User clicked on destination
     const destinationPressed = (coordinates) => {
         console.log(coordinates)
-        // Send to navigation
+        navigation.navigate('Navigation', { coordinates: coordinates });
     }
 
     return (
@@ -100,12 +101,13 @@ const Searchbar = ({ route }) => {
                     autoFocus={true}
                 />
                 <TouchableOpacity onPress={exitIconPressed}>
-                    <Image source={data.images.closeIcon} style={styles.searchImage}/>
+                    <Icon name='close' size={25} color='black'/>
                 </TouchableOpacity>
             </View>
             <TouchableWithoutFeedback style={styles.notSearch} onPressIn={() => Keyboard.dismiss()}>
                 <View style={[styles.notSearch, styles.wrapper]}>
                 <FlatList 
+                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, paddingHorizontal: 16 }}
                     data={placeList}
                     renderItem={({ item }) => {
                         return (
@@ -162,10 +164,15 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         alignSelf: 'center',
-        width: '90%',
+        width: width - 32,
         height: 50,
         backgroundColor: 'white',
-        borderRadius: 25,
+        borderRadius: 20,
+        shadowColor: 'black',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 4, height: 4 },
+        shadowRadius: 2,
+        elevation: 10,
     },
     searchImage: {
         width: 20,
@@ -191,7 +198,12 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: 'white',
         padding: 16,
-        borderRadius: 8,
+        borderRadius: 20,
+        shadowColor: 'black',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 4, height: 4 },
+        shadowRadius: 2,
+        elevation: 10,
         //marginBottom: 16
     },
     cardText: {

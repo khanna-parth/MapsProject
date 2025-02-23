@@ -4,9 +4,9 @@ import React from 'react'
 
 import data from '../utils/defaults/assets.js'
 
-const Button = ({ icon, iconColor, style, functionCall }) => {
+const Button = ({ icon, iconColor, boxStyle, functionCall }) => {
     return (
-        <TouchableOpacity style={[styles.button, style]} onPress={functionCall}>
+        <TouchableOpacity style={[styles.button, boxStyle]} onPress={functionCall}>
             <Icon name={icon} size={25} color={iconColor} />
         </TouchableOpacity>
     )
@@ -19,14 +19,13 @@ const styles = StyleSheet.create({
         //top: 120,
         width: 50,
         height: 50,
-        backgroundColor: data.colors.primaryColor,
-        borderRadius: 25,
+        backgroundColor: data.colors.offWhite,
+        borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: 'black',
-        shadowOffset: { width: 6, height: 6 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
+        shadowOpacity: 0.2,
+        shadowOffset: { width: 4, height: 4 },
+        shadowRadius: 2,
         elevation: 10,
     },
 })
