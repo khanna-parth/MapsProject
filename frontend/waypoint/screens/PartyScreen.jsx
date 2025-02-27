@@ -185,12 +185,12 @@ function PartyScreen({viewIndex}) {
                                     />
                                     <Box style={{width: 150, height: 50, justifyContent: 'center'}} textStyle={{fontSize: 16, paddingBottom: 0}} onPress={() => handleJoinParty(partySearch)}>Join Party</Box>
                                 </View>
-                                {viewIndex == 3 ? (
+                                {viewIndex == 2 ? (
                                     <View style={{flex: 1, justifyContent: 'flex-start', alignItems: 'center', paddingHorizontal: 16}}>
                                         <View style={{height: '30%', justifyContent: 'center'}}>
                                             <Icon style={{alignSelf: 'center', paddingBottom: 0}} name='account-group' size={125} color='#dddddd' />
                                             <Text style={styles.instructionText}>  
-                                                <Text style={{color: data.colors.primaryColor}}>Search</Text> for users to add as a friend,{"\n"}<Text style={{color: data.colors.primaryColor}}>Invite</Text> a friend to start a party, or{"\n"}<Text style={{color: data.colors.primaryColor}}>Join</Text> a party with a party ID.
+                                                <Text style={{color: data.colors.primaryColor}}>Join</Text> a party to get started.
                                             </Text>
                                         </View>
                                     </View>
@@ -199,7 +199,7 @@ function PartyScreen({viewIndex}) {
                                         <View style={{height: '75%', justifyContent: 'center'}}>
                                             <Icon style={{alignSelf: 'center', paddingBottom: 0}} name='account-group' size={125} color='#dddddd' />
                                             <Text style={styles.instructionText}>  
-                                                <Text style={{color: data.colors.primaryColor}}>Search</Text> for users to add as a friend,{"\n"}<Text style={{color: data.colors.primaryColor}}>Invite</Text> a friend to start a party, or{"\n"}<Text style={{color: data.colors.primaryColor}}>Join</Text> a party with a party ID.
+                                                <Text style={{color: data.colors.primaryColor}}>Join</Text> a party to get started.
                                             </Text>
                                         </View>
                                     </View>

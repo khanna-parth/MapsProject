@@ -1,15 +1,90 @@
 import { ActivityIndicator, Text, FlatList, TouchableWithoutFeedback, StyleSheet, View, TextInput, Dimensions, TouchableOpacity, Keyboard, Platform } from 'react-native'
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import Icon from 'react-native-vector-icons/AntDesign'
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import MapView, { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
 
+import Box from '../components/Box';
 import { useGlobalState } from '../components/GlobalStateContext';
 import data from '../utils/defaults/assets.js';
 import { postRequest } from '../utils/utils.js';
 
 const { width, height } = Dimensions.get('window');
+
+const Map = ({startupPin, setLocationClicked}) => {
+    const navigation = useNavigation();
+
+    const { partySocket } = useGlobalState();
+    const markerRef = useRef(null);
+    const [region, setRegion] = useState(null);
+
+    const handleAddWaypoint = () => {
+        if (partySocket) {
+            partySocket.emit('add-destination', startupPin);
+            navigation.navigate('Navigation', { coordinates: startupPin.coordinates });
+        }
+    };
+
+    // User doesn't want that waypoint
+    const handleCancel = () => {
+        setLocationClicked(null);
+    };
+
+    // Ensure camera location is in correct spot
+    useEffect(() => {
+        if (startupPin.coordinates) {
+            setRegion({
+                latitude: startupPin.coordinates.lat - 0.0006,
+                longitude: startupPin.coordinates.long,
+                latitudeDelta: 0.005,
+                longitudeDelta: 0.005,
+            });
+        }
+    }, [startupPin.coordinates]);
+
+    // Select pin on startup
+    useEffect(() => {
+        if (markerRef.current) {
+            setTimeout(() => markerRef.current.showCallout(), 300);
+        }
+    }, [region]);
+    
+    return (
+        <View style={mapStyles.map}>
+            {region && (
+                <MapView 
+                    style={mapStyles.map}
+                    provider={PROVIDER_DEFAULT}
+                    showsUserLocation={true}
+                    showsPointsOfInterest={true}
+                    showsCompass={false}
+                    initialRegion={region}
+                >
+                    <Marker
+                        ref={markerRef}
+                        key={startupPin.name}
+                        coordinate={{
+                            latitude: startupPin.coordinates.lat,
+                            longitude: startupPin.coordinates.long,
+                        }}
+                        title={startupPin.name}
+                        pinColor={data.colors.primaryColor}
+                    />
+                </MapView>
+            )}
+            <View style={mapStyles.pinContainer}>
+                <Text style={mapStyles.markerText}>{startupPin.name}</Text>
+                <Text style={mapStyles.markerSubtext}>{startupPin.address}</Text>
+                <View style={mapStyles.buttonRow}>
+                    <Box style={{height: 60, backgroundColor: data.colors.red}} onPress={handleCancel}>Cancel</Box>
+                    <Box style={{height: 60, width: 180}} onPress={handleAddWaypoint}>Add Waypoint</Box>
+                </View>
+            </View>
+        </View>
+    );
+};
 
 const Searchbar = () => {
     const navigation = useNavigation();
@@ -19,6 +94,7 @@ const Searchbar = () => {
     const [typingTimeout, setTypingTimeout] = useState(null);
     const [placeList, setPlaceList] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [locationPinClicked, setLocationClicked] = useState(null);
 
     // User pressed enter, or waited on search. Searches for places.
     const handleReturnPress = async () => {
@@ -82,9 +158,12 @@ const Searchbar = () => {
     }
 
     // User clicked on destination
-    const destinationPressed = (coordinates) => {
-        console.log(coordinates)
-        navigation.navigate('Navigation', { coordinates: coordinates });
+    const destinationPressed = (locationInfo) => {
+        console.log(locationInfo)
+        Keyboard.dismiss();
+        setLocationClicked(locationInfo);
+        // partySocket.emit('add-destination', locationInfo);
+        //navigation.navigate('Navigation', { coordinates: coordinates });
     }
 
     return (
@@ -112,7 +191,7 @@ const Searchbar = () => {
                     data={placeList}
                     renderItem={({ item }) => {
                         return (
-                            <TouchableOpacity onPress={() => destinationPressed(item.coordinates)}>
+                            <TouchableOpacity onPress={() => destinationPressed({name: item.name, address: item.address, coordinates: item.coordinates})}>
                                 <View style={styles.card} key={item.cardID}>
                                     <View style={styles.cardTextArea} key={item.cardID}>
                                         <Text style={styles.cardText}>{item.name}</Text>
@@ -151,9 +230,48 @@ const Searchbar = () => {
                 />
                 </View>
             </TouchableWithoutFeedback>
+            {locationPinClicked && (<Map startupPin={locationPinClicked} setLocationClicked={setLocationClicked}/>)}
         </SafeAreaView>
     );
 }
+
+const mapStyles = StyleSheet.create({
+    map: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    pinContainer: {
+        position: 'absolute',
+        bottom: 0,
+        width: '100%',
+        height: 170,
+        paddingHorizontal: 16,
+        paddingTop: 8,
+        backgroundColor: data.colors.offWhite,
+        borderRadius: 25,
+        shadowColor: 'black',
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        elevation: 10, 
+    },
+    buttonRow: {
+        justifyContent: "space-evenly",
+        flexDirection: 'row',
+        paddingBottom: 16,
+        paddingTop: 5
+    },
+    markerText: {
+        alignSelf: 'center',
+        fontSize: 20,
+        fontWeight: 'bold',
+        paddingBottom: 2,
+    },
+    markerSubtext: {
+        alignSelf: 'center',
+        color: '#999',
+        fontSize: 16,
+        paddingBottom: 8,
+    },
+});
 
 const styles = StyleSheet.create({
     safeContainer: {

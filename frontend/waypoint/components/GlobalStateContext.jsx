@@ -52,6 +52,10 @@ export const GlobalStateProvider = ({ children }) => {
                 socket.on("location", (socketData) => {
                     setUserSentLocation(socketData);
                 });
+
+                socket.on("shared-destinations", (socketData) => {
+                    console.log(`${currentUser} recieved destination: ${socketData}`);
+                });
     
                 socket.on("disconnect", () => {
                     console.log("Disconnected from socket server");

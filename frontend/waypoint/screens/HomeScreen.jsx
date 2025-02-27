@@ -3,6 +3,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import React, { useMemo, useEffect, useRef, useState } from 'react';
 import { useGlobalState } from '../components/GlobalStateContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 import data from '../utils/defaults/assets.js';
 
@@ -14,12 +15,17 @@ import ProfileDropdown from '../components/ui/ProfileDropdown';
 const HomeScreen = () => {
     const { isCameraMoving } = useGlobalState();
     const bottomSheetRef = useRef(null);
-    const bottomSheetSnapPoints = useMemo(() => [155, 215, '50%', '85%'], []);
     const [isLayoutReady, setIsLayoutReady] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
 
+    const bottomSheetSnapPoints = useMemo(() => [155, 215, '50%', '85%'], []);
+
     const opacity = useRef(new Animated.Value(isCameraMoving ? 0 : 1)).current;
 
+    const handleLayout = () => {
+        setIsLayoutReady(true);
+    };
+    
     useEffect(() => {
         Animated.timing(opacity, {
             toValue: isCameraMoving ? 0 : 1,
@@ -28,20 +34,20 @@ const HomeScreen = () => {
         }).start();
     }, [isCameraMoving]);
 
-    // Ensuring layout is ready before showing the bottom sheet
-    const handleLayout = () => {
-        setIsLayoutReady(true);
-    };
-
-    // Ensuring the bottom sheet always snaps correctly after mount
     useEffect(() => {
         if (isLayoutReady && bottomSheetRef.current) {
-            const timeout = setTimeout(() => {
-                bottomSheetRef.current.snapToIndex(0);
-            }, 100);
-            return () => clearTimeout(timeout);
+            bottomSheetRef.current.snapToIndex(0);
         }
     }, [isLayoutReady]);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            if (bottomSheetRef.current) {
+                bottomSheetRef.current.snapToIndex(0);
+                setCurrentIndex(0);
+            }
+        }, [])
+    );
 
     return (
         <View style={styles.container} onLayout={handleLayout}>
@@ -66,7 +72,9 @@ const HomeScreen = () => {
                             elevation: 10, 
                         }}
                         index={0}
-                        onChange={(index) => setCurrentIndex(index)}
+                        onChange={(index) => {
+                            setCurrentIndex(index);
+                        }}
                     >
                         <BottomSheetView style={styles.swipeUpContentContainer}>
                             <PartyScreen style={{ flex: 1 }} viewIndex={currentIndex}/>

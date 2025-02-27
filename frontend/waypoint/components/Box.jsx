@@ -16,9 +16,9 @@ const styles = StyleSheet.create({
         backgroundColor: data.colors.primaryColor,
         width: 120,
         height: 80,
-        justifyContent: 'flex-end',
+        justifyContent: 'center', // Center content vertically
+        alignItems: 'center', // Center content horizontally
         borderRadius: 20,
-        alignItems: 'center',
         shadowColor: 'black',
         shadowOpacity: 0.2,
         shadowOffset: { width: 4, height: 4 },
@@ -28,10 +28,9 @@ const styles = StyleSheet.create({
     text: {
         fontSize: 18,
         fontWeight: "bold",
-        textAlign: "center",
+        textAlign: "center", // Horizontal text alignment
+        textAlignVertical: 'center', // Vertical text alignment (Android only)
         color: data.colors.offWhite,
-        textAlignVertical: 'bottom',
-        paddingBottom: 10,
     },
     cardImage: {
         width: 32,
