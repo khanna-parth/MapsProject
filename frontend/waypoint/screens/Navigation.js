@@ -10,6 +10,7 @@ import { getRoute, getDistance } from '../utils/mapUtils.js';
 import data from '../utils/defaults/assets.js'
 import MapView, { PROVIDER_DEFAULT, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
+import ProfileDropdown from '../components/ui/ProfileDropdown';
 
 const NavScreen = () => {
     const navigation = useNavigation();
@@ -279,6 +280,8 @@ const NavScreen = () => {
                     <Text style={styles.directionText}>{nextDirection.description}</Text>
                 </View>
             )}
+            
+            <ProfileDropdown />
 
             <MapView 
                 ref={mapRef}

@@ -9,6 +9,7 @@ import data from '../utils/defaults/assets.js';
 import PartyScreen from './PartyScreen';
 import Map from '../components/Map';
 import Searchbar from '../components/Searchbar';
+import ProfileDropdown from '../components/ui/ProfileDropdown';
 
 const HomeScreen = () => {
     const { isCameraMoving } = useGlobalState();
@@ -46,6 +47,7 @@ const HomeScreen = () => {
             <Animated.View style={[{ opacity }, styles.searchbar]}>
                 <Searchbar />
             </Animated.View>
+            <ProfileDropdown />
             <Map />
             <GestureHandlerRootView style={styles.swipeUpContainer}>
                 <View style={styles.bottomOverlay} />

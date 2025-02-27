@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useGlobalState } from '../components/GlobalStateContext';
 import data from '../utils/defaults/assets.js';
 import { postRequest } from '../utils/utils.js';
+import ProfileDropdown from '../components/ui/ProfileDropdown';
 
 const { width, height } = Dimensions.get('window');
 
@@ -104,6 +105,7 @@ const Searchbar = () => {
                     <Icon name='close' size={25} color='black'/>
                 </TouchableOpacity>
             </View>
+            <ProfileDropdown />
             <TouchableWithoutFeedback style={styles.notSearch} onPressIn={() => Keyboard.dismiss()}>
                 <View style={[styles.notSearch, styles.wrapper]}>
                 <FlatList 

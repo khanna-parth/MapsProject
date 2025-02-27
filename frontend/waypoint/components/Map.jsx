@@ -295,7 +295,7 @@ const Map = () => {
                 <Animated.View style={{ opacity }}>
                     <Button
                         icon="location-arrow"
-                        boxStyle={{ top: 130, right: 16 }}
+                        boxStyle={{ top: 190, right: 16 }}
                         iconColor={data.colors.primaryColor}
                         functionCall={locationPressed}
                     />
@@ -304,7 +304,7 @@ const Map = () => {
                     <Animated.View style={{ opacity }}>
                         <Button
                             icon="compass"
-                            boxStyle={{ top: 190, right: 16 }}
+                            boxStyle={{ top: 250, right: 16 }}
                             iconColor={data.colors.primaryColor}
                             functionCall={resetToNorth}
                         />
