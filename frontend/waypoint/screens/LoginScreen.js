@@ -3,7 +3,7 @@ import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StyleShee
 import { useNavigation } from '@react-navigation/native';
 
 import { storeData, postRequest, storeKeychainData, getKeychainData, getData } from '../utils/utils.js';
-import { useGlobalState } from '../components/GlobalStateContext';
+import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
 
 
 function LoginScreen() {

@@ -4,7 +4,7 @@ import MapView, { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 
 import data from '../utils/defaults/assets.js'
-import { useGlobalState } from './GlobalStateContext';
+import { useGlobalState } from './global/GlobalStateContext.jsx';
 import { getNearbyPlaces, getDistance } from '../utils/mapUtils.js';
 import { getData } from '../utils/utils.js';
 

@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import MapView, { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
 
 import Box from '../components/Box';
-import { useGlobalState } from '../components/GlobalStateContext';
+import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
 import data from '../utils/defaults/assets.js';
 import { postRequest } from '../utils/utils.js';
 
@@ -23,7 +23,7 @@ const Map = ({startupPin, setLocationClicked}) => {
     const handleAddWaypoint = () => {
         if (partySocket) {
             partySocket.emit('add-destination', startupPin);
-            navigation.navigate('Navigation', { coordinates: startupPin.coordinates });
+            // navigation.navigate('Navigation', { coordinates: startupPin.coordinates });
         }
     };
 

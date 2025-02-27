@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, Button, Platform, SafeAreaView, Image } from 'r
 import { useEffect } from 'react';
 
 import { useNavigation } from '@react-navigation/native';
-import { useGlobalState } from '../components/GlobalStateContext';
+import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
 
 import { postRequest, getData } from '../utils/utils.js';
 import data from '../utils/defaults/assets.js'

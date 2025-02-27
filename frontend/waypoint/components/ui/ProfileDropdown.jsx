@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Pressable, Animated, Image, Platform, Keyboard } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { removeData } from '../../utils/utils.js';
+import { useGlobalState } from '../global/GlobalStateContext.jsx';
 import data from '../../utils/defaults/assets.js';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -21,6 +23,7 @@ const Avatar = ({ source, size = 50, onPress }) => {
 
 // Dropdown Menu component
 const ProfileDropdown = () => {
+    const { partySocket, setPartySocket, setPartyMemberLocation, setCurrentUser } = useGlobalState();
   const [isOpen, setIsOpen] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const navigation = useNavigation();
@@ -129,7 +132,20 @@ const ProfileDropdown = () => {
                 
                 <TouchableOpacity 
                   style={styles.dropdownItem} 
-                  onPress={() => handleNavigation('logout')}
+                  onPress={async () => {
+                    await removeData('userID');
+                    await removeData('password');
+                    await removeData('partyID');
+                    if (partySocket) {
+                        partySocket.disconnect();
+                    }
+                    await setPartySocket();
+                    await setPartyMemberLocation([]);
+                    await setCurrentUser("");
+                    await setIsOpen(false);
+
+                    navigation.navigate('Welcome');
+                  }}
                   activeOpacity={0.7}
                 >
                   <Text style={[styles.dropdownItemText, styles.logoutText]}>Log out</Text>

@@ -6,7 +6,7 @@ import Icon2 from 'react-native-vector-icons/AntDesign'
 const defaultImage = require("../assets/default-avatar-icon.jpg")
 
 import data from '../utils/defaults/assets.js'
-import { useGlobalState } from '../components/GlobalStateContext';
+import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
 import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
 import { getUserFriends } from '../utils/userUtils.js';
 

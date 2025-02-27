@@ -7,7 +7,7 @@ import UserSearchScreen from './UserSearch';
 import UserInviteScreen from './UserInvite';
 
 import data from '../utils/defaults/assets.js'
-import { useGlobalState } from '../components/GlobalStateContext';
+import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
 import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
 
 function PartyScreen({viewIndex}) {
@@ -35,7 +35,6 @@ function PartyScreen({viewIndex}) {
         const partyData = await postRequest('party/status', {userID: userID.data, partyID: partyID.data});
 
         if (partyData.error) {
-            removeData('partyID');
             setPartySocket();
             return {error: true, message: "User does not have permission to join party."}
         } else {
@@ -131,9 +130,18 @@ function PartyScreen({viewIndex}) {
                 return;
             }
 
-            await joinParty(userID.data, partyID.data);
+            const partyListData = await getPartyList();
 
-            getPartyList();
+            console.log(partyListData)
+
+            if (partyListData.error) {
+                await joinParty(userID.data, partyID.data);
+                const partyListData2 = await getPartyList();
+
+                if (partyListData2.error) {
+                    removeData('partyID');
+                }
+            }
         }
         
         autoJoin();
@@ -185,7 +193,7 @@ function PartyScreen({viewIndex}) {
                                     />
                                     <Box style={{width: 150, height: 50, justifyContent: 'center'}} textStyle={{fontSize: 16, paddingBottom: 0}} onPress={() => handleJoinParty(partySearch)}>Join Party</Box>
                                 </View>
-                                {viewIndex == 2 ? (
+                                {/* {viewIndex == 2 ? (
                                     <View style={{flex: 1, justifyContent: 'flex-start', alignItems: 'center', paddingHorizontal: 16}}>
                                         <View style={{height: '30%', justifyContent: 'center'}}>
                                             <Icon style={{alignSelf: 'center', paddingBottom: 0}} name='account-group' size={125} color='#dddddd' />
@@ -194,7 +202,7 @@ function PartyScreen({viewIndex}) {
                                             </Text>
                                         </View>
                                     </View>
-                                ) : (
+                                ) : ( */}
                                     <View style={{flex: 1, justifyContent: 'flex-start', alignItems: 'center', paddingHorizontal: 16}}>
                                         <View style={{height: '75%', justifyContent: 'center'}}>
                                             <Icon style={{alignSelf: 'center', paddingBottom: 0}} name='account-group' size={125} color='#dddddd' />
@@ -203,7 +211,7 @@ function PartyScreen({viewIndex}) {
                                             </Text>
                                         </View>
                                     </View>
-                                )}
+                                {/* )} */}
                                 
                                 
                             </View>

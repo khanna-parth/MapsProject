@@ -2,7 +2,7 @@ import { StyleSheet, View, Animated } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import React, { useMemo, useEffect, useRef, useState } from 'react';
-import { useGlobalState } from '../components/GlobalStateContext';
+import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
 import { useFocusEffect } from '@react-navigation/native';
 
 import data from '../utils/defaults/assets.js';
@@ -50,7 +50,7 @@ const HomeScreen = () => {
     );
 
     return (
-        <View style={styles.container} onLayout={handleLayout}>
+        <View style={styles.container}>
             <Animated.View style={[{ opacity }, styles.searchbar]}>
                 <Searchbar />
             </Animated.View>
@@ -58,7 +58,7 @@ const HomeScreen = () => {
             <Animated.View style={{ opacity }}>
                 <ProfileDropdown />
             </Animated.View>
-            <GestureHandlerRootView style={styles.swipeUpContainer}>
+            <GestureHandlerRootView style={styles.swipeUpContainer} onLayout={handleLayout}>
                 <View style={styles.bottomOverlay} />
                 {isLayoutReady && (
                     <BottomSheet

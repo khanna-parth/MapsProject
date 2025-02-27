@@ -1,13 +1,15 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useNavigation } from '@react-navigation/native';
 
 import { io } from "socket.io-client";
 
-import { removeData } from '../utils/utils';
+import { removeData } from '../../utils/utils';
 import { LOCAL_HOST } from '@env';
 
 const GlobalStateContext = createContext();
 
 export const GlobalStateProvider = ({ children }) => {
+    const navigation = useNavigation();
     const [userLocation, setUserLocation] = useState(null);
     const [partySocket, setPartySocket] = useState();
     const [userSentLocation, setUserSentLocation] = useState();
@@ -54,13 +56,14 @@ export const GlobalStateProvider = ({ children }) => {
                 });
 
                 socket.on("shared-destinations", (socketData) => {
-                    console.log(`${currentUser} recieved destination: ${socketData}`);
+                    let locationData = socketData.split(" ").slice(1);
+                    const destinationsObject = JSON.parse(locationData);
+                    navigation.navigate('Navigation', { coordinates: destinationsObject.destinations[1].coordinates });
                 });
     
                 socket.on("disconnect", () => {
                     console.log("Disconnected from socket server");
                     setPartyMemberLocation([]);
-                    removeData('partyID');
                 });
     
                 //return socket;
