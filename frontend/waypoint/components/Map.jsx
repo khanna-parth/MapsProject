@@ -237,7 +237,8 @@ const Map = () => {
     }, [userSentLocation]);
 
     // Display loading screen while waiting for location
-    if (!userLocation || !places[0]) {
+    // if (!userLocation || !places[0]) {
+    if (!userLocation) {
         return (
             <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', zIndex: 1000, width: '100%', height: '100%' }}>
                 <ActivityIndicator size="large" animating={true}/>
@@ -265,7 +266,7 @@ const Map = () => {
                     onRegionChange={handleRegionChange}
                     onRegionChangeComplete={handleRegionChangeComplete}
                 >
-                    {
+                    {/* {
                     places.map((place, index) => (
                         <Marker
                             key={index}
@@ -275,7 +276,7 @@ const Map = () => {
                             }}
                             title={place.address}
                         />
-                    ))}
+                    ))} */}
                     {partyMemberLocation.map((member, index) => (
                         <Marker
                             key={index}
@@ -295,7 +296,7 @@ const Map = () => {
                 <Animated.View style={{ opacity }}>
                     <Button
                         icon="location-arrow"
-                        boxStyle={{ top: 190, right: 16 }}
+                        boxStyle={{ top: 130, right: 16 }}
                         iconColor={data.colors.primaryColor}
                         functionCall={locationPressed}
                     />
@@ -304,7 +305,7 @@ const Map = () => {
                     <Animated.View style={{ opacity }}>
                         <Button
                             icon="compass"
-                            boxStyle={{ top: 250, right: 16 }}
+                            boxStyle={{ top: 190, right: 16 }}
                             iconColor={data.colors.primaryColor}
                             functionCall={resetToNorth}
                         />
@@ -327,7 +328,8 @@ const styles = StyleSheet.create({
         borderRadius: 15,
         shadowColor: 'black',
         shadowOpacity: 0.2,
-        shadowRadius: 5,
+        shadowOffset: { width: 4, height: 4 },
+        shadowRadius: 2,
         elevation: 10,
     }
 });

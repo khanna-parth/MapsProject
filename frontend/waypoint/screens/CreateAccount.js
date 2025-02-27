@@ -4,9 +4,12 @@ import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StyleShee
 import { storeData, postRequest } from '../utils/utils.js';
 
 import { useNavigation } from '@react-navigation/native';
+import { useGlobalState } from '../components/GlobalStateContext';
 
 function CreateAccountScreen() {
     const navigation = useNavigation();
+
+    const { setCurrentUser } = useGlobalState();
 
     // Actual Data
     const [form, setForm] = useState({
@@ -125,8 +128,15 @@ function CreateAccountScreen() {
                     if (!response.error) {
                         const userData = response.data;
 
+                        // await storeData('username', userData.username);
+                        // await storeData('userID', userData.userID);
+
+                        setCurrentUser(userData.username);
                         await storeData('username', userData.username);
                         await storeData('userID', userData.userID);
+                        
+                        // Temporary
+                        await storeData('password', password);
 
                         console.log('Login successful:', userData);
                         navigation.navigate('Home');

@@ -16,6 +16,7 @@ const HomeScreen = () => {
     const bottomSheetRef = useRef(null);
     const bottomSheetSnapPoints = useMemo(() => [155, 215, '50%', '85%'], []);
     const [isLayoutReady, setIsLayoutReady] = useState(false);
+    const [currentIndex, setCurrentIndex] = useState(0);
 
     const opacity = useRef(new Animated.Value(isCameraMoving ? 0 : 1)).current;
 
@@ -47,8 +48,10 @@ const HomeScreen = () => {
             <Animated.View style={[{ opacity }, styles.searchbar]}>
                 <Searchbar />
             </Animated.View>
-            <ProfileDropdown />
             <Map />
+            <Animated.View style={{ opacity }}>
+                <ProfileDropdown />
+            </Animated.View>
             <GestureHandlerRootView style={styles.swipeUpContainer}>
                 <View style={styles.bottomOverlay} />
                 {isLayoutReady && (
@@ -63,9 +66,10 @@ const HomeScreen = () => {
                             elevation: 10, 
                         }}
                         index={0}
+                        onChange={(index) => setCurrentIndex(index)}
                     >
                         <BottomSheetView style={styles.swipeUpContentContainer}>
-                            <PartyScreen style={{ flex: 1 }} />
+                            <PartyScreen style={{ flex: 1 }} viewIndex={currentIndex}/>
                         </BottomSheetView>
                     </BottomSheet>
                 )}

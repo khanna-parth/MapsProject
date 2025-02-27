@@ -1,6 +1,7 @@
 import { StyleSheet, View, Text, Image, TextInput, FlatList, Modal, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import Icon from 'react-native-vector-icons/Ionicons'
+import Icon2 from 'react-native-vector-icons/AntDesign'
 
 const defaultImage = require("../assets/default-avatar-icon.jpg")
 
@@ -85,7 +86,8 @@ function InviteScreen({ visible, onRequestClose }) {
                     </TouchableOpacity>
                     <Text style={styles.modalTitle}>Invite to Party</Text>
                     <FlatList 
-                        style={{ position: 'absolute', top: 60, left: 0, right: 0, bottom: 0, paddingHorizontal: 16 }}
+                        style={{ flex:1, position: 'absolute', top: 60, left: 0, right: 0, bottom: 0, paddingHorizontal: 16 }}
+                        contentContainerStyle={{ flexGrow: 1, padding: 0 }}
                         data={friendList}
                         renderItem={({ item }) => {
                             return (
@@ -94,7 +96,8 @@ function InviteScreen({ visible, onRequestClose }) {
                                     <View style={styles.cardTextArea} key={item.cardID}>
                                         <Text style={styles.cardText}>{item.username}</Text>
                                         <TouchableOpacity onPress={() => inviteButtonPressed(item.username)}>
-                                            <Image source={data.images.plusIcon} style={styles.cardPlusImage}/>
+                                            {/* <Image source={data.images.plusIcon} style={styles.cardPlusImage}/> */}
+                                            <Icon2 name='plus' size={25} color='black' style={styles.cardPlusImage}/>
                                         </TouchableOpacity>
                                     </View>
                                 </View>
@@ -103,7 +106,14 @@ function InviteScreen({ visible, onRequestClose }) {
                         horizontal={false}
                         keyExtractor={(item) => item.cardID.toString()}
                         ItemSeparatorComponent={<View style={{ height: 16 }} />}
-                        ListEmptyComponent={<Text style={{textAlign: 'center', fontSize: 20,}}>No Friends Found</Text>}
+                        ListEmptyComponent={
+                            <View style={styles.listEmptyContainer}>
+                                <View style={{height: '75%', justifyContent: 'center'}}>
+                                    <Icon2 style={{alignSelf: 'center', paddingBottom: 8}} name='deleteuser' size={100} color='#dddddd' />
+                                    <Text style={styles.instructionText}>No Friends Found</Text>
+                                </View>
+                            </View>
+                        }
                         ListHeaderComponent={
                             friendList.length != 0 && (
                                 <Text style={styles.listHeaderText}>Friends</Text>
@@ -171,9 +181,20 @@ const styles = StyleSheet.create({
         fontSize: 20
     },
     cardPlusImage: {
-        width: 25,
-        height: 25,
         alignSelf: 'flex-end'
+    },
+    listEmptyContainer: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
+    },
+    instructionText: {
+        alignSelf: 'center',
+        color: '#999',
+        fontSize: 18,
+        textAlign: 'center',
+        textAlign: 'center',
+        fontSize: 20,
     },
 });
 

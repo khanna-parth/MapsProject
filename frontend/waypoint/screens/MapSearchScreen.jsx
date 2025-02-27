@@ -8,7 +8,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useGlobalState } from '../components/GlobalStateContext';
 import data from '../utils/defaults/assets.js';
 import { postRequest } from '../utils/utils.js';
-import ProfileDropdown from '../components/ui/ProfileDropdown';
 
 const { width, height } = Dimensions.get('window');
 
@@ -105,11 +104,11 @@ const Searchbar = () => {
                     <Icon name='close' size={25} color='black'/>
                 </TouchableOpacity>
             </View>
-            <ProfileDropdown />
             <TouchableWithoutFeedback style={styles.notSearch} onPressIn={() => Keyboard.dismiss()}>
                 <View style={[styles.notSearch, styles.wrapper]}>
                 <FlatList 
-                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, paddingHorizontal: 16 }}
+                    style={{ flex: 1, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, paddingHorizontal: 16 }}
+                    contentContainerStyle={{ flexGrow: 1, padding: 0 }}
                     data={placeList}
                     renderItem={({ item }) => {
                         return (
@@ -128,12 +127,17 @@ const Searchbar = () => {
                     ItemSeparatorComponent={<View style={{ height: 16 }} />}
                     ListEmptyComponent={
                         isLoading ? (
-                            <View style={{ flex: 1, paddingTop: 20, zIndex: 1000, width: '100%', height: '100%' }}>
-                                <ActivityIndicator size="large" animating={true}/>
+                            <View style={styles.listEmptyContainer}>
+                                <View style={{height: '75%', justifyContent: 'center'}}>
+                                    <ActivityIndicator size="large" animating={true}/>
+                                </View>
                             </View>
                         ) : (
                             <View style={styles.listEmptyContainer}>
-                                <Text style={styles.listHeaderText}>No Places Found</Text>
+                                <View style={{height: '75%', justifyContent: 'center'}}>
+                                    <Icon style={{alignSelf: 'center', paddingBottom: 8}} name='search1' size={100} color='#dddddd' />
+                                    <Text style={styles.instructionText}>No Places Found</Text>
+                                </View>
                             </View>
                         )
                     }
@@ -236,6 +240,19 @@ const styles = StyleSheet.create({
         width: 25,
         height: 25,
         alignSelf: 'flex-end'
+    },
+    listEmptyContainer: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
+    },
+    instructionText: {
+        alignSelf: 'center',
+        color: '#999',
+        fontSize: 18,
+        textAlign: 'center',
+        textAlign: 'center',
+        fontSize: 20,
     },
 });
 

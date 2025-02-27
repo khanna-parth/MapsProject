@@ -12,7 +12,7 @@ const Avatar = ({ source, size = 50, onPress }) => {
         <Image source={source} style={styles.avatarImage} />
       ) : (
         <View style={[styles.avatarFallback, { width: size, height: size }]}>
-          <Icon name="user" size={26} color="white" />
+          <Icon name="user" size={26} color={data.colors.primaryColor} />
         </View>
       )}
     </TouchableOpacity>
@@ -147,8 +147,13 @@ const styles = StyleSheet.create({
   container: {
     position: 'absolute',
     top: 130,
-    right: 16,
-    zIndex: 9999,
+    left: 16,
+    // zIndex: 1,
+    shadowColor: 'black',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 4, height: 4 },
+    shadowRadius: 2,
+    elevation: 10,
   },
   avatar: {
     borderRadius: 20,
@@ -168,7 +173,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   avatarFallback: {
-    backgroundColor: data.colors.primaryColor,
+    backgroundColor: data.colors.offwhite,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 20,
@@ -181,8 +186,8 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     position: 'absolute',
-    top: 60,
-    right: 16,
+    top: 130,
+    left: 16,
     backgroundColor: data.colors.offWhite,
     borderRadius: 20,
     shadowColor: '#000',

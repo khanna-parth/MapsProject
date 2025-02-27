@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View, Platform, SafeAreaView, FlatList, Image, TextInput, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import Box from '../components/Box';
 import UserSearchScreen from './UserSearch';
@@ -9,7 +10,7 @@ import data from '../utils/defaults/assets.js'
 import { useGlobalState } from '../components/GlobalStateContext';
 import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
 
-function PartyScreen() {
+function PartyScreen({viewIndex}) {
     const { partySocket, setPartySocket, userPartyChange, setUserPartyChange, joinParty, disconnectedUser, setDisconnectedUser, setPartyMemberLocation, currentUser } = useGlobalState();
 
     const [searchModalVisible, setSearchModalVisible] = useState(false);
@@ -153,7 +154,8 @@ function PartyScreen() {
 
                 <View style={styles.wrapper}>
                     <FlatList
-                        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, paddingHorizontal: 16, paddingTop: 5 }}
+                        style={{ flex: 1, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, paddingHorizontal: 16, paddingTop: 5 }}
+                        contentContainerStyle={{ flexGrow: 1 }}
                         data={partyList}
                         renderItem={({ item }) => {
                             return (
@@ -183,6 +185,27 @@ function PartyScreen() {
                                     />
                                     <Box style={{width: 150, height: 50, justifyContent: 'center'}} textStyle={{fontSize: 16, paddingBottom: 0}} onPress={() => handleJoinParty(partySearch)}>Join Party</Box>
                                 </View>
+                                {viewIndex == 3 ? (
+                                    <View style={{flex: 1, justifyContent: 'flex-start', alignItems: 'center', paddingHorizontal: 16}}>
+                                        <View style={{height: '30%', justifyContent: 'center'}}>
+                                            <Icon style={{alignSelf: 'center', paddingBottom: 0}} name='account-group' size={125} color='#dddddd' />
+                                            <Text style={styles.instructionText}>  
+                                                <Text style={{color: data.colors.primaryColor}}>Search</Text> for users to add as a friend,{"\n"}<Text style={{color: data.colors.primaryColor}}>Invite</Text> a friend to start a party, or{"\n"}<Text style={{color: data.colors.primaryColor}}>Join</Text> a party with a party ID.
+                                            </Text>
+                                        </View>
+                                    </View>
+                                ) : (
+                                    <View style={{flex: 1, justifyContent: 'flex-start', alignItems: 'center', paddingHorizontal: 16}}>
+                                        <View style={{height: '75%', justifyContent: 'center'}}>
+                                            <Icon style={{alignSelf: 'center', paddingBottom: 0}} name='account-group' size={125} color='#dddddd' />
+                                            <Text style={styles.instructionText}>  
+                                                <Text style={{color: data.colors.primaryColor}}>Search</Text> for users to add as a friend,{"\n"}<Text style={{color: data.colors.primaryColor}}>Invite</Text> a friend to start a party, or{"\n"}<Text style={{color: data.colors.primaryColor}}>Join</Text> a party with a party ID.
+                                            </Text>
+                                        </View>
+                                    </View>
+                                )}
+                                
+                                
                             </View>
                         }
                         ListHeaderComponent={
@@ -286,8 +309,11 @@ const styles = StyleSheet.create({
     },
     listEmptyContainer: {
         flex: 1,
+        width: '100%',
+        height: '100%',
     },
     joinPartyContainer: {
+        // flex: 1,
         justifyContent: 'space-evenly',
         flexDirection: 'row',
         rowGap: 20,
@@ -299,6 +325,17 @@ const styles = StyleSheet.create({
         marginBottom: 15,
         padding: 10,
         borderRadius: 20,
+        shadowColor: 'black',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 4, height: 4 },
+        shadowRadius: 2,
+        elevation: 10,
+    },
+    instructionText: {
+        alignSelf: 'center',
+        color: '#999',
+        fontSize: 18,
+        textAlign: 'center',
     },
 });
 
