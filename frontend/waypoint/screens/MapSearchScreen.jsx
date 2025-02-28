@@ -78,8 +78,12 @@ const Map = ({startupPin, setLocationClicked}) => {
                 <Text style={mapStyles.markerText}>{startupPin.name}</Text>
                 <Text style={mapStyles.markerSubtext}>{startupPin.address}</Text>
                 <View style={mapStyles.buttonRow}>
-                    <Box style={{height: 60, backgroundColor: data.colors.red}} onPress={handleCancel}>Cancel</Box>
-                    <Box style={{height: 60, width: 180}} onPress={handleAddWaypoint}>Add Waypoint</Box>
+                    {partySocket && (<Box style={{height: 60, backgroundColor: data.colors.red}} onPress={handleCancel}>Cancel</Box>)}
+                    {partySocket ? (
+                        <Box style={{height: 60, width: 180}} onPress={handleAddWaypoint}>Add Waypoint</Box>
+                    ) : (
+                        <Box style={{height: 60, width: 200}} onPress={() => {navigation.goBack();}}>Join Party to{"\n"}Add Waypoint</Box>
+                    )}
                 </View>
             </View>
         </View>
