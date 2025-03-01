@@ -1,6 +1,6 @@
 import { StyleSheet, View, SafeAreaView, ActivityIndicator, Keyboard, Pressable, Image, Animated } from 'react-native'
 import React, { useState, useEffect, useRef } from 'react';
-import MapView, { PROVIDER_DEFAULT, Marker } from 'react-native-maps';
+import MapView, { PROVIDER_DEFAULT, Marker, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 
 import data from '../utils/defaults/assets.js'
@@ -10,7 +10,7 @@ import { getData } from '../utils/utils.js';
 
 import Button from '../components/Button.jsx'
 
-const Map = () => {
+const Map = ({ route }) => {
     const { currentUser, userLocation, setUserLocation, partySocket, userSentLocation, setUserSentLocation, partyMemberLocation, setPartyMemberLocation, isCameraMoving, setIsCameraMoving } = useGlobalState();
     const mapRef = useRef(null);
     const [cameraDirection, setCameraDirection] = useState(0);
@@ -160,8 +160,8 @@ const Map = () => {
             mapRef.current.animateToRegion({
                 latitude: userLocation.latitude,
                 longitude: userLocation.longitude,
-                latitudeDelta: 0.015,
-                longitudeDelta: 0.015,
+                latitudeDelta: route && route.length > 0 ? 0.003 : 0.015,
+                longitudeDelta: route && route.length > 0 ? 0.003 : 0.015,
             }, 1000);
         }
     }
@@ -260,12 +260,22 @@ const Map = () => {
                     initialRegion={{
                         latitude: userLocation.latitude,
                         longitude: userLocation.longitude,
-                        latitudeDelta: 0.1,
-                        longitudeDelta: 0.1,
+                        latitudeDelta: route && route.length > 0 ? 0.003 : 0.1,
+                        longitudeDelta: route && route.length > 0 ? 0.003 : 0.1,
                     }}
                     onRegionChange={handleRegionChange}
                     onRegionChangeComplete={handleRegionChangeComplete}
                 >
+
+                    {/*Draw polyline*/}
+                    {route && route.length > 0 && (
+                        <Polyline
+                            coordinates={route}
+                            strokeColor="#007bff"
+                            strokeWidth={7}
+                        />
+                    )}
+
                     {/* {
                     places.map((place, index) => (
                         <Marker

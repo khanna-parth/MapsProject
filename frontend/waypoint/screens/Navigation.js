@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, ActivityIndicator, TouchableOpacity, Modal } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
@@ -7,10 +7,9 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { getRoute, getDistance } from '../utils/mapUtils.js';
 
-import data from '../utils/defaults/assets.js'
-import MapView, { PROVIDER_DEFAULT, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
-import ProfileDropdown from '../components/ui/ProfileDropdown';
+import Map from '../components/Map';
+import PartyScreen from './PartyScreen';
 
 const NavScreen = () => {
     const navigation = useNavigation();
@@ -19,7 +18,6 @@ const NavScreen = () => {
     const { coordinates } = screenRoute.params || {};
 
     const mapRef = useRef(null);
-    const [isZoomedIn, setIsZoomedIn] = useState(true);
 
     const [location, setLocation] = useState(null);
 
@@ -34,7 +32,7 @@ const NavScreen = () => {
     const [eta, setEta] = useState("");
     const [remainingTime, setRemainingTime] = useState("");
 
-    const snapPoints = useMemo(() => ['25%', '50%', '90%'], [])
+    const snapPoints = useMemo(() => ['20%', '20%'], [])
     const bottomSheetRef = useRef<BottomSheet>(null);
 
     const [routeRequested, setRouteRequested] = useState(false);
@@ -43,12 +41,26 @@ const NavScreen = () => {
         console.log('handleSheetChanges', index);
     }, []);
 
+    const [showPartyScreen, setShowPartyScreen] = useState(false);
+    const [currentIndex, setCurrentIndex] = useState(0);  // Assuming this value is coming from your logic
+
+    const togglePartyScreen = () => {
+        setShowPartyScreen(prev => !prev);
+    };
+
+
     //End Route
     const endRoute = () => {
         console.log("End Route -> Homepage")
         setShowNewButtons(false);
         setRoute(null);
         navigation.navigate("Home");
+    }
+
+    //Add Waypoint
+    const waypoint = () => {
+        console.log("Waypoint +");
+        navigation.navigate("MapSearch");
     }
     
     //Fetch User Route
@@ -148,7 +160,7 @@ const NavScreen = () => {
                 (newLocation) => {
                     setLocation(newLocation.coords);
     
-                    if (isZoomedIn && mapRef.current) {
+                    if (mapRef.current) {
                         mapRef.current.animateToRegion({
                             latitude: newLocation.coords.latitude,
                             longitude: newLocation.coords.longitude,
@@ -189,39 +201,6 @@ const NavScreen = () => {
             }
         }
     }, [location, directions]); 
-
-    //Zoom to user or zoom out to route
-    const toggleZoom = () => {
-        if (isZoomedIn) {
-            if (route && route.length > 0 && mapRef.current) {
-                const routeCoordinates = route.map(coord => ({
-                    latitude: coord.latitude,
-                    longitude: coord.longitude
-                }));
-    
-                mapRef.current.fitToCoordinates(routeCoordinates, {
-                    edgePadding: { top: 50, right: 50, bottom: 150, left: 50 },
-                    animated: true,
-                });
-            }
-        } else {
-            if (location && mapRef.current) {
-                mapRef.current.animateToRegion({
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                    latitudeDelta: 0.004,
-                    longitudeDelta: 0.004,
-                }, 1000);
-            }
-        }
-        
-        setIsZoomedIn(prev => !prev)
-    };
-
-    const handleRegionChange = () => {
-        // Set isZoomedIn to false if user moves the map
-        setIsZoomedIn(false);
-    };
 
     //Uses the polyline objects given by parths api 🪄🪄
     const decodePolyline = (encoded) => {
@@ -281,43 +260,14 @@ const NavScreen = () => {
                 </View>
             )}
             
-            <ProfileDropdown />
-
-            <MapView 
-                ref={mapRef}
-                style={styles.map}
-                provider={PROVIDER_DEFAULT}
-                showsUserLocation={true}
-                showsMyLocationButton={true}
-                showsPointsOfInterest={false}
-                initialRegion={{
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                    latitudeDelta: 0.004,
-                    longitudeDelta: 0.004,
-                }}
-
-                onRegionChangeComplete={handleRegionChange}
-            >
-                {route && (
-                    <Polyline
-                        coordinates={route}
-                        strokeWidth={7}
-                        strokeColor="blue"
-                    />
-                )}
-            </MapView>
-
-            <TouchableOpacity style={styles.zoomButton} onPress={toggleZoom}>
-                <Icon name={isZoomedIn ? "arrows-alt" : "location-arrow"} size={30} color="white" />
-            </TouchableOpacity>
+            <Map route={route}/>
 
             <GestureHandlerRootView style={styles.swipeUpContainer}>
                 <BottomSheet
                     useRef={bottomSheetRef}
                     snapPoints={snapPoints}
                     onChange={handleSheetChanges}
-                    index={0}
+                    index={1}
                     enablePanDownToClose={false}
                 >
                     <BottomSheetView style={styles.swipeUpContentContainer}>
@@ -339,17 +289,31 @@ const NavScreen = () => {
                                     <TouchableOpacity style={styles.button} onPress={() => setShowNewButtons(prev => !prev)}>
                                         <Icon name="times" size={40} color="white" />
                                     </TouchableOpacity>
-                                    <TouchableOpacity style={styles.button} onPress={() => console.log("Waypoint Pressed")}>
+                                    <TouchableOpacity style={styles.button} onPress={waypoint}>
                                         <Icon name="map-marker" size={35} color="white" />
                                     </TouchableOpacity>
-                                    <TouchableOpacity style={styles.button} onPress={() => console.log("Walkie Pressed")}>
-                                        <Icon name="microphone" size={30} color="white" />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity style={styles.button} onPress={() => console.log("Friends Pressed")}>
+                                    <TouchableOpacity style={styles.button} onPress={togglePartyScreen}>
                                         <Icon name="users" size={30} color="white" />
                                     </TouchableOpacity>
                                 </>
                             )}
+
+                            {/* Conditionally render the PartyScreen */}
+                            <Modal
+                                visible={showPartyScreen}
+                                animationType="slide"  // or 'fade' for a fade transition
+                                transparent={true}
+                                onRequestClose={togglePartyScreen}  // This allows closing the modal on Android back button press
+                            >
+                                <View style={styles.modalBackground}>
+                                    <View style={styles.modalContainer}>
+                                        <PartyScreen style={{ flex: 1 }} viewIndex={currentIndex} />
+                                        <TouchableOpacity onPress={togglePartyScreen} style={styles.closeButton}>
+                                            <Text style={styles.closeButtonText}>Close</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </Modal>
                         </View>
                     </BottomSheetView>
                 </BottomSheet>
@@ -432,7 +396,7 @@ const styles = StyleSheet.create({
     },
     zoomButton: {
         position: 'absolute',
-        bottom: 150,
+        bottom: 180,
         right: 20,
         width: 60,
         height: 60,
@@ -440,8 +404,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 30,
-        elevation: 5, //Smelly Android
-        shadowColor: '#000', //Pog IOS
+        elevation: 5,
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 2,
@@ -462,7 +426,30 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: 'bold',
-    }
+    },
+    modalBackground: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',  // semi-transparent background
+    },
+    modalContainer: {
+        width: '80%',
+        backgroundColor: 'white',
+        borderRadius: 10,
+        padding: 20,
+    },
+    closeButton: {
+        marginTop: 20,
+        backgroundColor: '#ff6347',  // Example color
+        padding: 10,
+        borderRadius: 5,
+    },
+    closeButtonText: {
+        color: 'white',
+        fontSize: 18,
+        textAlign: 'center',
+    },
 })
 
 export default NavScreen;
