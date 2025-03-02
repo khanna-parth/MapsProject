@@ -25,15 +25,15 @@
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "typeorm": "^0.3.20",
-    "uuid": "^11.0.5",
-    "ws": "^8.18.0"
+    "uuid": "^11.1.0",
+    "ws": "^8.18.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.0",
-    "@types/node": "^22.10.5",
+    "@types/node": "^22.13.8",
     "@types/ws": "^8.5.13",
-    "axios": "^1.7.9",
+    "axios": "^1.8.1",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
