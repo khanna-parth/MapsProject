@@ -1,8 +1,6 @@
 import * as utils from './utils.js';
 import { getSyncedData, storeSyncedData } from './syncStorage';
 
-import { LOCAL_HOST } from '@env';
-
 export const getUserFriends = async (currentUser) => {
     try {
         if (!currentUser) {
@@ -54,9 +52,9 @@ export const getUserFriends = async (currentUser) => {
 
 export const getUsers = async (prompt) => {
     try {
-        console.log(`Making GET to social/search @ ${LOCAL_HOST}`)
+        console.log(`Making GET to social/search @ ${utils.API_URL}`)
 
-        const res = await fetch(`http://${LOCAL_HOST}/social/search?username=${prompt}`)
+        const res = await fetch(`${utils.API_URL}/social/search?username=${prompt}`)
 
         const reqData = await res.json();
     
@@ -72,10 +70,11 @@ export const getUsers = async (prompt) => {
 };
 
 /**
- * Get a user's profile picture
+ * Get a user's profile picture - CURRENTLY DISABLED
+ * Returns a placeholder since profile picture upload has been disabled
  * 
  * @param {string} username - The username to get the profile picture for
- * @returns {Promise<Object>} - Result with error status, data, and message
+ * @returns {Promise<Object>} - Result with default placeholder
  */
 export const getUserProfilePicture = async (username) => {
     try {
@@ -84,42 +83,17 @@ export const getUserProfilePicture = async (username) => {
             return {error: true, message: "Username is required", data: null};
         }
         
-        console.log(`Getting profile picture for user: ${username}`);
+        console.log(`Profile picture functionality disabled - returning placeholder for: ${username}`);
         
-        // First check if we have it cached
-        const cachedPicture = await getSyncedData(`profilePicture_${username}`);
-        if (cachedPicture && cachedPicture.imageUri) {
-            console.log(`Found cached profile picture for ${username}`);
-            return {error: false, data: cachedPicture, message: 'Retrieved from cache'};
-        }
-        
-        // If not cached, try to get from server
-        console.log(`No cached profile picture for ${username}, fetching from server`);
-        const response = await utils.getRequest(`user/profile-picture/${username}`);
-        
-        console.log(`Server response for ${username}'s profile picture:`, 
-            response.error ? 'Error: ' + response.message : 'Success');
-        
-        if (!response.error && response.data) {
-            // Check if we have a valid image URI
-            if (response.data.imageUri) {
-                console.log(`Successfully retrieved profile picture for ${username} from server`);
-                
-                // Cache the profile picture
-                await storeSyncedData(`profilePicture_${username}`, response.data);
-                
-                return {error: false, data: response.data, message: 'Successfully retrieved profile picture'};
-            } else {
-                console.log(`No profile picture set for ${username}`);
-                return {error: false, data: {username, imageUri: null}, message: 'User has no profile picture'};
-            }
-        } else {
-            console.error("Error getting profile picture:", response.message);
-            if (response.data && response.data.rawResponse) {
-                console.error("Raw response:", response.data.rawResponse);
-            }
-            return {error: true, message: response.message || "Error retrieving profile picture", data: null};
-        }
+        // Return a placeholder response
+        return {
+            error: false, 
+            data: {
+                username, 
+                imageUri: null
+            }, 
+            message: 'Profile picture feature disabled'
+        };
     } catch (error) {
         console.error("Exception in getUserProfilePicture:", error);
         return {error: true, message: `Error: ${error.message || error}`, data: null};

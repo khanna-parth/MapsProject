@@ -4,7 +4,12 @@ import * as Keychain from 'react-native-keychain';
 import { LOCAL_HOST } from '@env';
 
 // API configuration
-export const API_URL = `http://${LOCAL_HOST}`;
+// Provide fallback in case env variable isn't loaded
+const serverHost = LOCAL_HOST || '100.64.43.38:3010';
+export const API_URL = `http://${serverHost}`;
+
+// Log the API URL for debugging
+console.log(`API configured with URL: ${API_URL}`);
 
 let storedData = [];
 
@@ -130,7 +135,7 @@ export const del = async (endpoint, token = null) => {
 // Legacy API functions (maintained for backward compatibility)
 export const getRequest = async (address) => {
     try {
-        console.log(`Making GET to ${address} @ ${LOCAL_HOST}`)
+        console.log(`Making GET to ${address} @ ${API_URL}`)
 
         const res = await fetch(`${API_URL}/${address}`, {
             method: 'get',
@@ -165,7 +170,7 @@ export const getRequest = async (address) => {
 
 export const postRequest = async (address, data={}) => {
     try {
-        console.log(`Making POST to ${address} @ ${LOCAL_HOST}`)
+        console.log(`Making POST to ${address} @ ${API_URL}`)
 
         const res = await fetch(`${API_URL}/${address}`, {
             method: 'post',

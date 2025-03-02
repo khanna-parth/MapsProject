@@ -25,13 +25,8 @@ const SYNC_CONFIG = {
     syncInterval: 600000, // 10 minutes
     priority: 'local',
     localOnly: true // Flag to indicate this should only be stored locally
-  },
-  profilePicture: {
-    endpoint: 'user/profile-picture', // Endpoint for profile picture
-    syncInterval: 300000, // 5 minutes
-    priority: 'local',
-    localOnly: false // Enable server syncing for profile pictures
   }
+  // Profile picture functionality has been removed due to payload size issues
 };
 
 // Track last sync times
@@ -73,13 +68,6 @@ export const initSync = async () => {
  */
 export const storeSyncedData = async (key, value, syncNow = false) => {
   try {
-    // Check if this is a friend profile picture request
-    if (key.startsWith('profilePicture_')) {
-      const username = key.replace('profilePicture_', '');
-      // Create a dynamic config for this friend's profile picture
-      SYNC_CONFIG[key] = createFriendProfilePictureConfig(username);
-    }
-    
     // Validate the key is configured for syncing
     if (!SYNC_CONFIG[key]) {
       console.warn(`Key "${key}" is not configured for syncing. Using local storage only.`);
@@ -120,11 +108,10 @@ export const storeSyncedData = async (key, value, syncNow = false) => {
  */
 export const getSyncedData = async (key, forceSync = false) => {
   try {
-    // Check if this is a friend profile picture request
+    // Profile picture functionality has been removed
     if (key.startsWith('profilePicture_')) {
-      const username = key.replace('profilePicture_', '');
-      // Create a dynamic config for this friend's profile picture
-      SYNC_CONFIG[key] = createFriendProfilePictureConfig(username);
+      console.log(`Profile picture functionality is disabled. Returning null for ${key}`);
+      return null;
     }
     
     // Check if this key is configured for syncing
@@ -221,13 +208,8 @@ export const syncData = async (key) => {
         // Remove sync metadata before sending
         const { _needsSync, _lastModified, ...dataToSync } = localData;
         
-        // Use POST for profile picture endpoint, PUT for others
-        let response;
-        if (key === 'profilePicture') {
-          response = await post(config.endpoint, dataToSync, token);
-        } else {
-          response = await put(config.endpoint, dataToSync, token);
-        }
+        // Use PUT for all endpoints
+        const response = await put(config.endpoint, dataToSync, token);
         
         if (response.ok) {
           // Update local data to mark as synced
@@ -373,12 +355,3 @@ export const stopPeriodicSync = () => {
   }
 };
 
-// Add dynamic configuration for friend profile pictures
-const createFriendProfilePictureConfig = (username) => {
-  return {
-    endpoint: `user/profile-picture/${username}`, // Endpoint for friend's profile picture
-    syncInterval: 600000, // 10 minutes
-    priority: 'server', // Server has the most up-to-date profile pictures
-    localOnly: false // Enable server syncing
-  };
-}; 

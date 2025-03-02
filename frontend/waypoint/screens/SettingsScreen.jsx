@@ -16,13 +16,12 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Icon2 from 'react-native-vector-icons/MaterialIcons';
 import Icon3 from 'react-native-vector-icons/FontAwesome';
-import * as ImagePicker from 'expo-image-picker';
 
 import data from '../utils/defaults/assets.js';
 import { getData, storeData } from '../utils/asyncStorage';
 import { storeSyncedData, getSyncedData } from '../utils/syncStorage';
 import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
-import { API_URL, uploadFile } from '../utils/utils';
+import { API_URL } from '../utils/utils';
 
 const SettingsScreen = () => {
   const navigation = useNavigation();
@@ -41,14 +40,13 @@ const SettingsScreen = () => {
 
   useEffect(() => {
     loadUserData();
-    checkPermissions();
   }, [currentUser]);
 
   const loadUserData = async () => {
     try {
       setIsLoading(true);
       
-      // Reset profile image state to ensure we don't show previous user's image
+      // Reset profile image state
       setProfileImage(null);
       
       // Get username from local storage (not synced)
@@ -59,12 +57,9 @@ const SettingsScreen = () => {
       
       // Initialize settings if they don't exist yet
       const userData = await getData('user');
-      let token = null;
       
       if (userData) {
-        token = userData.token;
-        
-        // If we have a token but no settings yet, create default settings
+        // If we have user data but no settings yet, create default settings
         const settings = await getSyncedData('settings');
         if (!settings) {
           const defaultSettings = {
@@ -75,29 +70,6 @@ const SettingsScreen = () => {
           };
           
           await storeSyncedData('settings', defaultSettings, true);
-        }
-        
-        // Force fetch profile picture from server to ensure we have the latest
-        try {
-          console.log('Fetching profile picture for current user from server');
-          const profilePicData = await getSyncedData('profilePicture', true); // Force sync from server
-          
-          if (profilePicData && profilePicData.imageUri) {
-            console.log('Setting profile image from server data');
-            setProfileImage(profilePicData.imageUri);
-          } else if (userData.profilePicture) {
-            console.log('Setting profile image from user data');
-            setProfileImage(userData.profilePicture);
-          } else {
-            console.log('No profile image found for current user');
-            setProfileImage(null);
-          }
-        } catch (error) {
-          console.error('Error fetching profile picture:', error);
-          // Fallback to user data if available
-          if (userData.profilePicture) {
-            setProfileImage(userData.profilePicture);
-          }
         }
       }
       
@@ -117,99 +89,12 @@ const SettingsScreen = () => {
     }
   };
 
-  const checkPermissions = async () => {
-    if (Platform.OS !== 'web') {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          'Permission Required',
-          'Sorry, we need camera roll permissions to upload a profile picture!',
-          [{ text: 'OK' }]
-        );
-      }
-    }
-  };
-
-  const pickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.7,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const selectedImage = result.assets[0];
-        setProfileImage(selectedImage.uri);
-        
-        // Upload image to server
-        uploadProfileImage(selectedImage.uri);
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
-    }
-  };
-
-  const uploadProfileImage = async (imageUri) => {
-    try {
-      setIsLoading(true);
-      
-      // Get user data
-      const userData = await getData('user');
-      if (!userData) {
-        throw new Error('User not authenticated');
-      }
-      
-      if (!userData.token) {
-        throw new Error('User token not found');
-      }
-
-      // Hybrid storage approach:
-      // 1. Update local user data with profile picture
-      // 2. Store profile picture separately for syncing with server
-      try {
-        console.log('Starting profile picture upload process');
-        console.log('Image URI:', imageUri.substring(0, 50) + '...');
-        
-        // Create updated user data with the new profile picture
-        const updatedUserData = {
-          ...userData,
-          profilePicture: imageUri,
-        };
-        
-        // Store the updated user data locally
-        const storeResult = await storeData('user', updatedUserData);
-        console.log('Local user data update result:', storeResult);
-        
-        // Store profile picture separately for syncing with server
-        console.log('Attempting to sync profile picture with server');
-        const syncResult = await storeSyncedData('profilePicture', {
-          username: userData.username || username,
-          imageUri: imageUri,
-          timestamp: new Date().toISOString()
-        }, true); // Try to sync immediately if online
-        
-        console.log('Profile picture sync result:', syncResult);
-        
-        if (syncResult.error) {
-          console.warn('Warning: Profile picture sync returned error:', syncResult.message);
-          // Still show success since we saved locally
-          Alert.alert('Partial Success', 'Profile picture saved locally but could not be synced with the server. It will sync when you reconnect.');
-        } else {
-          console.log('Profile picture updated successfully!');
-        }
-      } catch (e) {
-        console.error('Error updating profile image:', e);
-        throw new Error('Failed to update profile picture: ' + (e.message || e));
-      }
-    } catch (error) {
-      console.error('Error updating profile image:', error);
-      Alert.alert('Error', error.message || 'Failed to update profile picture. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+  const showProfilePictureDisabledMessage = () => {
+    Alert.alert(
+      'Feature Disabled',
+      'Profile picture upload is currently disabled due to server limitations. This feature will be available in a future update.',
+      [{ text: 'OK' }]
+    );
   };
 
   const toggleNotifications = async (value) => {
@@ -281,33 +166,6 @@ const SettingsScreen = () => {
         throw new Error('Authentication token not found. Please log in again.');
       }
       
-      // Sync profile picture with server
-      if (userData.profilePicture) {
-        try {
-          console.log('Syncing profile picture with server');
-          console.log('Profile picture URI:', userData.profilePicture.substring(0, 50) + '...');
-          console.log('Username:', userData.username || username);
-          
-          // Store profile picture for syncing with server
-          const syncResult = await storeSyncedData('profilePicture', {
-            username: userData.username || username,
-            imageUri: userData.profilePicture,
-            timestamp: new Date().toISOString()
-          }, true); // Try to sync immediately
-          
-          console.log('Profile picture sync result:', syncResult);
-          
-          if (syncResult.error) {
-            console.warn('Profile picture sync returned error:', syncResult.message);
-          } else {
-            console.log('Profile picture synced successfully');
-          }
-        } catch (picError) {
-          console.error('Error syncing profile picture:', picError);
-          // Continue with other syncs even if profile picture sync fails
-        }
-      }
-      
       // Update the last sync times for all data types
       const now = Date.now();
       const syncTimes = await getData('syncTimes') || {};
@@ -316,11 +174,10 @@ const SettingsScreen = () => {
       syncTimes.user = now;
       syncTimes.settings = now;
       syncTimes.friends = now;
-      syncTimes.profilePicture = now;
       
       await storeData('syncTimes', syncTimes);
       
-      Alert.alert('Success', 'Settings and profile data synced successfully!');
+      Alert.alert('Success', 'Settings synced successfully!');
     } catch (error) {
       console.error('Error during sync:', error);
       Alert.alert('Error', error.message || 'Failed to sync data. Please try again.');
@@ -356,24 +213,22 @@ const SettingsScreen = () => {
         <View style={styles.profileSection}>
           <TouchableOpacity 
             style={styles.profileImageContainer} 
-            onPress={pickImage}
+            onPress={showProfilePictureDisabledMessage}
             disabled={isLoading}
           >
             {isLoading ? (
               <ActivityIndicator size="large" color={data.colors.primaryColor} />
-            ) : profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.profileImage} />
             ) : (
               <View style={styles.profileImagePlaceholder}>
                 <Image source={data.images.defaultAvatar} style={styles.defaultProfileImage} />
               </View>
             )}
-            <View style={styles.plusIconContainer}>
-              <Icon2 name="add" size={20} color="#fff" />
+            <View style={styles.disabledPlusIconContainer}>
+              <Icon2 name="block" size={16} color="#fff" />
             </View>
           </TouchableOpacity>
           <Text style={styles.username}>{username}</Text>
-          <Text style={styles.editProfileText}>Tap to {profileImage ? 'change' : 'add'} profile picture</Text>
+          <Text style={styles.editProfileText}>Profile picture upload disabled</Text>
         </View>
         
         <View style={styles.sectionContainer}>
@@ -535,6 +390,20 @@ const styles = StyleSheet.create({
     bottom: -1,
     right: -1,
     backgroundColor: data.colors.primaryColor,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+    zIndex: 10,
+  },
+  disabledPlusIconContainer: {
+    position: 'absolute',
+    bottom: -1,
+    right: -1,
+    backgroundColor: '#999',
     width: 30,
     height: 30,
     borderRadius: 15,
