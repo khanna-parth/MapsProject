@@ -1,5 +1,5 @@
-import { StyleSheet, View, Text, Image, TextInput, FlatList, Modal, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, View, Text, Image, TextInput, FlatList, Modal, TouchableOpacity, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
 import Icon from 'react-native-vector-icons/Ionicons'
 import Icon2 from 'react-native-vector-icons/AntDesign'
 
@@ -10,58 +10,136 @@ import { getUserFriends, getUsers } from '../utils/userUtils.js';
 function SearchScreen({ visible, onRequestClose }) {
     const [username, setUsername] = useState("");
     const [searchList, setSearchList] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [userFriends, setUserFriends] = useState([]);
+    const [currentUserName, setCurrentUserName] = useState(null);
+    const [pendingRequests, setPendingRequests] = useState([]);
 
-    const searchInputChange = async (searchText) => {
-        setUsername(searchText);
-        
-        if (searchText.length >= 3) {
+    // Load current user and their friends when modal opens
+    useEffect(() => {
+        if (visible) {
+            loadCurrentUserAndFriends();
+        }
+    }, [visible]);
+
+    const loadCurrentUserAndFriends = async () => {
+        try {
             const currentUser = await getData('username');
-
-            // Get friends of logged in user
-            const friendData = await getUserFriends(currentUser.data);
-            
-            let userFriends = [];
-            if (!friendData.error) {
-                for (let i = 0; i < friendData.data.length; i++) {
-                    userFriends.push(friendData.data[i].username);
+            if (!currentUser.error) {
+                setCurrentUserName(currentUser.data);
+                
+                // Get friends of logged in user
+                const friendData = await getUserFriends(currentUser.data);
+                
+                let friends = [];
+                if (!friendData.error && friendData.data) {
+                    for (let i = 0; i < friendData.data.length; i++) {
+                        friends.push(friendData.data[i].username);
+                    }
                 }
+                setUserFriends(friends);
+                
+                // Here we could also load pending requests if the API supports it
+                // For now, we'll just use local state to track requests made in this session
             }
+        } catch (error) {
+            console.error("Error loading user data:", error);
+        }
+    };
 
+    // Debounce search with useEffect
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            if (username.length > 0) {
+                performSearch(username);
+            } else {
+                setSearchList([]);
+            }
+        }, 300); // 300ms delay
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [username]);
+
+    const performSearch = async (searchText) => {
+        if (searchText.length === 0) {
+            setSearchList([]);
+            return;
+        }
+
+        setIsLoading(true);
+        try {
             // Get search results
             const searchData = await getUsers(String(searchText));
 
-            if (!searchData.error) {
-                let returnData = []
+            if (!searchData.error && searchData.data) {
+                let returnData = [];
 
                 for (let i = 0; i < searchData.data.length; i++) {
-                    if (searchData.data[i] !== currentUser.data) {
-                        returnData.push({username: searchData.data[i], cardID: i, isFriend: userFriends.includes(searchData.data[i])})
+                    if (searchData.data[i] !== currentUserName) {
+                        returnData.push({
+                            username: searchData.data[i], 
+                            cardID: i, 
+                            isFriend: userFriends.includes(searchData.data[i]),
+                            requestSent: pendingRequests.includes(searchData.data[i])
+                        });
                     }
                 }
                 
                 setSearchList(returnData);
             } else {
                 setSearchList([]);
+                console.error("Search error:", searchData.message);
             }
-        } else {
+        } catch (error) {
+            console.error("Error during search:", error);
             setSearchList([]);
+        } finally {
+            setIsLoading(false);
         }
+    };
+
+    const searchInputChange = (searchText) => {
+        setUsername(searchText);
     };
 
     const addButtonPressed = async (addedUser) => {
-        const currentUser = await getData('username');
+        try {
+            if (!currentUserName) {
+                const currentUser = await getData('username');
+                if (currentUser.error) {
+                    console.error("Error retrieving username");
+                    return;
+                }
+                setCurrentUserName(currentUser.data);
+            }
 
-        if (currentUser.error) {
-            return {error: true, message: "Error retrieving username."}
+            setIsLoading(true);
+            const response = await postRequest('social/add', {
+                username: currentUserName, 
+                friendUsername: addedUser
+            });
+            
+            if (!response.error) {
+                // Add to pending requests
+                setPendingRequests(prev => [...prev, addedUser]);
+                
+                // Update the search results to reflect the request status
+                setSearchList(prev => 
+                    prev.map(user => 
+                        user.username === addedUser 
+                            ? {...user, requestSent: true} 
+                            : user
+                    )
+                );
+            }
+        } catch (error) {
+            console.error("Error adding friend:", error);
+        } finally {
+            setIsLoading(false);
         }
-
-        await postRequest('social/add', {username: currentUser.data, friendUsername: addedUser});
-
-        searchInputChange(username);
     };
 
     return (
-        
         <Modal visible={ visible } 
             animationType='slide'
             presentationStyle='pageSheet'
@@ -76,57 +154,76 @@ function SearchScreen({ visible, onRequestClose }) {
                         <Icon name='chevron-back' size={24} color='black' style={{ position: 'absolute', width: 50, height: 50}}/>
                     </TouchableOpacity>
                     <Text style={styles.modalTitle}>Search for User</Text>
-                    <TextInput 
-                        style={styles.textInput} 
-                        placeholder='Search'
-                        value={username}
-                        onChangeText={searchInputChange}
-                    />
-                        <FlatList 
-                            style={{ flex: 1, position: 'absolute', top: 120, left: 0, right: 0, bottom: 0, paddingHorizontal: 16 }}
-                            contentContainerStyle={{ flexGrow: 1, padding: 0 }}
-                            data={searchList}
-                            renderItem={({ item }) => {
-                                return (
-                                    <View style={styles.card} key={item.cardID}>
-                                        <Image source={data.images.defaultAvatar} style={styles.cardImage}/>
-                                        <View style={styles.cardTextArea} key={item.cardID}>
-                                            <Text style={styles.cardText}>{item.username}</Text>
-                                            {!item.isFriend && (
-                                                <TouchableOpacity onPress={() => addButtonPressed(item.username)}>
-                                                    <Icon2 name='adduser' size={25} color='black' style={styles.cardPlusImage}/>
-                                                </TouchableOpacity>
-                                            )}
-                                        </View>
-                                    </View>
-                                );
-                            }}
-                            horizontal={false}
-                            keyExtractor={(item) => item.cardID.toString()}
-                            ItemSeparatorComponent={<View style={{ height: 16 }} />}
-                            ListEmptyComponent={
-                                username ? (
-                                    <View style={styles.listEmptyContainer}>
-                                        <View style={{height: '75%', justifyContent: 'center'}}>
-                                            <Icon2 style={{alignSelf: 'center', paddingBottom: 8}} name='deleteuser' size={100} color='#dddddd' />
-                                            <Text style={styles.instructionText}>No Users Founds</Text>
-                                        </View>
-                                    </View>
-                                ) : (
-                                    <View style={styles.listEmptyContainer}>
-                                        <View style={{height: '75%', justifyContent: 'center'}}>
-                                            <Icon2 style={{alignSelf: 'center', paddingBottom: 8}} name='user' size={100} color='#dddddd' />
-                                            <Text style={styles.instructionText}>Search for User</Text>
-                                        </View>
-                                    </View>
-                                )
-                            }
-                            ListHeaderComponent={
-                                searchList.length != 0 && (
-                                    <Text style={styles.listHeaderText}>Users</Text>
-                                )
-                            }
+                    <View style={styles.searchContainer}>
+                        <TextInput 
+                            style={styles.textInput} 
+                            placeholder='Search'
+                            value={username}
+                            onChangeText={searchInputChange}
+                            autoCapitalize="none"
+                            autoCorrect={false}
                         />
+                        {isLoading && (
+                            <ActivityIndicator 
+                                style={styles.searchLoader} 
+                                size="small" 
+                                color="#999" 
+                            />
+                        )}
+                    </View>
+                    <FlatList 
+                        style={{ flex: 1, position: 'absolute', top: 120, left: 0, right: 0, bottom: 0, paddingHorizontal: 16 }}
+                        contentContainerStyle={{ flexGrow: 1, padding: 0 }}
+                        data={searchList}
+                        renderItem={({ item }) => {
+                            return (
+                                <View style={styles.card} key={item.cardID}>
+                                    <Image source={data.images.defaultAvatar} style={styles.cardImage}/>
+                                    <View style={styles.cardTextArea} key={item.cardID}>
+                                        <Text style={styles.cardText}>{item.username}</Text>
+                                        {!item.isFriend && !item.requestSent && (
+                                            <TouchableOpacity onPress={() => addButtonPressed(item.username)}>
+                                                <Icon2 name='adduser' size={25} color='black' style={styles.cardPlusImage}/>
+                                            </TouchableOpacity>
+                                        )}
+                                        {item.requestSent && (
+                                            <View style={styles.sentContainer}>
+                                                <Text style={styles.sentText}>Sent</Text>
+                                            </View>
+                                        )}
+                                        {item.isFriend && (
+                                            <Icon2 name='check' size={25} color='green' style={styles.cardPlusImage}/>
+                                        )}
+                                    </View>
+                                </View>
+                            );
+                        }}
+                        horizontal={false}
+                        keyExtractor={(item) => item.cardID.toString()}
+                        ItemSeparatorComponent={<View style={{ height: 16 }} />}
+                        ListEmptyComponent={
+                            username ? (
+                                <View style={styles.listEmptyContainer}>
+                                    <View style={{height: '75%', justifyContent: 'center'}}>
+                                        <Icon2 style={{alignSelf: 'center', paddingBottom: 8}} name='deleteuser' size={100} color='#dddddd' />
+                                        <Text style={styles.instructionText}>No Users Found</Text>
+                                    </View>
+                                </View>
+                            ) : (
+                                <View style={styles.listEmptyContainer}>
+                                    <View style={{height: '75%', justifyContent: 'center'}}>
+                                        <Icon2 style={{alignSelf: 'center', paddingBottom: 8}} name='user' size={100} color='#dddddd' />
+                                        <Text style={styles.instructionText}>Search for User</Text>
+                                    </View>
+                                </View>
+                            )
+                        }
+                        ListHeaderComponent={
+                            searchList.length != 0 && (
+                                <Text style={styles.listHeaderText}>Users</Text>
+                            )
+                        }
+                    />
                 </View>
             </SafeAreaView>
         </Modal>
@@ -142,7 +239,6 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 16,
         paddingBottom: 0,
-        
     },
     modalTitle: {
         textAlign: 'center',
@@ -150,16 +246,25 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold'
     },
+    searchContainer: {
+        position: 'relative',
+        marginBottom: 15,
+    },
     textInput: {
         height: 40,
         backgroundColor: 'white',
-        marginBottom: 15,
         padding: 10,
+        paddingRight: 40,
         borderRadius: 20,
         shadowOpacity: 0.1,
         shadowOffset: { width: 4, height: 4 },
         shadowRadius: 2,
         elevation: 10,
+    },
+    searchLoader: {
+        position: 'absolute',
+        right: 15,
+        top: 10,
     },
     listHeaderText: {
         fontSize: 20,
@@ -181,7 +286,6 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 4, height: 4 },
         shadowRadius: 2,
         elevation: 10,
-        //marginBottom: 16
     },
     cardImage: {
         width: 50,
@@ -196,6 +300,18 @@ const styles = StyleSheet.create({
     cardPlusImage: {
         alignSelf: 'flex-end'
     },
+    sentContainer: {
+        backgroundColor: '#e6e6e6',
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 12,
+        alignSelf: 'flex-end',
+    },
+    sentText: {
+        color: '#666',
+        fontSize: 14,
+        fontWeight: '500',
+    },
     listEmptyContainer: {
         flex: 1,
         width: '100%',
@@ -205,7 +321,6 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         color: '#999',
         fontSize: 18,
-        textAlign: 'center',
         textAlign: 'center',
         fontSize: 20,
     },

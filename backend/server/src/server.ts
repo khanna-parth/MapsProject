@@ -6,12 +6,13 @@ import ROUTES from './routes/routes';
 import { createUser, loginUser } from './handlers/auth';
 import { connectDB } from './db/client';
 import { addFriend, getFriends, removeFriend, searchUsers } from './handlers/social';
-import { AccessUserRequest, AddFriendsRequest, CreatePartyRequest, DirectionsRequest, PartyModifcationRequest, SearchNearbyRequest } from './models/connection/requests';
+import { AccessUserRequest, AddFriendsRequest, CreatePartyRequest, DirectionsRequest, PartyModifcationRequest, ProfilePictureRequest, SearchNearbyRequest } from './models/connection/requests';
 import { setupSocketIO } from './handlers/socketio-ws';
 import { getDirections, nearbyPlaces, searchPlaces } from './ext/gmaps';
 import { Coordinates} from './models/geolocation';
 import { error } from 'console';
 import { UserDB } from './db/dbuser';
+import { getProfilePicture, updateProfilePicture } from './handlers/profile';
 
 const app = express();
 
@@ -235,6 +236,41 @@ app.get("/users/all", async (req: Request, res: Response) => {
     const users = await UserDB.dbAllUsers();
     res.status(200).json(users);
 })
+
+// Profile picture endpoints
+app.post(ROUTES.UPDATE_PROFILE_PICTURE, async (req: Request, res: Response) => {
+    const { username, imageUri }: ProfilePictureRequest = req.body;
+    
+    try {
+        const result = await updateProfilePicture(username, imageUri);
+        
+        if (result.success) {
+            res.status(result.code).json(result.data);
+        } else {
+            res.status(result.code).json({ error: result.error });
+        }
+    } catch (error) {
+        console.error('Error updating profile picture:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get(ROUTES.GET_PROFILE_PICTURE, async (req: Request, res: Response) => {
+    const username = req.params.username;
+    
+    try {
+        const result = await getProfilePicture(username);
+        
+        if (result.success) {
+            res.status(result.code).json(result.data);
+        } else {
+            res.status(result.code).json({ error: result.error });
+        }
+    } catch (error) {
+        console.error('Error getting profile picture:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 if (cluster.isPrimary) {
     // const numCPUs = os.cpus().length;
