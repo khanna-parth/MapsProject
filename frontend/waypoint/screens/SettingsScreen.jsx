@@ -368,11 +368,9 @@ const SettingsScreen = () => {
                 <Image source={data.images.defaultAvatar} style={styles.defaultProfileImage} />
               </View>
             )}
-            {!profileImage && (
-              <View style={styles.plusIconContainer}>
-                <Icon2 name="add" size={20} color="#fff" />
-              </View>
-            )}
+            <View style={styles.plusIconContainer}>
+              <Icon2 name="add" size={20} color="#fff" />
+            </View>
           </TouchableOpacity>
           <Text style={styles.username}>{username}</Text>
           <Text style={styles.editProfileText}>Tap to {profileImage ? 'change' : 'add'} profile picture</Text>
@@ -511,19 +509,18 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
   },
   profileImageContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
     backgroundColor: '#f5f5f5',
-    overflow: 'hidden',
   },
   profileImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 60,
+    borderRadius: 50,
   },
   profileImagePlaceholder: {
     width: '100%',
@@ -531,11 +528,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f0f0f0',
+    borderRadius: 50,
   },
   plusIconContainer: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
+    bottom: -1,
+    right: -1,
     backgroundColor: data.colors.primaryColor,
     width: 30,
     height: 30,
@@ -544,6 +542,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#fff',
+    zIndex: 10,
   },
   username: {
     fontSize: 22,
@@ -604,7 +603,7 @@ const styles = StyleSheet.create({
   defaultProfileImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 60,
+    borderRadius: 50,
   },
 });
 

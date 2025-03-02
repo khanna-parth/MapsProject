@@ -5,7 +5,8 @@ import Icon2 from 'react-native-vector-icons/AntDesign'
 
 import data from '../utils/defaults/assets.js'
 import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
-import { getUserFriends, getUsers } from '../utils/userUtils.js';
+import { getUserFriends, getUsers, getUserProfilePicture } from '../utils/userUtils.js';
+import { getSyncedData, storeSyncedData } from '../utils/syncStorage';
 
 function SearchScreen({ visible, onRequestClose }) {
     const [username, setUsername] = useState("");
@@ -14,6 +15,7 @@ function SearchScreen({ visible, onRequestClose }) {
     const [userFriends, setUserFriends] = useState([]);
     const [currentUserName, setCurrentUserName] = useState(null);
     const [pendingRequests, setPendingRequests] = useState([]);
+    const [userProfilePics, setUserProfilePics] = useState({});
 
     // Load current user and their friends when modal opens
     useEffect(() => {
@@ -47,6 +49,76 @@ function SearchScreen({ visible, onRequestClose }) {
         }
     };
 
+    // Load profile pictures for search results
+    const loadUserProfilePictures = async (users) => {
+        if (!users || !Array.isArray(users) || users.length === 0) return users;
+        
+        console.log(`Loading profile pictures for ${users.length} search results`);
+        const profilePics = { ...userProfilePics };
+        
+        for (const user of users) {
+            try {
+                console.log(`Attempting to load profile picture for ${user.username}`);
+                
+                // Try to get profile picture from synced storage first
+                const profilePicData = await getSyncedData(`profilePicture_${user.username}`);
+                
+                if (profilePicData && profilePicData.imageUri) {
+                    console.log(`Found cached profile picture for ${user.username}`);
+                    profilePics[user.username] = profilePicData.imageUri;
+                    user.profilePicture = profilePicData.imageUri;
+                } else {
+                    console.log(`No cached profile picture for ${user.username}, fetching from server`);
+                    // If not in synced storage, try to fetch from server
+                    const serverPicData = await getUserProfilePicture(user.username);
+                    
+                    if (!serverPicData.error && serverPicData.data) {
+                        // The getUserProfilePicture function returns data.imageUri
+                        const imageUri = serverPicData.data.imageUri;
+                        if (imageUri) {
+                            console.log(`Got profile picture for ${user.username} from server`);
+                            profilePics[user.username] = imageUri;
+                            user.profilePicture = imageUri;
+                            
+                            // Save to synced storage for future use
+                            await storeSyncedData(`profilePicture_${user.username}`, { 
+                                imageUri: imageUri,
+                                timestamp: Date.now()
+                            });
+                            
+                            // Also save to AsyncStorage for compatibility
+                            await storeData(`profilePicture_${user.username}`, imageUri);
+                        }
+                    } else {
+                        console.log(`No profile picture available for ${user.username}`);
+                    }
+                }
+            } catch (error) {
+                console.error(`Error loading profile picture for ${user.username}:`, error);
+            }
+        }
+        
+        setUserProfilePics(profilePics);
+        return users;
+    };
+
+    // Helper function to extract first name from username
+    const extractFirstName = (username) => {
+        // Check if username contains a space (indicating first and last name)
+        if (username && username.includes(' ')) {
+            return username.split(' ')[0];
+        }
+        
+        // Check if username contains a period, underscore or dash
+        if (username && (username.includes('.') || username.includes('_') || username.includes('-'))) {
+            // Split by any of these separators and take the first part
+            return username.split(/[._-]/)[0];
+        }
+        
+        // If no separator found, just return the username
+        return username;
+    };
+
     // Debounce search with useEffect
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
@@ -72,20 +144,32 @@ function SearchScreen({ visible, onRequestClose }) {
             const searchData = await getUsers(String(searchText));
 
             if (!searchData.error && searchData.data) {
-                let returnData = [];
+                let initialResults = [];
 
                 for (let i = 0; i < searchData.data.length; i++) {
                     if (searchData.data[i] !== currentUserName) {
-                        returnData.push({
+                        // Extract first name from username
+                        const firstName = extractFirstName(searchData.data[i]);
+                        
+                        initialResults.push({
                             username: searchData.data[i], 
+                            firstName: firstName,
                             cardID: i, 
                             isFriend: userFriends.includes(searchData.data[i]),
-                            requestSent: pendingRequests.includes(searchData.data[i])
+                            requestSent: pendingRequests.includes(searchData.data[i]),
+                            profilePicture: userProfilePics[searchData.data[i]] || null
                         });
                     }
                 }
                 
-                setSearchList(returnData);
+                // Set search results immediately with any cached profile pics
+                setSearchList(initialResults);
+                
+                // Load profile pictures in the background
+                const resultsWithPics = await loadUserProfilePictures(initialResults);
+                if (resultsWithPics) {
+                    setSearchList([...resultsWithPics]);
+                }
             } else {
                 setSearchList([]);
                 console.error("Search error:", searchData.message);
@@ -178,9 +262,20 @@ function SearchScreen({ visible, onRequestClose }) {
                         renderItem={({ item }) => {
                             return (
                                 <View style={styles.card} key={item.cardID}>
-                                    <Image source={data.images.defaultAvatar} style={styles.cardImage}/>
+                                    {item.profilePicture ? (
+                                        <Image 
+                                            source={{ uri: item.profilePicture }} 
+                                            style={styles.cardImage}
+                                            resizeMode="cover"
+                                        />
+                                    ) : (
+                                        <Image 
+                                            source={data.images.defaultAvatar} 
+                                            style={styles.cardImage}
+                                        />
+                                    )}
                                     <View style={styles.cardTextArea} key={item.cardID}>
-                                        <Text style={styles.cardText}>{item.username}</Text>
+                                        <Text style={styles.cardText}>{item.firstName || item.username}</Text>
                                         {!item.isFriend && !item.requestSent && (
                                             <TouchableOpacity onPress={() => addButtonPressed(item.username)}>
                                                 <Icon2 name='adduser' size={25} color='black' style={styles.cardPlusImage}/>
@@ -243,7 +338,7 @@ const styles = StyleSheet.create({
     modalTitle: {
         textAlign: 'center',
         paddingBottom: 14,
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 'bold'
     },
     searchContainer: {
@@ -251,11 +346,11 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
     textInput: {
-        height: 40,
+        height: 38,
         backgroundColor: 'white',
         padding: 10,
         paddingRight: 40,
-        borderRadius: 20,
+        borderRadius: 18,
         shadowOpacity: 0.1,
         shadowOffset: { width: 4, height: 4 },
         shadowRadius: 2,
@@ -264,10 +359,10 @@ const styles = StyleSheet.create({
     searchLoader: {
         position: 'absolute',
         right: 15,
-        top: 10,
+        top: 9,
     },
     listHeaderText: {
-        fontSize: 20,
+        fontSize: 19,
         marginBottom: 12,
     },
     card: {
@@ -279,8 +374,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         backgroundColor: 'white',
-        padding: 16,
-        borderRadius: 20,
+        padding: 14,
+        borderRadius: 18,
         shadowColor: 'black',
         shadowOpacity: 0.1,
         shadowOffset: { width: 4, height: 4 },
@@ -288,28 +383,28 @@ const styles = StyleSheet.create({
         elevation: 10,
     },
     cardImage: {
-        width: 50,
-        height: 50,
+        width: 45,
+        height: 45,
         backgroundColor: 'white',
         marginRight: 10,
         borderRadius: 100,
     },
     cardText: {
-        fontSize: 20
+        fontSize: 18
     },
     cardPlusImage: {
         alignSelf: 'flex-end'
     },
     sentContainer: {
         backgroundColor: '#e6e6e6',
-        paddingHorizontal: 12,
+        paddingHorizontal: 11,
         paddingVertical: 4,
-        borderRadius: 12,
+        borderRadius: 10,
         alignSelf: 'flex-end',
     },
     sentText: {
         color: '#666',
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '500',
     },
     listEmptyContainer: {
@@ -320,9 +415,8 @@ const styles = StyleSheet.create({
     instructionText: {
         alignSelf: 'center',
         color: '#999',
-        fontSize: 18,
+        fontSize: 17,
         textAlign: 'center',
-        fontSize: 20,
     },
 });
 

@@ -21,7 +21,21 @@ export const getUserFriends = async (currentUser) => {
             
             if (Array.isArray(friendData.data)) {
                 for (let i = 0; i < friendData.data.length; i++) {
-                    returnData.push({username: friendData.data[i], cardID: i});
+                    const friend = friendData.data[i];
+                    // Check if the response is the new format (object with firstName, lastName)
+                    // or the old format (just username string)
+                    if (typeof friend === 'object') {
+                        returnData.push({
+                            username: friend.username,
+                            firstName: friend.firstName || '',
+                            lastName: friend.lastName || '',
+                            userID: friend.userID,
+                            cardID: i
+                        });
+                    } else {
+                        // Handle old format for backward compatibility
+                        returnData.push({username: friend, cardID: i});
+                    }
                 }
                 return {error: false, data: returnData, message: 'Successfully retrieved friends.'};
             } else {

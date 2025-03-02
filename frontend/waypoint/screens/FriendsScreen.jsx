@@ -252,17 +252,30 @@ function FriendsScreen({ visible, onRequestClose }) {
                                                 />
                                             )}
                                             <View style={styles.cardTextArea} key={item.cardID}>
-                                                <Text style={styles.cardText}>{item.username}</Text>
-                                                <TouchableOpacity>
-                                                    <Icon2 name='message1' size={25} color='black' style={styles.cardActionIcon}/>
-                                                </TouchableOpacity>
+                                                <View>
+                                                    {(item.firstName || item.lastName) ? (
+                                                        <>
+                                                            <Text style={styles.cardText}>
+                                                                {[item.firstName, item.lastName].filter(Boolean).join(' ')}
+                                                            </Text>
+                                                            <Text style={styles.cardSubText}>{item.username}</Text>
+                                                        </>
+                                                    ) : (
+                                                        <Text style={styles.cardText}>{item.username}</Text>
+                                                    )}
+                                                </View>
+                                                <View style={styles.iconContainer}>
+                                                    <TouchableOpacity>
+                                                        <Icon2 name='message1' size={23} color='black' style={styles.cardActionIcon}/>
+                                                    </TouchableOpacity>
+                                                </View>
                                             </View>
                                         </View>
                                     );
                                 }}
                                 horizontal={false}
                                 keyExtractor={(item) => item.cardID.toString()}
-                                ItemSeparatorComponent={<View style={{ height: 16 }} />}
+                                ItemSeparatorComponent={<View style={{ height: 14 }} />}
                                 ListEmptyComponent={
                                     <View style={styles.listEmptyContainer}>
                                         <Icon2 style={styles.emptyIcon} name='user' size={100} color='#dddddd' />
@@ -343,27 +356,34 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         justifyContent: 'space-between',
+        alignItems: 'center',
         backgroundColor: 'white',
-        padding: 16,
-        borderRadius: 20,
+        padding: 14,
+        borderRadius: 18,
         shadowColor: 'black',
-        shadowOpacity: 0.1,
-        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 0.08,
+        shadowOffset: { width: 2, height: 2 },
         shadowRadius: 2,
-        elevation: 10,
+        elevation: 4,
     },
     cardImage: {
-        width: 50,
-        height: 50,
+        width: 45,
+        height: 45,
         backgroundColor: 'white',
-        marginRight: 10,
+        marginRight: 9,
         borderRadius: 100,
     },
     cardText: {
-        fontSize: 20
+        fontSize: 17,
+        color: '#333'
+    },
+    cardSubText: {
+        fontSize: 13,
+        color: '#888',
+        marginTop: 2
     },
     cardActionIcon: {
-        alignSelf: 'flex-end'
+        alignSelf: 'center'
     },
     listEmptyContainer: {
         flex: 1,
@@ -425,6 +445,11 @@ const styles = StyleSheet.create({
     emptyIcon: {
         alignSelf: 'center',
         marginBottom: 16,
+    },
+    iconContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingLeft: 8
     },
 });
 

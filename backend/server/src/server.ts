@@ -133,7 +133,12 @@ app.post(ROUTES.GET_FRIENDS, async (req: Request, res: Response) => {
 
     const result = await getFriends(username)
     if (result.friends && result.friends !== null) {
-        res.status(200).json(result.friends.map(friend => friend.username))
+        res.status(200).json(result.friends.map(friend => ({
+            username: friend.username,
+            firstName: friend.firstName,
+            lastName: friend.lastName,
+            userID: friend.userID
+        })))
     } else {
         res.status(result.code).json({'error': result.error})
     }

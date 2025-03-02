@@ -83,8 +83,9 @@ const ProfileDropdown = () => {
         setFriendsModalVisible(true);
       }, 300); // Add a small delay to ensure dropdown is closed first
     } else if (screen === 'team') {
-      // Navigate to team/party screen
-      console.log('Navigate to party');
+      // Navigate to party details screen
+      console.log('Navigate to party details');
+      navigation.navigate('PartyDetails');
     } else if (screen === 'logout') {
       // Handle logout logic
       console.log('Logout');
