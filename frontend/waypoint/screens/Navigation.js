@@ -41,13 +41,19 @@ const NavScreen = () => {
         console.log('handleSheetChanges', index);
     }, []);
 
-    const [showPartyScreen, setShowPartyScreen] = useState(false);
-    const [currentIndex, setCurrentIndex] = useState(0);  // Assuming this value is coming from your logic
+    const partySheetRef = useRef(null);
 
     const togglePartyScreen = () => {
-        setShowPartyScreen(prev => !prev);
+        if (partySheetRef.current) {
+            partySheetRef.current.expand();
+        }
     };
 
+    const closePartyScreen = () => {
+        if (partySheetRef.current) {
+            partySheetRef.current.close();
+        }
+    };
 
     //End Route
     const endRoute = () => {
@@ -297,24 +303,23 @@ const NavScreen = () => {
                                     </TouchableOpacity>
                                 </>
                             )}
-
-                            {/* Conditionally render the PartyScreen */}
-                            <Modal
-                                visible={showPartyScreen}
-                                animationType="slide"  // or 'fade' for a fade transition
-                                transparent={true}
-                                onRequestClose={togglePartyScreen}  // This allows closing the modal on Android back button press
-                            >
-                                <View style={styles.modalBackground}>
-                                    <View style={styles.modalContainer}>
-                                        <PartyScreen style={{ flex: 1 }} viewIndex={currentIndex} />
-                                        <TouchableOpacity onPress={togglePartyScreen} style={styles.closeButton}>
-                                            <Text style={styles.closeButtonText}>Close</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-                            </Modal>
                         </View>
+                    </BottomSheetView>
+
+                </BottomSheet>
+                
+                {/* PartyScreen Bottom Sheet */}
+                <BottomSheet
+                    ref={partySheetRef}
+                    snapPoints={['60%']}
+                    index={-1} // Initially closed
+                    enablePanDownToClose={true}
+                >
+                    <BottomSheetView style={styles.partySheetContainer}>
+                        <PartyScreen />
+                        <TouchableOpacity onPress={closePartyScreen} style={styles.closeButton}>
+                            <Text style={styles.closeButtonText}>Close</Text>
+                        </TouchableOpacity>
                     </BottomSheetView>
                 </BottomSheet>
             </GestureHandlerRootView>
@@ -322,12 +327,10 @@ const NavScreen = () => {
     );
 };
 
+//Style Sheet
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    map: {
-        ...StyleSheet.absoluteFillObject,
     },
     swipeUpContainer: {
         flex: 1,
@@ -394,22 +397,6 @@ const styles = StyleSheet.create({
         color: 'black',
         zIndex: 1000,
     },
-    zoomButton: {
-        position: 'absolute',
-        bottom: 180,
-        right: 20,
-        width: 60,
-        height: 60,
-        backgroundColor: '#007bff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 30,
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 2,
-    },
     directionBar: {
         position: 'absolute',
         top: 50,
@@ -427,21 +414,15 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
-    modalBackground: {
+    partySheetContainer: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',  // semi-transparent background
-    },
-    modalContainer: {
-        width: '80%',
-        backgroundColor: 'white',
-        borderRadius: 10,
-        padding: 20,
+        padding: 15,
+        alignItems: 'stretch',
+        justifyContent: 'flex-start',
     },
     closeButton: {
         marginTop: 20,
-        backgroundColor: '#ff6347',  // Example color
+        backgroundColor: '#ff6347',
         padding: 10,
         borderRadius: 5,
     },

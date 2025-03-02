@@ -1,6 +1,6 @@
 import * as utils from './utils.js';
 
-// Yea thats right I used the haversine formula, in meters 8==D - - - 
+// Yea thats right I used the haversine formula, in meters
 export const getDistance = (latitude1, longitude1, latitude2, longitude2) => {
     const earthRadius = 6371000;
     const latitude1Radians = (latitude1 * Math.PI) / 180;
@@ -52,6 +52,7 @@ export const getRoute = async (userLatitude, userLongitude, destLatitude, destLo
     };
 
     try {
+        //Comment out if testing
         const routeResponse = await utils.postRequest('routing/fetch', requestData);
 
         //console.log(requestData);
