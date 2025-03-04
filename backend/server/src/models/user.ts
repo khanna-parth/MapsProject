@@ -30,9 +30,6 @@ class User extends BaseEntity {
     @Column('json')
     coordinates: { long: number; lat: number };
 
-    @Column({nullable: true, type: 'text'})
-    profilePicture: string;
-
     // ws?: WebSocket
     ws?: Socket
     wsID?: string
@@ -61,7 +58,6 @@ class User extends BaseEntity {
         this.email = ""
         this.password = ""
         this.coordinates = {long: 0, lat: 0}
-        this.profilePicture = ""
     }
 
     static CreateUser(firstName: string, lastName: string, email: string, username: string, password: string): User {
@@ -73,7 +69,6 @@ class User extends BaseEntity {
         user.email = email;
         user.sessionID = uuidv4();
         user.friends = [];
-        user.profilePicture = "";
 
         return user;
     }
@@ -126,7 +121,6 @@ class User extends BaseEntity {
                 lat: this.coordinates.lat,
             },
             friends: this.friends ? this.friends.map((friend) => friend.username) : [],
-            profilePicture: this.profilePicture || "",
         };
     }
 

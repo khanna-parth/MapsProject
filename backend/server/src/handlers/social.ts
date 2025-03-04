@@ -60,13 +60,16 @@ const searchUsers = async (username: string): Promise<AccessUserResult> => {
         return { success: false, code: 400, error: "username must be provided" };
     }
 
+    // Minimum search length check
+    if (username.length < 3) {
+        return { success: false, code: 404, error: "no users found" };
+    }
+
     try {
         const usernames = await UserDB.dbFindUserWithUsername(username);
         
         if (usernames.length === 0) {
-            // Return success with empty array instead of error
-            // This allows the frontend to handle "no results" state better
-            return { success: true, usernames: [], code: 200 };
+            return { success: false, code: 404, error: "no users found" };
         }
 
         console.log(`Search request completed for username: ${username}`);

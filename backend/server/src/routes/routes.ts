@@ -12,8 +12,9 @@ const ROUTES = {
     GET_DIRECTIONS: "/routing/fetch",
     SEARCH_PLACES: "/routing/search",
     FEED_PLACES: "/routing/feed",
-    UPDATE_PROFILE_PICTURE: "/user/profile-picture",
-    GET_PROFILE_PICTURE: "/user/profile-picture/:username",
+
+    //http://localhost:3010/auth/search?username=
+    
 };
 
 export default ROUTES;

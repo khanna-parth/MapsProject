@@ -1,11 +1,9 @@
 import { useState,  useEffect } from 'react';
-import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-import { postRequest } from '../utils/utils.js';
-import { storeData, removeData, clearKeysWithPrefix } from '../utils/asyncStorage';
+import { storeData, postRequest, storeKeychainData, getKeychainData, getData } from '../utils/utils.js';
 import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
-import { getSyncedData } from '../utils/syncStorage';
 
 
 function LoginScreen() {
@@ -68,56 +66,21 @@ function LoginScreen() {
                 const userData = response.data;
                 console.log('Login successful:', userData);
                 
-                // Clear any previous user data
-                await removeData('user');
-                await removeData('profilePicture');
-                
-                // Clear any previous friend profile pictures
-                await clearKeysWithPrefix('profilePicture_');
-                console.log('Cleared previous friend profile pictures');
-                
-                // Set current user after clearing data
                 setCurrentUser(userData.username);
-                
-                // Store individual fields as strings
                 await storeData('username', userData.username);
                 await storeData('userID', userData.userID);
+                
+                // Temporary
                 await storeData('password', password);
-                
-                // Create a token if one isn't provided by the server
-                const token = userData.token || userData.userID;
-                
-                // Store the complete user object with token
-                const userObject = {
-                    ...userData,
-                    token: token
-                };
-                
-                await storeData('user', userObject);
-                
-                // Try to fetch profile picture from server
-                try {
-                    const profilePicData = await getSyncedData('profilePicture', true); // Force sync from server
-                    console.log('Fetched profile picture from server:', profilePicData ? 'success' : 'not found');
-                    
-                    if (profilePicData && profilePicData.imageUri) {
-                        // Update user object with profile picture
-                        const updatedUserObject = {
-                            ...userObject,
-                            profilePicture: profilePicData.imageUri
-                        };
-                        await storeData('user', updatedUserObject);
-                        console.log('Updated user object with profile picture');
-                    } else {
-                        console.log('No profile picture found on server');
-                    }
-                } catch (error) {
-                    console.error('Error fetching profile picture:', error);
-                }
-                
-                console.log('User authenticated, starting sync for profile data');
-                
+                // const storeCredentials = await storeKeychainData(username, password);
+                // if (storeCredentials.error) {
+                //     console.error('Ignore for now - Error storing credentials:', storeCredentials.message);
+                // } else {
+                //     console.log('User credentials stored successfully');
+                // }
+
                 navigation.navigate('Home');
+        
             } else {
                 console.error('Login failed:', response.message);
                 alert('Invalid username or password. Please try again.');

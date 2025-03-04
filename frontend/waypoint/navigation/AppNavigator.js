@@ -7,11 +7,9 @@ import LoginScreen from '../screens/LoginScreen';
 import CreateAccountScreen from '../screens/CreateAccount';
 
 import PartyScreen from '../screens/PartyScreen';
-import PartyDetailsScreen from '../screens/PartyDetailsScreen';
 import HomeScreen from '../screens/HomeScreen';
 import NavScreen from '../screens/Navigation';
 import MapSearchScreen from '../screens/MapSearchScreen'
-import SettingsScreen from '../screens/SettingsScreen';
 import { useState, useEffect } from 'react';
 
 
@@ -120,8 +118,6 @@ const RootNavigator = () => {
             <Stack.Screen name="Home" component={HomeStack} options={{ tabBarStyle: { display: 'flex' } }}/>
             <Stack.Screen name="Navigation" component={NavigationStack}options={{ tabBarStyle: { display: 'flex' } }}/>
             <Stack.Screen name="MapSearch" component={MapSearchStack} options={{ cardStyleInterpolator: forFade }}/>
-            <Stack.Screen name="Settings" component={SettingsScreen} options={{ cardStyleInterpolator: forFade }}/>
-            <Stack.Screen name="PartyDetails" component={PartyDetailsScreen} options={{ cardStyleInterpolator: forFade }}/>
         </Stack.Navigator>
     );
 };

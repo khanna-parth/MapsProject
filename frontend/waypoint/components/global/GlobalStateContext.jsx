@@ -3,7 +3,8 @@ import { useNavigation } from '@react-navigation/native';
 
 import { io } from "socket.io-client";
 
-import { removeData, API_URL } from '../../utils/utils';
+import { removeData } from '../../utils/utils';
+import { LOCAL_HOST } from '@env';
 
 const GlobalStateContext = createContext();
 
@@ -22,7 +23,7 @@ export const GlobalStateProvider = ({ children }) => {
         console.log(`Joining party with ${userID}, ${partyID}.`);
         try {
             return new Promise((resolve, reject) => {
-                const socket = io(API_URL, {
+                const socket = io(`http://${LOCAL_HOST}`, {
                     path: "/party/join",
                     transports: ['websocket'],  // Force WebSocket transport
                     query: {

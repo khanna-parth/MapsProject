@@ -11,11 +11,6 @@ interface AccessUserRequest {
     password: string;
 }
 
-interface ProfilePictureRequest {
-    username: string;
-    imageUri: string;
-}
-
 interface AddFriendsRequest {
     username: string;
     friendUsername: string;
@@ -50,4 +45,4 @@ interface SearchNearbyRequest {
     properties: PartyModificationData
 }
 
-export { CreatePartyRequest, AccessUserRequest, ProfilePictureRequest, AddFriendsRequest, GetFriendsRequest, SearchUsersRequest, DirectionsRequest, SearchNearbyRequest, PartyModifcationRequest }
+export { CreatePartyRequest, AccessUserRequest, AddFriendsRequest, GetFriendsRequest, SearchUsersRequest, DirectionsRequest, SearchNearbyRequest, PartyModifcationRequest }

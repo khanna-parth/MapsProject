@@ -2,11 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Pressable, Animated, Image, Platform, Keyboard } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { removeData } from '../../utils/utils.js';
-import { clearKeysWithPrefix } from '../../utils/asyncStorage';
 import { useGlobalState } from '../global/GlobalStateContext.jsx';
 import data from '../../utils/defaults/assets.js';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import FriendsScreen from '../../screens/FriendsScreen.jsx';
 
 // Avatar component
 const Avatar = ({ source, size = 50, onPress }) => {
@@ -25,11 +23,10 @@ const Avatar = ({ source, size = 50, onPress }) => {
 
 // Dropdown Menu component
 const ProfileDropdown = () => {
-    const { partySocket, setPartySocket, setPartyMemberLocation, setCurrentUser } = useGlobalState();
+    const { partySocket, setPartySocket, setPartyMemberLocation, setCurrentUser, currentUser } = useGlobalState();
   const [isOpen, setIsOpen] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const navigation = useNavigation();
-  const [friendsModalVisible, setFriendsModalVisible] = useState(false);
 
   // Close dropdown when keyboard appears
   useEffect(() => {
@@ -74,18 +71,8 @@ const ProfileDropdown = () => {
     if (screen === 'profile') {
       navigation.navigate('Profile');
     } else if (screen === 'settings') {
-      // Navigate to settings screen
-      navigation.navigate('Settings');
-    } else if (screen === 'friends') {
-      // Show friends modal
-      console.log('Opening friends modal');
-      setTimeout(() => {
-        setFriendsModalVisible(true);
-      }, 300); // Add a small delay to ensure dropdown is closed first
-    } else if (screen === 'team') {
-      // Navigate to party details screen
-      console.log('Navigate to party details');
-      navigation.navigate('PartyDetails');
+      // Add navigation to settings screen when available
+      console.log('Navigate to settings');
     } else if (screen === 'logout') {
       // Handle logout logic
       console.log('Logout');
@@ -114,10 +101,10 @@ const ProfileDropdown = () => {
               ]}
             >
               <View style={styles.dropdownContent}>
-                <Text style={styles.dropdownLabel}>My Account</Text>
+                <Text style={styles.dropdownLabel}>Hey, {currentUser}</Text>
                 <View style={styles.separator} />
                 
-                <TouchableOpacity 
+                {/* <TouchableOpacity 
                   style={styles.dropdownItem} 
                   onPress={() => handleNavigation('profile')}
                   activeOpacity={0.7}
@@ -135,38 +122,20 @@ const ProfileDropdown = () => {
                 
                 <TouchableOpacity 
                   style={styles.dropdownItem} 
-                  onPress={() => handleNavigation('friends')}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.dropdownItemText}>Friends</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={styles.dropdownItem} 
                   onPress={() => handleNavigation('team')}
                   activeOpacity={0.7}
                 >
                   <Text style={styles.dropdownItemText}>Party</Text>
                 </TouchableOpacity>
                 
-                <View style={styles.separator} />
+                <View style={styles.separator} /> */}
                 
                 <TouchableOpacity 
                   style={styles.dropdownItem} 
                   onPress={async () => {
-                    // Clear user data
                     await removeData('userID');
                     await removeData('password');
                     await removeData('partyID');
-                    await removeData('user');
-                    await removeData('username');
-                    await removeData('profilePicture');
-                    
-                    // Clear friend profile pictures
-                    await clearKeysWithPrefix('profilePicture_');
-                    console.log('Cleared friend profile pictures');
-                    
-                    // Disconnect and reset state
                     if (partySocket) {
                         partySocket.disconnect();
                     }
@@ -186,12 +155,6 @@ const ProfileDropdown = () => {
           </Pressable>
         </Modal>
       )}
-      
-      {/* Friends Modal */}
-      <FriendsScreen 
-        visible={friendsModalVisible}
-        onRequestClose={() => setFriendsModalVisible(false)}
-      />
     </View>
   );
 };
@@ -248,7 +211,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 5,
     elevation: 10,
-    width: 200,
+    width: 150,
     zIndex: 10000,
   },
   dropdownContent: {

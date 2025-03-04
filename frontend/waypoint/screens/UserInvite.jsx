@@ -8,83 +8,11 @@ const defaultImage = require("../assets/default-avatar-icon.jpg")
 import data from '../utils/defaults/assets.js'
 import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
 import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
-import { getUserFriends, getUserProfilePicture } from '../utils/userUtils.js';
-import { getSyncedData, storeSyncedData } from '../utils/syncStorage';
+import { getUserFriends } from '../utils/userUtils.js';
 
 function InviteScreen({ visible, onRequestClose }) {
     const { joinParty } = useGlobalState();
     const [friendList, setFriendList] = useState([]);
-    const [friendProfilePics, setFriendProfilePics] = useState({});
-
-    // Load profile pictures for friends
-    const loadFriendProfilePictures = async (friends) => {
-        if (!friends || !Array.isArray(friends) || friends.length === 0) return friends;
-        
-        console.log(`Loading profile pictures for ${friends.length} friends`);
-        const profilePics = { ...friendProfilePics };
-        
-        for (const friend of friends) {
-            try {
-                console.log(`Attempting to load profile picture for ${friend.username}`);
-                
-                // Try to get profile picture from synced storage first
-                const profilePicData = await getSyncedData(`profilePicture_${friend.username}`);
-                
-                if (profilePicData && profilePicData.imageUri) {
-                    console.log(`Found cached profile picture for ${friend.username}`);
-                    profilePics[friend.username] = profilePicData.imageUri;
-                    friend.profilePicture = profilePicData.imageUri;
-                } else {
-                    console.log(`No cached profile picture for ${friend.username}, fetching from server`);
-                    // If not in synced storage, try to fetch from server
-                    const serverPicData = await getUserProfilePicture(friend.username);
-                    
-                    if (!serverPicData.error && serverPicData.data) {
-                        // The getUserProfilePicture function returns data.imageUri
-                        const imageUri = serverPicData.data.imageUri;
-                        if (imageUri) {
-                            console.log(`Got profile picture for ${friend.username} from server`);
-                            profilePics[friend.username] = imageUri;
-                            friend.profilePicture = imageUri;
-                            
-                            // Save to synced storage for future use
-                            await storeSyncedData(`profilePicture_${friend.username}`, { 
-                                imageUri: imageUri,
-                                timestamp: Date.now()
-                            });
-                            
-                            // Also save to AsyncStorage for compatibility
-                            await storeData(`profilePicture_${friend.username}`, imageUri);
-                        }
-                    } else {
-                        console.log(`No profile picture available for ${friend.username}`);
-                    }
-                }
-            } catch (error) {
-                console.error(`Error loading profile picture for ${friend.username}:`, error);
-            }
-        }
-        
-        setFriendProfilePics(profilePics);
-        return friends;
-    };
-
-    // Helper function to extract first name from username
-    const extractFirstName = (username) => {
-        // Check if username contains a space (indicating first and last name)
-        if (username && username.includes(' ')) {
-            return username.split(' ')[0];
-        }
-        
-        // Check if username contains a period, underscore or dash
-        if (username && (username.includes('.') || username.includes('_') || username.includes('-'))) {
-            // Split by any of these separators and take the first part
-            return username.split(/[._-]/)[0];
-        }
-        
-        // If no separator found, just return the username
-        return username;
-    };
 
     // Get all friends of logged in user
     const getFriends = async () => {
@@ -97,26 +25,7 @@ function InviteScreen({ visible, onRequestClose }) {
         const friendData = await getUserFriends(usernameData.data);
 
         if (!friendData.error) {
-            // Create initial friend objects with any cached profile pictures
-            const initialFriends = friendData.data.map(friend => {
-                // Extract first name if not already provided
-                const firstName = friend.firstName || extractFirstName(friend.username);
-                
-                return {
-                    ...friend,
-                    firstName: firstName,
-                    profilePicture: friendProfilePics[friend.username] || null
-                };
-            });
-            
-            // Set friends list immediately with any cached profile pics
-            setFriendList(initialFriends);
-            
-            // Load profile pictures in the background
-            const friendsWithPics = await loadFriendProfilePictures(initialFriends);
-            if (friendsWithPics) {
-                setFriendList([...friendsWithPics]);
-            }
+            setFriendList(friendData.data);
         }
     }
 
@@ -183,20 +92,9 @@ function InviteScreen({ visible, onRequestClose }) {
                         renderItem={({ item }) => {
                             return (
                                 <View style={styles.card} key={item.cardID}>
-                                    {item.profilePicture ? (
-                                        <Image 
-                                            source={{ uri: item.profilePicture }} 
-                                            style={styles.cardImage}
-                                            resizeMode="cover"
-                                        />
-                                    ) : (
-                                        <Image 
-                                            source={defaultImage} 
-                                            style={styles.cardImage}
-                                        />
-                                    )}
+                                    <Image source={defaultImage} style={styles.cardImage}/>
                                     <View style={styles.cardTextArea} key={item.cardID}>
-                                        <Text style={styles.cardText}>{item.firstName || item.username}</Text>
+                                        <Text style={styles.cardText}>{item.username}</Text>
                                         <TouchableOpacity onPress={() => inviteButtonPressed(item.username)}>
                                             {/* <Image source={data.images.plusIcon} style={styles.cardPlusImage}/> */}
                                             <Icon2 name='plus' size={25} color='black' style={styles.cardPlusImage}/>
@@ -241,18 +139,18 @@ const styles = StyleSheet.create({
     modalTitle: {
         textAlign: 'center',
         paddingBottom: 14,
-        fontSize: 22,
+        fontSize: 24,
         fontWeight: 'bold'
     },
     textInput: {
-        height: 42,
+        height: 40,
         backgroundColor: 'white',
         marginBottom: 15,
         padding: 10,
-        borderRadius: 18
+        borderRadius: 20
     },
     listHeaderText: {
-        fontSize: 19,
+        fontSize: 20,
         marginBottom: 12,
     },
     card: {
@@ -264,8 +162,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         backgroundColor: 'white',
-        padding: 14,
-        borderRadius: 18,
+        padding: 16,
+        borderRadius: 20,
         shadowOpacity: 0.1,
         shadowOffset: { width: 4, height: 4 },
         shadowRadius: 2,
@@ -273,14 +171,14 @@ const styles = StyleSheet.create({
         //marginBottom: 16
     },
     cardImage: {
-        width: 45,
-        height: 45,
+        width: 50,
+        height: 50,
         backgroundColor: 'white',
         marginRight: 10,
         borderRadius: 100,
     },
     cardText: {
-        fontSize: 18
+        fontSize: 20
     },
     cardPlusImage: {
         alignSelf: 'flex-end'
@@ -293,8 +191,10 @@ const styles = StyleSheet.create({
     instructionText: {
         alignSelf: 'center',
         color: '#999',
-        fontSize: 17,
+        fontSize: 18,
         textAlign: 'center',
+        textAlign: 'center',
+        fontSize: 20,
     },
 });
 

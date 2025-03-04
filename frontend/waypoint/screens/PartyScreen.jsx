@@ -9,8 +9,6 @@ import UserInviteScreen from './UserInvite';
 import data from '../utils/defaults/assets.js'
 import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
 import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
-import { getUserFriends, getUserProfilePicture } from '../utils/userUtils.js';
-import { getSyncedData, storeSyncedData } from '../utils/syncStorage';
 
 function PartyScreen({viewIndex}) {
     const { partySocket, setPartySocket, userPartyChange, setUserPartyChange, joinParty, disconnectedUser, setDisconnectedUser, setPartyMemberLocation, currentUser } = useGlobalState();
@@ -22,60 +20,6 @@ function PartyScreen({viewIndex}) {
 
     const [partyList, setPartyList] = useState([]);
     const [partyID, setPartyID] = useState();
-    const [memberProfilePics, setMemberProfilePics] = useState({});
-    
-    // Load profile pictures for party members
-    const loadMemberProfilePictures = async (members) => {
-        if (!members || !Array.isArray(members) || members.length === 0) return members;
-        
-        console.log(`Loading profile pictures for ${members.length} party members`);
-        const profilePics = { ...memberProfilePics };
-        
-        for (const member of members) {
-            try {
-                console.log(`Attempting to load profile picture for ${member.username}`);
-                
-                // Try to get profile picture from synced storage first
-                const profilePicData = await getSyncedData(`profilePicture_${member.username}`);
-                
-                if (profilePicData && profilePicData.imageUri) {
-                    console.log(`Found cached profile picture for ${member.username}`);
-                    profilePics[member.username] = profilePicData.imageUri;
-                    member.profilePicture = profilePicData.imageUri;
-                } else {
-                    console.log(`No cached profile picture for ${member.username}, fetching from server`);
-                    // If not in synced storage, try to fetch from server
-                    const serverPicData = await getUserProfilePicture(member.username);
-                    
-                    if (!serverPicData.error && serverPicData.data) {
-                        // The getUserProfilePicture function returns data.imageUri
-                        const imageUri = serverPicData.data.imageUri;
-                        if (imageUri) {
-                            console.log(`Got profile picture for ${member.username} from server`);
-                            profilePics[member.username] = imageUri;
-                            member.profilePicture = imageUri;
-                            
-                            // Save to synced storage for future use
-                            await storeSyncedData(`profilePicture_${member.username}`, { 
-                                imageUri: imageUri,
-                                timestamp: Date.now()
-                            });
-                            
-                            // Also save to AsyncStorage for compatibility
-                            await storeData(`profilePicture_${member.username}`, imageUri);
-                        }
-                    } else {
-                        console.log(`No profile picture available for ${member.username}`);
-                    }
-                }
-            } catch (error) {
-                console.error(`Error loading profile picture for ${member.username}:`, error);
-            }
-        }
-        
-        setMemberProfilePics(profilePics);
-        return members;
-    };
     
     // Get the party details of the user and update the list
     const getPartyList = async () => {
@@ -94,23 +38,14 @@ function PartyScreen({viewIndex}) {
             setPartySocket();
             return {error: true, message: "User does not have permission to join party."}
         } else {
-            // Create initial member objects
-            let partyMembers = partyData.data.connected.map(member => ({
-                username: member.username,
-                userID: member.userID || member.username,
-                profilePicture: memberProfilePics[member.username] || null
-            }));
+            let partyMembers = [];
 
-            // Set party members immediately with any cached profile pics
+            for (let i = 0; i < partyData.data.connected.length; i++) {
+                partyMembers.push({username: partyData.data.connected[i].username, userID: i});
+            }
+
             setPartyID(partyID.data);
             setPartyList(partyMembers);
-            
-            // Load profile pictures in the background
-            const membersWithPics = await loadMemberProfilePictures(partyMembers);
-            if (membersWithPics) {
-                setPartyList([...membersWithPics]);
-            }
-            
             return {error: false, message: "Party members successfully retrieved"};
         }
     }
@@ -234,18 +169,7 @@ function PartyScreen({viewIndex}) {
                             return (
                                 <View style={styles.card} key={item.userID}>
                                     <View style={styles.cardImage}>
-                                        {item.profilePicture ? (
-                                            <Image 
-                                                source={{ uri: item.profilePicture }} 
-                                                style={styles.cardImage}
-                                                resizeMode="cover"
-                                            />
-                                        ) : (
-                                            <Image 
-                                                source={data.images.defaultAvatar} 
-                                                style={styles.cardImage}
-                                            />
-                                        )}
+                                        <Image source={data.images.defaultAvatar} style={styles.cardImage}/>
                                     </View>
                                     
                                     <View style={styles.cardTextArea} key={item.userID}>
@@ -352,8 +276,8 @@ const styles = StyleSheet.create({
     cardTextArea: {
         flex: 1,
         backgroundColor: 'white',
-        padding: 14,
-        borderRadius: 18,
+        padding: 16,
+        borderRadius: 20,
         shadowColor: 'black',
         shadowOpacity: 0.1,
         shadowOffset: { width: 4, height: 4 },
@@ -362,21 +286,21 @@ const styles = StyleSheet.create({
         //marginBottom: 16
     },
     cardImage: {
-        width: 45,
-        height: 45,
+        width: 50,
+        height: 50,
         backgroundColor: 'white',
         marginRight: 10,
         borderRadius: 100,
     },
     cardText: {
-        fontSize: 18
+        fontSize: 20
     },
     listHeaderText: {
-        fontSize: 19,
+        fontSize: 20,
         // marginBottom: 12,
     },
     partyIDText: {
-        fontSize: 15,
+        fontSize: 16,
         marginBottom: 12,
         color: '#999',
     },
@@ -404,11 +328,11 @@ const styles = StyleSheet.create({
     },
     textInput: {
         width: 150,
-        height: 48,
+        height: 50,
         backgroundColor: 'white',
         marginBottom: 15,
         padding: 10,
-        borderRadius: 18,
+        borderRadius: 20,
         shadowColor: 'black',
         shadowOpacity: 0.1,
         shadowOffset: { width: 4, height: 4 },
@@ -418,7 +342,7 @@ const styles = StyleSheet.create({
     instructionText: {
         alignSelf: 'center',
         color: '#999',
-        fontSize: 17,
+        fontSize: 18,
         textAlign: 'center',
     },
 });
