@@ -4,6 +4,8 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
+import data from '../utils/defaults/assets.js';
+
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { getRoute, getDistance } from '../utils/mapUtils.js';
 
@@ -250,7 +252,8 @@ const NavScreen = () => {
         return points;
     };
 
-    if (!location || loadingRoute) {
+    // if (!location || loadingRoute) {
+    if (!location) {
         return (
             <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                 <ActivityIndicator size="large" animating={true}/>
@@ -268,61 +271,75 @@ const NavScreen = () => {
             
             <Map route={route}/>
 
-            <GestureHandlerRootView style={styles.swipeUpContainer}>
-                <BottomSheet
-                    useRef={bottomSheetRef}
-                    snapPoints={snapPoints}
-                    onChange={handleSheetChanges}
-                    index={1}
-                    enablePanDownToClose={false}
-                >
-                    <BottomSheetView style={styles.swipeUpContentContainer}>
-                        <Text style={styles.topLeftText}>ETA: {eta || "--:-- --"}</Text>
-                        <Text style={styles.topRightText}>{remainingTime || "-- Hours -- Minutes"}</Text>
-                        
-                        <View style={styles.buttonContainer}>
-                            {showNewButtons ? (
-                                <>
-                                    <TouchableOpacity style={styles.cancelButton} onPress={() => setShowNewButtons(prev => !prev)}>
-                                        <Text style={styles.endButtonText}>Cancel</Text>
-                                    </TouchableOpacity> 
-                                    <TouchableOpacity style={styles.endButton} onPress={endRoute}>
-                                        <Text style={styles.endButtonText}>End Route</Text>
-                                    </TouchableOpacity>
-                                </>
-                            ) : (
-                                <>
-                                    <TouchableOpacity style={styles.button} onPress={() => setShowNewButtons(prev => !prev)}>
-                                        <Icon name="times" size={40} color="white" />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity style={styles.button} onPress={waypoint}>
-                                        <Icon name="map-marker" size={35} color="white" />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity style={styles.button} onPress={togglePartyScreen}>
-                                        <Icon name="users" size={30} color="white" />
-                                    </TouchableOpacity>
-                                </>
-                            )}
-                        </View>
-                    </BottomSheetView>
+            <BottomSheet
+                useRef={bottomSheetRef}
+                snapPoints={['20%', '20%']}
+                backgroundStyle={{ 
+                    backgroundColor: data.colors.offWhite, 
+                    shadowColor: 'black',
+                    shadowOpacity: 0.2,
+                    shadowRadius: 5,
+                    elevation: 10, 
+                }}
+                index={0}
+                enablePanDownToClose={false}
+                enableDynamicSizing={false}
+                onChange={handleSheetChanges}
+            >
+                <BottomSheetView style={styles.swipeUpContentContainer}>
+                    <Text style={styles.topLeftText}>ETA: {eta || "--:-- --"}</Text>
+                    <Text style={styles.topRightText}>{remainingTime || "-- Hours -- Minutes"}</Text>
+                    
+                    <View style={styles.buttonContainer}>
+                        {showNewButtons ? (
+                            <>
+                                <TouchableOpacity style={styles.cancelButton} onPress={() => setShowNewButtons(prev => !prev)}>
+                                    <Text style={styles.endButtonText}>Cancel</Text>
+                                </TouchableOpacity> 
+                                <TouchableOpacity style={styles.endButton} onPress={endRoute}>
+                                    <Text style={styles.endButtonText}>End Route</Text>
+                                </TouchableOpacity>
+                            </>
+                        ) : (
+                            <>
+                                <TouchableOpacity style={styles.button} onPress={() => setShowNewButtons(prev => !prev)}>
+                                    <Icon name="times" size={40} color="white" />
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.button} onPress={waypoint}>
+                                    <Icon name="map-marker" size={35} color="white" />
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.button} onPress={togglePartyScreen}>
+                                    <Icon name="users" size={30} color="white" />
+                                </TouchableOpacity>
+                            </>
+                        )}
+                    </View>
+                </BottomSheetView>
 
-                </BottomSheet>
-                
-                {/* PartyScreen Bottom Sheet */}
-                <BottomSheet
-                    ref={partySheetRef}
-                    snapPoints={['60%']}
-                    index={-1} // Initially closed
-                    enablePanDownToClose={true}
-                >
-                    <BottomSheetView style={styles.partySheetContainer}>
-                        <PartyScreen />
-                        <TouchableOpacity onPress={closePartyScreen} style={styles.closeButton}>
-                            <Text style={styles.closeButtonText}>Close</Text>
-                        </TouchableOpacity>
-                    </BottomSheetView>
-                </BottomSheet>
-            </GestureHandlerRootView>
+            </BottomSheet>
+            
+            {/* PartyScreen Bottom Sheet */}
+            <BottomSheet
+                ref={partySheetRef}
+                backgroundStyle={{ 
+                    backgroundColor: data.colors.offWhite, 
+                    shadowColor: 'black',
+                    shadowOpacity: 0.2,
+                    shadowRadius: 5,
+                    elevation: 10, 
+                }}
+                snapPoints={['60%']}
+                index={-1} // Initially closed
+                enablePanDownToClose={true}
+                enableDynamicSizing={false}
+            >
+                <BottomSheetView style={styles.partySheetContainer}>
+                    <PartyScreen />
+                    <TouchableOpacity onPress={closePartyScreen} style={styles.closeButton}>
+                        <Text style={styles.closeButtonText}>Close</Text>
+                    </TouchableOpacity>
+                </BottomSheetView>
+            </BottomSheet>
         </View>
     );
 };
@@ -424,7 +441,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
         backgroundColor: '#ff6347',
         padding: 10,
-        borderRadius: 5,
+        borderRadius: 20,
     },
     closeButtonText: {
         color: 'white',

@@ -45,7 +45,7 @@ const HomeScreen = () => {
                     shadowRadius: 5,
                     elevation: 10, 
                 }}
-                index={1}
+                index={0}
                 enablePanDownToClose={false}
                 enableDynamicSizing={false}
                 onChange={(index) => {
