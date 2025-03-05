@@ -1,4 +1,5 @@
 import * as utils from './utils.js';
+import { API_URL } from './config.js';
 
 // Yea thats right I used the haversine formula, in meters
 export const getDistance = (latitude1, longitude1, latitude2, longitude2) => {

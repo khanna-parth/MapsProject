@@ -4,15 +4,10 @@ import { getSyncedData, storeSyncedData } from './syncStorage';
 export const getUserFriends = async (currentUser) => {
     try {
         if (!currentUser) {
-            console.error("getUserFriends: currentUser is undefined or null");
             return {error: true, message: "Username is required", data: []};
         }
         
-        console.log(`Getting friends for user: ${currentUser}`);
-        
         const friendData = await utils.postRequest('social/friends', {username: currentUser});
-        
-        console.log("Friend data response:", friendData);
         
         if (!friendData.error) {
             let returnData = [];
@@ -37,25 +32,19 @@ export const getUserFriends = async (currentUser) => {
                 }
                 return {error: false, data: returnData, message: 'Successfully retrieved friends.'};
             } else {
-                console.error("Unexpected response format:", friendData.data);
                 return {error: true, message: "Unexpected response format", data: []};
             }
         } else {
-            console.error("Error in friend data response:", friendData.message);
             return {error: true, message: friendData.message || "Error retrieving friends", data: []};
         }
     } catch (error) {
-        console.error("Exception in getUserFriends:", error);
         return {error: true, message: `Error: ${error.message || error}`, data: []};
     }
 }
 
 export const getUsers = async (prompt) => {
     try {
-        console.log(`Making GET to social/search @ ${utils.API_URL}`)
-
         const res = await fetch(`${utils.API_URL}/social/search?username=${prompt}`)
-
         const reqData = await res.json();
     
         if (res.ok) {
@@ -70,32 +59,108 @@ export const getUsers = async (prompt) => {
 };
 
 /**
- * Get a user's profile picture - CURRENTLY DISABLED
- * Returns a placeholder since profile picture upload has been disabled
+ * Get a user's profile picture
  * 
  * @param {string} username - The username to get the profile picture for
- * @returns {Promise<Object>} - Result with default placeholder
+ * @returns {Promise<Object>} - Result with profile picture data
  */
 export const getUserProfilePicture = async (username) => {
     try {
         if (!username) {
-            console.error("getUserProfilePicture: username is undefined or null");
             return {error: true, message: "Username is required", data: null};
         }
         
-        console.log(`Profile picture functionality disabled - returning placeholder for: ${username}`);
+        // Check if we have a cached version first
+        const cachedData = await getSyncedData(`profilePicture_${username}`);
+        if (cachedData && cachedData.imageUri) {
+            return {
+                error: false,
+                data: cachedData,
+                message: 'Retrieved from cache'
+            };
+        }
         
-        // Return a placeholder response
-        return {
-            error: false, 
-            data: {
-                username, 
-                imageUri: null
-            }, 
-            message: 'Profile picture feature disabled'
-        };
+        // Fetch from server if not cached
+        try {
+            const response = await utils.get(`user/profile-picture/${username}`);
+            
+            if (!response.error && response.data) {
+                // Cache the profile picture
+                await storeSyncedData(`profilePicture_${username}`, response.data);
+                
+                return {
+                    error: false,
+                    data: response.data,
+                    message: 'Profile picture retrieved successfully'
+                };
+            } else {
+                return {
+                    error: true,
+                    message: response.message || 'Failed to fetch profile picture',
+                    data: null
+                };
+            }
+        } catch (fetchError) {
+            return {
+                error: true,
+                message: `Network error: ${fetchError.message || fetchError}`,
+                data: null
+            };
+        }
     } catch (error) {
-        console.error("Exception in getUserProfilePicture:", error);
         return {error: true, message: `Error: ${error.message || error}`, data: null};
+    }
+};
+
+/**
+ * Update a user's profile picture
+ * 
+ * @param {string} username - The username to update the profile picture for
+ * @param {string} imageUri - The base64 encoded image or image URI
+ * @returns {Promise<Object>} - Result of the update operation
+ */
+export const updateProfilePicture = async (username, imageUri) => {
+    try {
+        if (!username) {
+            return {error: true, message: "Username is required"};
+        }
+        
+        if (!imageUri) {
+            return {error: true, message: "Image data is required"};
+        }
+        
+        // Send to server
+        try {
+            const response = await utils.post('user/profile-picture', {
+                username,
+                imageUri
+            });
+            
+            if (!response.error) {
+                // Update local cache
+                await storeSyncedData(`profilePicture_${username}`, {
+                    username,
+                    imageUri,
+                    timestamp: new Date().toISOString()
+                });
+                
+                return {
+                    error: false,
+                    message: 'Profile picture updated successfully'
+                };
+            } else {
+                return {
+                    error: true,
+                    message: response.message || 'Failed to update profile picture'
+                };
+            }
+        } catch (networkError) {
+            return {
+                error: true, 
+                message: `Network error: ${networkError.message || 'Connection failed'}`
+            };
+        }
+    } catch (error) {
+        return {error: true, message: `Error: ${error.message || error}`};
     }
 };

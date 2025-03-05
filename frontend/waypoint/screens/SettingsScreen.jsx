@@ -16,12 +16,15 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Icon2 from 'react-native-vector-icons/MaterialIcons';
 import Icon3 from 'react-native-vector-icons/FontAwesome';
+import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 import data from '../utils/defaults/assets.js';
 import { getData, storeData } from '../utils/asyncStorage';
 import { storeSyncedData, getSyncedData } from '../utils/syncStorage';
 import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
 import { API_URL } from '../utils/utils';
+import { getUserProfilePicture, updateProfilePicture } from '../utils/userUtils';
 
 const SettingsScreen = () => {
   const navigation = useNavigation();
@@ -30,6 +33,7 @@ const SettingsScreen = () => {
   const [username, setUsername] = useState('');
   const [profileImage, setProfileImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   
   // Settings state
@@ -49,17 +53,37 @@ const SettingsScreen = () => {
       // Reset profile image state
       setProfileImage(null);
       
-      // Get username from local storage (not synced)
-      const username = await getData('username');
+      // Get username from local storage
+      const usernameResult = await getData('username');
+      
+      // Extract username whether it's an object or string
+      let username;
+      
+      if (typeof usernameResult === 'string') {
+        username = usernameResult;
+      } 
+      else if (usernameResult && !usernameResult.error && usernameResult.data) {
+        username = usernameResult.data;
+      }
+      
       if (username) {
         setUsername(username);
+        
+        // Try to load profile picture
+        try {
+          const profilePicResult = await getUserProfilePicture(username);
+          if (!profilePicResult.error && profilePicResult.data && profilePicResult.data.imageUri) {
+            setProfileImage(profilePicResult.data.imageUri);
+          }
+        } catch (error) {
+          console.error('Error loading profile picture:', error);
+        }
       }
       
       // Initialize settings if they don't exist yet
       const userData = await getData('user');
       
       if (userData) {
-        // If we have user data but no settings yet, create default settings
         const settings = await getSyncedData('settings');
         if (!settings) {
           const defaultSettings = {
@@ -89,12 +113,145 @@ const SettingsScreen = () => {
     }
   };
 
-  const showProfilePictureDisabledMessage = () => {
-    Alert.alert(
-      'Feature Disabled',
-      'Profile picture upload is currently disabled due to server limitations. This feature will be available in a future update.',
-      [{ text: 'OK' }]
-    );
+  // Process image by resizing and compressing
+  const processImage = async (uri) => {
+    try {
+      // First try with moderate compression
+      let manipResult = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: 600, height: 600 } }],
+        { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+      );
+      
+      // Check if the resulting image is still too large
+      let base64Size = manipResult.base64?.length || 0;
+      
+      // If still too large, compress again more aggressively
+      if (base64Size > 2 * 1024 * 1024) {
+        manipResult = await ImageManipulator.manipulateAsync(
+          manipResult.uri,
+          [{ resize: { width: 400, height: 400 } }],
+          { compress: 0.3, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+        );
+      }
+      
+      // Return the base64 encoded image
+      return {
+        uri: manipResult.uri,
+        base64: manipResult.base64,
+        width: manipResult.width,
+        height: manipResult.height
+      };
+    } catch (error) {
+      console.error("Error processing image:", error);
+      throw new Error("Failed to process image. Please try again.");
+    }
+  };
+
+  const handlePickImage = async () => {
+    // Ask for permission
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Please allow access to your photo library to change your profile picture.');
+      return;
+    }
+    
+    try {
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+      
+      // Verify image was selected
+      if (result.canceled || !result.assets || result.assets.length === 0) {
+        return;
+      }
+      
+      const selectedAsset = result.assets[0];
+      
+      if (!selectedAsset.uri) {
+        Alert.alert('Error', 'The selected image could not be loaded. Please try again.');
+        return;
+      }
+      
+      // Show loading indicator
+      setIsUploadingImage(true);
+      
+      try {
+        // Process the image (resize and compress)
+        const processedImage = await processImage(selectedAsset.uri);
+        
+        // Create base64 image URI
+        const imageUri = `data:image/jpeg;base64,${processedImage.base64}`;
+        
+        // Upload the processed image
+        await uploadProfilePicture(imageUri);
+        
+      } catch (error) {
+        console.error("Error processing/uploading image:", error);
+        Alert.alert('Error', error.message || 'Failed to process image. Please try again.');
+        setIsUploadingImage(false);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
+      setIsUploadingImage(false);
+    }
+  };
+  
+  const uploadProfilePicture = async (imageUri) => {
+    try {
+      // Directly get username from storage to ensure it's available
+      const usernameResult = await getData('username');
+      
+      // Extract the username whether it's returned as an object or direct string
+      let username;
+      
+      if (typeof usernameResult === 'string') {
+        username = usernameResult;
+      } 
+      else if (usernameResult && !usernameResult.error && usernameResult.data) {
+        username = usernameResult.data;
+      }
+      
+      // Verify we have a valid username
+      if (!username) {
+        Alert.alert('Error', 'Username not found. Please log in again.');
+        return;
+      }
+      
+      // Check if the image is too large for API transmission
+      const imageSizeInBytes = imageUri.length * 0.75;
+      const imageSizeInMB = imageSizeInBytes / (1024 * 1024);
+      
+      // If still too large even after processing, show error
+      if (imageSizeInMB > 5) {
+        Alert.alert(
+          'Image Still Too Large',
+          'Even after processing, the image is too large. Please try a smaller image.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+      
+      const result = await updateProfilePicture(username, imageUri);
+      
+      if (!result.error) {
+        setProfileImage(imageUri);
+        Alert.alert('Success', 'Profile picture updated successfully.');
+      } else {
+        Alert.alert('Error', result.message || 'Failed to update profile picture.');
+      }
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+      Alert.alert('Error', 'Failed to upload profile picture. Please try again.');
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   const toggleNotifications = async (value) => {
@@ -134,8 +291,6 @@ const SettingsScreen = () => {
       ...settings, 
       darkMode: value 
     });
-    
-    // Here you would also apply the dark mode theme to your app
   };
 
   const toggleDistanceUnit = async () => {
@@ -177,6 +332,9 @@ const SettingsScreen = () => {
       
       await storeData('syncTimes', syncTimes);
       
+      // Reload user data to refresh profile picture
+      await loadUserData();
+      
       Alert.alert('Success', 'Settings synced successfully!');
     } catch (error) {
       console.error('Error during sync:', error);
@@ -213,22 +371,24 @@ const SettingsScreen = () => {
         <View style={styles.profileSection}>
           <TouchableOpacity 
             style={styles.profileImageContainer} 
-            onPress={showProfilePictureDisabledMessage}
-            disabled={isLoading}
+            onPress={handlePickImage}
+            disabled={isLoading || isUploadingImage}
           >
-            {isLoading ? (
+            {isLoading || isUploadingImage ? (
               <ActivityIndicator size="large" color={data.colors.primaryColor} />
+            ) : profileImage ? (
+              <Image source={{ uri: profileImage }} style={styles.profileImage} />
             ) : (
               <View style={styles.profileImagePlaceholder}>
                 <Image source={data.images.defaultAvatar} style={styles.defaultProfileImage} />
               </View>
             )}
-            <View style={styles.disabledPlusIconContainer}>
-              <Icon2 name="block" size={16} color="#fff" />
+            <View style={styles.plusIconContainer}>
+              <Icon2 name="add" size={16} color="#fff" />
             </View>
           </TouchableOpacity>
-          <Text style={styles.username}>{username}</Text>
-          <Text style={styles.editProfileText}>Profile picture upload disabled</Text>
+          <Text style={styles.username}>{username || ''}</Text>
+          <Text style={styles.editProfileText}>Tap to change profile picture</Text>
         </View>
         
         <View style={styles.sectionContainer}>
@@ -390,20 +550,6 @@ const styles = StyleSheet.create({
     bottom: -1,
     right: -1,
     backgroundColor: data.colors.primaryColor,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#fff',
-    zIndex: 10,
-  },
-  disabledPlusIconContainer: {
-    position: 'absolute',
-    bottom: -1,
-    right: -1,
-    backgroundColor: '#999',
     width: 30,
     height: 30,
     borderRadius: 15,

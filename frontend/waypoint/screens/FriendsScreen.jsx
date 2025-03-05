@@ -78,53 +78,32 @@ function FriendsScreen({ visible, onRequestClose }) {
     const loadFriendProfilePictures = async (friends) => {
         if (!friends || !Array.isArray(friends) || friends.length === 0) return;
         
-        console.log(`Loading profile pictures for ${friends.length} friends`);
         const profilePics = { ...friendProfilePics };
         let loadedCount = 0;
         
         for (const friend of friends) {
             try {
-                console.log(`Attempting to load profile picture for ${friend.username}`);
-                
                 // Try to get profile picture for this friend
-                const profilePicData = await getSyncedData(`profilePicture_${friend.username}`);
+                const serverPicData = await getUserProfilePicture(friend.username);
                 
-                if (profilePicData && profilePicData.imageUri) {
-                    console.log(`Found cached profile picture for ${friend.username}`);
-                    profilePics[friend.username] = profilePicData.imageUri;
-                    loadedCount++;
-                } else {
-                    console.log(`No cached profile picture for ${friend.username}, fetching from server`);
-                    // If not in local storage, try to fetch from server
-                    const serverPicData = await getUserProfilePicture(friend.username);
-                    
-                    if (!serverPicData.error && serverPicData.data) {
-                        if (serverPicData.data.imageUri) {
-                            console.log(`Successfully retrieved profile picture for ${friend.username} from server`);
-                            profilePics[friend.username] = serverPicData.data.imageUri;
-                            loadedCount++;
-                            
-                            // Cache the profile picture
-                            await storeSyncedData(`profilePicture_${friend.username}`, serverPicData.data);
-                        } else {
-                            console.log(`${friend.username} has no profile picture set`);
-                            // Explicitly set to null to indicate we checked and there's no picture
-                            profilePics[friend.username] = null;
-                        }
+                if (!serverPicData.error && serverPicData.data) {
+                    if (serverPicData.data.imageUri) {
+                        profilePics[friend.username] = serverPicData.data.imageUri;
+                        loadedCount++;
                     } else {
-                        console.warn(`Could not retrieve profile picture for ${friend.username}: ${serverPicData.message}`);
                         // Explicitly set to null to indicate we checked and there's no picture
                         profilePics[friend.username] = null;
                     }
+                } else {
+                    // Explicitly set to null to indicate we checked and there's no picture
+                    profilePics[friend.username] = null;
                 }
             } catch (error) {
-                console.error(`Error loading profile picture for ${friend.username}:`, error);
                 // Explicitly set to null to indicate we checked and there's no picture
                 profilePics[friend.username] = null;
             }
         }
         
-        console.log(`Loaded ${loadedCount} profile pictures out of ${friends.length} friends`);
         setFriendProfilePics(profilePics);
     };
     

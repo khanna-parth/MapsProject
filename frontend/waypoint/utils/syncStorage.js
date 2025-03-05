@@ -25,8 +25,14 @@ const SYNC_CONFIG = {
     syncInterval: 600000, // 10 minutes
     priority: 'local',
     localOnly: true // Flag to indicate this should only be stored locally
+  },
+  // Profile picture configuration
+  profilePicture: {
+    endpoint: 'user/profile-picture',
+    syncInterval: 600000, // 10 minutes
+    priority: 'server',
+    localOnly: false
   }
-  // Profile picture functionality has been removed due to payload size issues
 };
 
 // Track last sync times
@@ -68,8 +74,11 @@ export const initSync = async () => {
  */
 export const storeSyncedData = async (key, value, syncNow = false) => {
   try {
-    // Validate the key is configured for syncing
-    if (!SYNC_CONFIG[key]) {
+    // Handle profile picture keys specially
+    const isProfilePicture = key.startsWith('profilePicture_');
+    
+    // Validate the key is configured for syncing or it's a profile picture
+    if (!SYNC_CONFIG[key] && !isProfilePicture) {
       console.warn(`Key "${key}" is not configured for syncing. Using local storage only.`);
       return storeData(key, value);
     }
@@ -78,17 +87,20 @@ export const storeSyncedData = async (key, value, syncNow = false) => {
     const dataToStore = {
       ...value,
       _lastModified: new Date().toISOString(),
-      _needsSync: !SYNC_CONFIG[key].localOnly && SYNC_CONFIG[key].endpoint !== null, // Only mark for sync if not local-only
+      _needsSync: isProfilePicture ? false : !SYNC_CONFIG[key].localOnly && SYNC_CONFIG[key].endpoint !== null,
     };
 
     // Store locally
     const storeResult = await storeData(key, dataToStore);
     
-    // Attempt immediate sync if requested and online and not local-only
-    if (syncNow && !SYNC_CONFIG[key].localOnly && SYNC_CONFIG[key].endpoint) {
-      const netInfo = await NetInfo.fetch();
-      if (netInfo.isConnected) {
-        await syncData(key);
+    // Profile pictures are synced through their own API flow, not here
+    if (!isProfilePicture) {
+      // Attempt immediate sync if requested and online and not local-only
+      if (syncNow && !SYNC_CONFIG[key].localOnly && SYNC_CONFIG[key].endpoint) {
+        const netInfo = await NetInfo.fetch();
+        if (netInfo.isConnected) {
+          await syncData(key);
+        }
       }
     }
 
@@ -108,10 +120,11 @@ export const storeSyncedData = async (key, value, syncNow = false) => {
  */
 export const getSyncedData = async (key, forceSync = false) => {
   try {
-    // Profile picture functionality has been removed
+    // Handle profile picture keys
     if (key.startsWith('profilePicture_')) {
-      console.log(`Profile picture functionality is disabled. Returning null for ${key}`);
-      return null;
+      // Get the locally stored profile picture
+      const localData = await getData(key);
+      return localData;
     }
     
     // Check if this key is configured for syncing

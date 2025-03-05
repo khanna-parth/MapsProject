@@ -137,7 +137,6 @@ const Map = ({ route }) => {
             const newTimeoutID = setTimeout(() => {
                 fetchPlaces(region.latitude, region.longitude);
                 setPreviousLocation({ latitude: region.latitude, longitude: region.longitude });
-                console.log('map updated');
             }, 1000); // Wait 1 second
 
             setTimeoutId(newTimeoutID);
@@ -147,7 +146,6 @@ const Map = ({ route }) => {
             const newTimeoutID = setTimeout(() => {
                 fetchPlaces(region.latitude, region.longitude);
                 setPreviousLocation({ latitude: region.latitude, longitude: region.longitude });
-                console.log('user waited and updated');
             }, 5000); // Wait 5 seconds
 
             setTimeoutId(newTimeoutID);

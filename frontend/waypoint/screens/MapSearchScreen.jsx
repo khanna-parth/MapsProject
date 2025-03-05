@@ -163,12 +163,22 @@ const Searchbar = () => {
 
     // User clicked on destination
     const destinationPressed = (locationInfo) => {
-        console.log(locationInfo)
+        // Pass location information back to parent component
+        const locationData = {
+            placeId: locationInfo.place_id,
+            coordinates: {
+                lat: locationInfo.geometry.location.lat,
+                long: locationInfo.geometry.location.lng
+            },
+            name: locationInfo.name,
+            vicinity: locationInfo.vicinity || locationInfo.formatted_address
+        };
+        
+        setLocationClicked(locationData);
+        setPlace('');
+        setData([]);
         Keyboard.dismiss();
-        setLocationClicked(locationInfo);
-        // partySocket.emit('add-destination', locationInfo);
-        //navigation.navigate('Navigation', { coordinates: coordinates });
-    }
+    };
 
     return (
         <SafeAreaView style={styles.safeContainer}>
