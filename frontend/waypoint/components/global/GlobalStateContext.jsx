@@ -58,7 +58,7 @@ export const GlobalStateProvider = ({ children }) => {
                 socket.on("shared-destinations", (socketData) => {
                     let locationData = socketData.split(" ").slice(1);
                     const destinationsObject = JSON.parse(locationData);
-                    navigation.navigate('Navigation', { coordinates: destinationsObject.destinations[1].coordinates });
+                    navigation.navigate('Navigation', { coordinates: destinationsObject.destinations[destinationsObject.destinations.length - 1].coordinates });
                 });
     
                 socket.on("disconnect", () => {
