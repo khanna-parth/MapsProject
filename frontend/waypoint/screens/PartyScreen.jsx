@@ -44,6 +44,9 @@ function PartyScreen({viewIndex}) {
                 partyMembers.push({username: partyData.data.connected[i].username, userID: i});
             }
 
+            console.log(partyData);
+            console.log(JSON.stringify(partyData, 2));
+
             setPartyID(partyID.data);
             setPartyList(partyMembers);
             return {error: false, message: "Party members successfully retrieved"};

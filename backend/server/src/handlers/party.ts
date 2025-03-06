@@ -6,6 +6,7 @@ import { User } from "../models/user";
 import { PartyDB } from "../db/dbparty";
 import { UserDB } from "../db/dbuser";
 import { PartyModification, PartyModificationData } from "../models/deps/party-deps";
+import { SharedDestination, SharedDestinationList } from "../models/geolocation";
 
 // interface PartyDisplay {
 //     partyID: string;
@@ -21,6 +22,7 @@ interface PartyDisplay {
         lastEmpty: number;
         host?: string; 
         participants?: string[];
+        destinations?: SharedDestination[];
     }
 
 const createParty = async (userID: string): Promise<PartyCreationResult> => {
@@ -97,7 +99,8 @@ const getParty = (userID: string, partyID: string): { party?: PartyDisplay, code
             }),
             lastEmpty: existingParty.lastEmpty,
             host: existingParty.host?.username,
-            participants: existingParty.participants?.map(p => p.username)
+            participants: existingParty.participants?.map(p => p.username),
+            destinations: existingParty.sharedDestinations.destinations,
         };
 
         return { party: partyDisplay, code: 200 };

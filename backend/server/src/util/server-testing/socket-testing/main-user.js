@@ -36,6 +36,8 @@ async function sendMessage(socket, partyID) {
         } else {
             console.log(resp.data);
         }
+        
+        console.log(resp.data);
     } catch (error) {
         console.error('Error sending message:', error);
     }
