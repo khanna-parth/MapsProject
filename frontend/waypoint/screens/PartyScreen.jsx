@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View, Platform, SafeAreaView, FlatList, Image, TextInput, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import Box from '../components/Box';
@@ -11,7 +12,9 @@ import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
 import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
 
 function PartyScreen({viewIndex}) {
-    const { partySocket, setPartySocket, userPartyChange, setUserPartyChange, joinParty, disconnectedUser, setDisconnectedUser, setPartyMemberLocation, currentUser } = useGlobalState();
+    const { partySocket, setPartySocket, userPartyChange, setUserPartyChange, joinParty, disconnectedUser, setDisconnectedUser, setPartyMemberLocation, currentUser, exitNavigation } = useGlobalState();
+
+    const navigation = useNavigation();
 
     const [searchModalVisible, setSearchModalVisible] = useState(false);
     const [inviteModalVisible, setInviteModalVisible] = useState(false);
@@ -44,11 +47,15 @@ function PartyScreen({viewIndex}) {
                 partyMembers.push({username: partyData.data.connected[i].username, userID: i});
             }
 
-            console.log(partyData);
-            console.log(JSON.stringify(partyData, 2));
-
             setPartyID(partyID.data);
             setPartyList(partyMembers);
+
+            console.log(partyData.data.destinations[partyData.data.destinations.length - 1])
+
+            if (exitNavigation == false && partyData.data.destinations.length > 0) {
+                navigation.navigate('Navigation', { coordinates: partyData.data.destinations[partyData.data.destinations.length - 1].coordinates });
+            }
+
             return {error: false, message: "Party members successfully retrieved"};
         }
     }

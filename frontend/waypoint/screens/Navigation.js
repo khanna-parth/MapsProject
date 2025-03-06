@@ -2,7 +2,8 @@ import { StyleSheet, Text, View, SafeAreaView, ActivityIndicator, TouchableOpaci
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
 
 import data from '../utils/defaults/assets.js';
 
@@ -15,6 +16,8 @@ import PartyScreen from './PartyScreen';
 
 const NavScreen = () => {
     const navigation = useNavigation();
+
+    const { setExitNavigation } = useGlobalState();
 
     const screenRoute = useRoute();
     const { coordinates } = screenRoute.params || {};
@@ -62,6 +65,7 @@ const NavScreen = () => {
         console.log("End Route -> Homepage")
         setShowNewButtons(false);
         setRoute(null);
+        setExitNavigation(true);
         navigation.navigate("Home");
     }
 

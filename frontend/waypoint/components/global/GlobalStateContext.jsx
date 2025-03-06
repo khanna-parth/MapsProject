@@ -18,6 +18,7 @@ export const GlobalStateProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState("");
     const [disconnectedUser, setDisconnectedUser] = useState("");
     const [isCameraMoving, setIsCameraMoving] = useState(false);
+    const [exitNavigation, setExitNavigation] = useState(false);
 
     const joinParty = async (userID, partyID) => {
         console.log(`Joining party with ${userID}, ${partyID}.`);
@@ -58,6 +59,7 @@ export const GlobalStateProvider = ({ children }) => {
                 socket.on("shared-destinations", (socketData) => {
                     let locationData = socketData.split(" ").slice(1);
                     const destinationsObject = JSON.parse(locationData);
+                    setExitNavigation(false);
                     navigation.navigate('Navigation', { coordinates: destinationsObject.destinations[destinationsObject.destinations.length - 1].coordinates });
                 });
     
@@ -85,6 +87,7 @@ export const GlobalStateProvider = ({ children }) => {
             currentUser, setCurrentUser,
             disconnectedUser, setDisconnectedUser,
             isCameraMoving, setIsCameraMoving,
+            exitNavigation, setExitNavigation,
             joinParty
         }}>
             {children}
