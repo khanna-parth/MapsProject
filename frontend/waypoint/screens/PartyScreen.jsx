@@ -50,8 +50,6 @@ function PartyScreen({viewIndex}) {
             setPartyID(partyID.data);
             setPartyList(partyMembers);
 
-            console.log(partyData.data.destinations[partyData.data.destinations.length - 1])
-
             if (exitNavigation == false && partyData.data.destinations.length > 0) {
                 navigation.navigate('Navigation', { coordinates: partyData.data.destinations[partyData.data.destinations.length - 1].coordinates });
             }
