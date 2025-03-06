@@ -140,8 +140,6 @@ function PartyScreen({viewIndex}) {
 
             const partyListData = await getPartyList();
 
-            console.log(partyListData)
-
             if (partyListData.error) {
                 await joinParty(userID.data, partyID.data);
                 const partyListData2 = await getPartyList();
