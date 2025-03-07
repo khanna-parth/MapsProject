@@ -58,21 +58,24 @@ function WelcomeScreen() {
 
                 {/* Log in button */}
 
-                <View style={styles.loginButtonContainer}>
+                {/* <View style={styles.loginButtonContainer}>
                     <Button title="Log In" color="#F2F2F2" onPress={handleLogIn} />
-                </View>
+                </View> */}
 
                 {/* Text, Image, and Buttons */}
 
                 <View style={styles.centeredContent}>
                     {/* Replace with logo */}
-                    <Image source={{ uri: "https://picsum.photos/id/237/200/300" }} style={styles.image} />
-                    <Text style={styles.welcomeLabel}>Waypoint</Text>
-                    <View style={styles.googleButtonContainer}>
+                    <Image source={data.images.logo} style={styles.image} />
+                    {/* <Text style={styles.welcomeLabel}>Waypoint</Text> */}
+                    {/* <View style={styles.googleButtonContainer}>
                         <Button title="Continue with Google" color="#3E82FC" onPress={handleGoogle} /> 
+                    </View> */}
+                    <View style={styles.buttonContainer}>
+                        <Button title="Log In" color="#F2F2F2" onPress={handleLogIn} /> 
                     </View>
                     <View style={styles.buttonContainer}>
-                        <Button title="Create Account" color="#F2F2F2" onPress={handleCreate} /> 
+                        <Button title="Sign Up" color="#F2F2F2" onPress={handleCreate} /> 
                     </View>
                 </View>
 
@@ -101,14 +104,14 @@ const styles = StyleSheet.create({
     },
     centeredContent: {
         flex: 1,
-        justifyContent: 'center',
         alignItems: 'center',
+        paddingTop: 100,
     },
     image: {
-        width: 100,
-        height: 100,
-        alignSelf: 'flex-start',
-        marginBottom: 25
+        width: 250,
+        height: 250,
+        alignSelf: 'center',
+        marginBottom: 35
     },
     googleButtonContainer: {
         height: 45,
@@ -127,13 +130,14 @@ const styles = StyleSheet.create({
         borderColor: data.colors.offWhite,
         justifyContent: 'center',
         alignSelf: "center",
+        marginBottom: 25
     },
     welcomeLabel: {
-        fontSize: 32,
+        fontSize: 48,
         marginBottom: 90,
         fontWeight: 'bold',
         color: "#F2F2F2",
-        alignSelf: "baseline"
+        alignSelf: "center",
     },
     endText: {
         color: data.colors.offWhite,

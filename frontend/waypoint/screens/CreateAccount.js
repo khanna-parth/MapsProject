@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons'
 
 import { storeData, postRequest } from '../utils/utils.js';
+
+import data from '../utils/defaults/assets.js'
 
 import { useNavigation } from '@react-navigation/native';
 import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
@@ -162,7 +165,10 @@ function CreateAccountScreen() {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#e8ecf4' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: data.colors.offWhite }}>
+            <TouchableOpacity style={{zIndex: 10}} onPress={() => {navigation.goBack();}}>
+                <Icon name='chevron-back' size={24} color='black' style={{ position: 'absolute', left: 15, width: 50, height: 50}}/>
+            </TouchableOpacity>
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -171,7 +177,7 @@ function CreateAccountScreen() {
                         <View style={styles.header}>
                             <Image
                                 // Swap Image With Our Logo
-                                source={{ uri: 'https://withfra.me/android-chrome-512x512.png' }}
+                                source={data.images.logo}
                                 style={styles.headerImg}
                                 alt='Logo'
                             />
@@ -334,10 +340,11 @@ const styles = StyleSheet.create({
         marginVertical: 36,
     },
     headerImg: {
-        width: 80,
-        height: 88,
+        width: 100,
+        height: 100,
         alignSelf: 'center',
         marginBottom: 36,
+        borderRadius: 20,
     },
     title: {
         fontSize: 27,
@@ -366,7 +373,7 @@ const styles = StyleSheet.create({
     },
     inputControl: {
         height: 44,
-        backgroundColor: '#fff',
+        backgroundColor: 'white',
         paddingHorizontal: 16,
         borderRadius: 12,
         fontWeight: '500',
@@ -382,14 +389,14 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderWidth: 1,
-        backgroundColor: '#075eec',
+        backgroundColor: data.colors.primaryColor,
         borderColor: '#075eec',
     },
     btnText: {
         fontSize: 18,
         lineHeight: 26,
         fontWeight: '600',
-        color: '#fff',
+        color: data.colors.offWhite,
     },
 });
 

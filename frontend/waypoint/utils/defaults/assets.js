@@ -7,11 +7,12 @@ const data = {
         plusIcon: require("../../assets/plus.png"),
         searchIconBlack: require('../../assets/search-icon-black.png'),
         closeIcon: require('../../assets/close.png'),
+        logo: require('../../assets/icon.png')
     },
     colors: {
         primaryColor: '#3E82FC',
         offWhite: '#F2F2F2',
-        red: '#C65252'
+        red: '#C65252',
     }
 }
 

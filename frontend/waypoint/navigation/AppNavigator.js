@@ -25,7 +25,7 @@ const forFade = ({ current }) => ({
 const WelcomeStack = () => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
+            <Stack.Screen name="WelcomeScreen" component={WelcomeScreen}/>
             <Stack.Screen name="CreateAccount" component={CreateAccountScreen} />
             <Stack.Screen name="LoginScreen" component={LoginScreen} />
         </Stack.Navigator>
@@ -114,8 +114,8 @@ const RootNavigator = () => {
             {/* <Stack.Screen name="App" component={AppNavigator} /> */}
     
             {/* Screens not apart of the tab navigator */}
-            <Stack.Screen name="Welcome" component={WelcomeStack} options={{ tabBarStyle: { display: 'flex' } }}/>
-            <Stack.Screen name="Home" component={HomeStack} options={{ tabBarStyle: { display: 'flex' } }}/>
+            <Stack.Screen name="Welcome" component={WelcomeStack} options={{ gestureEnabled: false, tabBarStyle: { display: 'flex' } }}/>
+            <Stack.Screen name="Home" component={HomeStack} options={{ gestureEnabled: false, tabBarStyle: { display: 'flex' } }}/>
             <Stack.Screen name="Navigation" component={NavigationStack}options={{ tabBarStyle: { display: 'flex' } }}/>
             <Stack.Screen name="MapSearch" component={MapSearchStack} options={{ cardStyleInterpolator: forFade }}/>
         </Stack.Navigator>
