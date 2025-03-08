@@ -242,6 +242,11 @@ const styles = StyleSheet.create({
         color: '#222',
         borderColor: '#FF0000',
         borderWidth: 0,
+        shadowColor: 'black',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 4, height: 4 },
+        shadowRadius: 2,
+        elevation: 10,
     },
     inputControlPass: {
         height: 44,
@@ -263,6 +268,11 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         backgroundColor: data.colors.primaryColor,
         borderColor: data.colors.primaryColor,
+        shadowColor: 'black',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 4, height: 4 },
+        shadowRadius: 2,
+        elevation: 10,
     },
     btnText: {
         fontSize: 18,

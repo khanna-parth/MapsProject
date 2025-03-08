@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     },
     loginButtonContainer: {
         position: 'absolute',
-        right: 20,             
+        right: 20,
     },
     centeredContent: {
         flex: 1,
@@ -130,7 +130,12 @@ const styles = StyleSheet.create({
         borderColor: data.colors.offWhite,
         justifyContent: 'center',
         alignSelf: "center",
-        marginBottom: 25
+        marginBottom: 25,
+        shadowColor: 'black',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 4, height: 4 },
+        shadowRadius: 2,
+        elevation: 10,
     },
     welcomeLabel: {
         fontSize: 48,
