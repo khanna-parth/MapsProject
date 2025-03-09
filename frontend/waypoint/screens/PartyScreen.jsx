@@ -12,7 +12,7 @@ import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
 import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
 
 function PartyScreen({viewIndex}) {
-    const { partySocket, setPartySocket, userPartyChange, setUserPartyChange, joinParty, disconnectedUser, setDisconnectedUser, setPartyMemberLocation, currentUser, exitNavigation } = useGlobalState();
+    const { partySocket, setPartySocket, userPartyChange, setUserPartyChange, joinParty, disconnectedUser, setDisconnectedUser, setPartyMemberLocation, currentUser, exitNavigation, userLocation } = useGlobalState();
 
     const navigation = useNavigation();
 

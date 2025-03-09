@@ -257,6 +257,11 @@ const styles = StyleSheet.create({
         color: '#222',
         borderColor: '#FF0000',
         borderWidth: 0,
+        shadowColor: 'black',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 4, height: 4 },
+        shadowRadius: 2,
+        elevation: 10,
     },
     btn: {
         flexDirection: 'row',

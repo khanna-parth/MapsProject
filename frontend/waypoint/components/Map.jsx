@@ -247,6 +247,7 @@ const Map = ({ route, partyRoutes = []}) => {
                 lat: userLocation.latitude,
                 long: userLocation.longitude
             });
+
         }
 
         if (userLocation) {
@@ -270,35 +271,26 @@ const Map = ({ route, partyRoutes = []}) => {
     useEffect(() => {
         if (userSentLocation) {
             const objectSentLocation = JSON.parse(userSentLocation);
-
-            // If sent location is yourself
-            if (objectSentLocation.username != currentUser) {
-
-                // If list has entries
-                if (partyMemberLocation.length > 0) {
-                    for (let i = 0; i < partyMemberLocation.length; i++) {
-                        const currentMember = partyMemberLocation[i];
-        
-                        // If user location already there
-                        if (objectSentLocation.username == currentMember.username) {
-                            setPartyMemberLocation(prevState => {
-                                let newState = [...prevState];
-                                newState[i] = objectSentLocation;
-                                return newState;
-                            });
-                        // Add to locations
-                        } else {
-                            setPartyMemberLocation(prevState => [...prevState, objectSentLocation]);
-                        }
+    
+            // If sent location is not yourself
+            if (objectSentLocation.username !== currentUser) {
+                setPartyMemberLocation(prevState => {
+                    const existingIndex = prevState.findIndex(member => member.username === objectSentLocation.username);
+    
+                    if (existingIndex !== -1) {
+                        // Update the existing entry
+                        const newState = [...prevState];
+                        newState[existingIndex] = objectSentLocation;
+                        return newState;
+                    } else {
+                        // Add new entry
+                        return [...prevState, objectSentLocation];
                     }
-                } else {
-                    setPartyMemberLocation(prevState => [...prevState, objectSentLocation]);
-                }
+                });
             }
-
+    
             setUserSentLocation(false);
         }
-
     }, [userSentLocation]);
 
     // Display loading screen while waiting for location
@@ -398,11 +390,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: data.colors.primaryColor,
         borderRadius: 15,
-        shadowColor: 'black',
-        shadowOpacity: 0.2,
-        shadowOffset: { width: 4, height: 4 },
-        shadowRadius: 2,
-        elevation: 10,
     }
 });
 

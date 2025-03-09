@@ -5,6 +5,7 @@ import { io } from "socket.io-client";
 
 import { removeData } from '../../utils/utils';
 import { LOCAL_HOST } from '@env';
+import PartyScreen from '../../screens/PartyScreen';
 
 const GlobalStateContext = createContext();
 
@@ -48,7 +49,7 @@ export const GlobalStateProvider = ({ children }) => {
                         setUserPartyChange(true);
                     }
                     
-                    if (connections[2] != currentUser) {
+                    if (connections[1] != currentUser) {
                         setUserPartyChange(true);
                     }
                 });
