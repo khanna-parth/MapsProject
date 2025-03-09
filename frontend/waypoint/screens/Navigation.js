@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, SafeAreaView, ActivityIndicator, TouchableOpacity, Modal } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
@@ -8,7 +8,7 @@ import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
 import data from '../utils/defaults/assets.js';
 
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { getRoute, getDistance } from '../utils/mapUtils.js';
+import { getRoute, getDistance, decodePolyline } from '../utils/mapUtils.js';
 
 import * as Location from 'expo-location';
 import Map from '../components/Map';
@@ -16,8 +16,7 @@ import PartyScreen from './PartyScreen';
 
 const NavScreen = () => {
     const navigation = useNavigation();
-
-    const { setExitNavigation } = useGlobalState();
+    const { setExitNavigation, partyMemberLocation, routeView, setRouteView } = useGlobalState();
 
     const screenRoute = useRoute();
     const { coordinates } = screenRoute.params || {};
@@ -41,6 +40,7 @@ const NavScreen = () => {
     const bottomSheetRef = useRef<BottomSheet>(null);
 
     const [routeRequested, setRouteRequested] = useState(false);
+    const [partyRoutes, setPartyRoutes] = useState([]);
 
     const handleSheetChanges = useCallback((index) => {
         console.log('handleSheetChanges', index);
@@ -121,6 +121,48 @@ const NavScreen = () => {
     useEffect(() => {
         fetchRoute();
     }, [location]);
+
+    useEffect(() => {
+        if (routeView) {
+            fetchPartyRoutes();  // Fetch party routes when routeView is true
+        }
+    }, [routeView, fetchPartyRoutes]);
+
+    //Fetch Party Routes
+    const fetchPartyRoutes = useCallback(async (forceReroute = false) => {
+        if (!location || !coordinates || (!forceReroute && routeRequested)) return;
+        
+        setRouteRequested(true);
+        setLoadingRoute(true);
+        console.log("Fetching routes for all party members...");
+        
+        const partyRoutes = [];
+        for (let member of partyMemberLocation) {
+            console.log(`Fetching route for ${member.username} to destination...`);
+        
+            // Fetch route for each member to the destination
+            const routeData = await getRoute(member.lat, member.long, coordinates.lat, coordinates.long);
+        
+            if (!routeData.error && routeData.data.directions) {
+                const routeCoordinates = routeData.data.directions.flatMap((step) => {
+                    return decodePolyline(step.polyline);
+                });
+        
+                partyRoutes.push({
+                    username: member.username,
+                    route: routeCoordinates
+                });
+            } else {
+                console.error(`Failed to fetch route for ${member.username}:`, routeData.message);
+            }
+        }
+        
+        // Store all fetched routes for party members
+        setPartyRoutes(partyRoutes);  // This updates the partyRoutes state
+    
+        setLoadingRoute(false);
+        setRouteRequested(false);
+    }, [location, routeRequested, partyMemberLocation, coordinates]);
     
     // Off Route, Reroute
     useEffect(() => {
@@ -157,7 +199,7 @@ const NavScreen = () => {
                 alert('Permission to access location was denied');
                 return;
             }
-    
+     
             const currentLocation = await Location.getCurrentPositionAsync({
                 accuracy: Location.Accuracy.High,
             });
@@ -214,48 +256,6 @@ const NavScreen = () => {
         }
     }, [location, directions]); 
 
-    //Uses the polyline objects given by parths api 🪄🪄
-    const decodePolyline = (encoded) => {
-        let points = [];
-        let index = 0;
-        let lat = 0;
-        let lng = 0;
-
-        while (index < encoded.length) {
-            let byte;
-            let shift = 0;
-            let result = 0;
-
-            do {
-                byte = encoded.charCodeAt(index++) - 63;
-                result |= (byte & 0x1f) << shift;
-                shift += 5;
-            } while (byte >= 0x20);
-
-            let deltaLat = (result & 1) ? ~(result >> 1) : (result >> 1);
-            lat += deltaLat;
-
-            shift = 0;
-            result = 0;
-
-            do {
-                byte = encoded.charCodeAt(index++) - 63;
-                result |= (byte & 0x1f) << shift;
-                shift += 5;
-            } while (byte >= 0x20);
-
-            let deltaLng = (result & 1) ? ~(result >> 1) : (result >> 1);
-            lng += deltaLng;
-
-            points.push({
-                latitude: lat / 1E5,
-                longitude: lng / 1E5,
-            });
-        }
-
-        return points;
-    };
-
     // if (!location || loadingRoute) {
     if (!location) {
         return (
@@ -273,7 +273,12 @@ const NavScreen = () => {
                 </View>
             )}
             
-            <Map route={route}/>
+            <Map 
+                route={route} 
+                partyRoutes={routeView ? partyRoutes : []}
+                dest_lat={coordinates.lat} 
+                dest_long={coordinates.long} 
+            />
 
             <BottomSheet
                 useRef={bottomSheetRef}

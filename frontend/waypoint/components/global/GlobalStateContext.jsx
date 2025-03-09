@@ -19,6 +19,7 @@ export const GlobalStateProvider = ({ children }) => {
     const [disconnectedUser, setDisconnectedUser] = useState("");
     const [isCameraMoving, setIsCameraMoving] = useState(false);
     const [exitNavigation, setExitNavigation] = useState(false);
+    const [routeView, setRouteView] = useState(false);
 
     const joinParty = async (userID, partyID) => {
         console.log(`Joining party with ${userID}, ${partyID}.`);
@@ -87,6 +88,7 @@ export const GlobalStateProvider = ({ children }) => {
             currentUser, setCurrentUser,
             disconnectedUser, setDisconnectedUser,
             isCameraMoving, setIsCameraMoving,
+            routeView, setRouteView,
             exitNavigation, setExitNavigation,
             joinParty
         }}>

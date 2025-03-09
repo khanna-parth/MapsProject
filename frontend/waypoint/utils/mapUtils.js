@@ -73,3 +73,44 @@ export const getRoute = async (userLatitude, userLongitude, destLatitude, destLo
         return { error: true, message: "An error occurred while fetching the route." };
     }
 };
+
+export const decodePolyline = (encoded) => {
+    let points = [];
+    let index = 0;
+    let lat = 0;
+    let lng = 0;
+
+    while (index < encoded.length) {
+        let byte;
+        let shift = 0;
+        let result = 0;
+
+        do {
+            byte = encoded.charCodeAt(index++) - 63;
+            result |= (byte & 0x1f) << shift;
+            shift += 5;
+        } while (byte >= 0x20);
+
+        let deltaLat = (result & 1) ? ~(result >> 1) : (result >> 1);
+        lat += deltaLat;
+
+        shift = 0;
+        result = 0;
+
+        do {
+            byte = encoded.charCodeAt(index++) - 63;
+            result |= (byte & 0x1f) << shift;
+            shift += 5;
+        } while (byte >= 0x20);
+
+        let deltaLng = (result & 1) ? ~(result >> 1) : (result >> 1);
+        lng += deltaLng;
+
+        points.push({
+            latitude: lat / 1E5,
+            longitude: lng / 1E5,
+        });
+    }
+
+    return points;
+};

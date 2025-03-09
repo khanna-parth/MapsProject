@@ -10,8 +10,11 @@ import { getData } from '../utils/utils.js';
 
 import Button from '../components/Button.jsx'
 
-const Map = ({ route }) => {
-    const { currentUser, userLocation, setUserLocation, partySocket, userSentLocation, setUserSentLocation, partyMemberLocation, setPartyMemberLocation, isCameraMoving, setIsCameraMoving } = useGlobalState();
+const Map = ({ route, partyRoutes = []}) => {
+    const { currentUser, userLocation, setUserLocation, partySocket, 
+            userSentLocation, setUserSentLocation, partyMemberLocation, 
+            setPartyMemberLocation, isCameraMoving, setIsCameraMoving,
+            routeView, setRouteView } = useGlobalState();
     const mapRef = useRef(null);
     const [cameraDirection, setCameraDirection] = useState(0);
 
@@ -154,15 +157,77 @@ const Map = ({ route }) => {
         }
     };
 
+    // Render polyline for the driver's route
+    const renderDriverRoute = () => {
+        //console.log("Drawing User Route");
+        if (route && route.length > 0) {
+            return (
+                <Polyline
+                    coordinates={route}
+                    strokeColor="#007bff"
+                    strokeWidth={7}
+                />
+            );
+        }
+        return null;
+    };
+
+    // Render polyline for each party member's route
+    const renderPartyRoutes = () => {
+        //console.log("Drawing Party Routes");
+        if (routeView && partyRoutes && partyRoutes.length > 0) {
+            return partyRoutes.map((partyRoute, index) => (
+                <Polyline
+                    key={index}
+                    coordinates={partyRoute.route}
+                    strokeColor="rgba(255, 99, 71, 0.5)"
+                    strokeWidth={8}
+                />
+            ));
+        }
+        return null;
+    };
+
     // Move camera to where user is
     const locationPressed = () => {
         if (userLocation && mapRef.current) {
-            mapRef.current.animateToRegion({
-                latitude: userLocation.latitude,
-                longitude: userLocation.longitude,
-                latitudeDelta: route && route.length > 0 ? 0.003 : 0.015,
-                longitudeDelta: route && route.length > 0 ? 0.003 : 0.015,
-            }, 1000);
+            if (partyRoutes && partyRoutes.length > 0 && !routeView) {
+                setRouteView(true);
+
+                const allRoutes = [...route, ...partyRoutes.flatMap(route => route)];
+                console.log(allRoutes);
+
+                mapRef.current.fitToCoordinates(allRoutes, {
+                    edgePadding: {
+                        top: 50,
+                        right: 50,
+                        bottom: 50,
+                        left: 50,
+                    },
+                    animated: true,
+                });
+            }
+            else if (route && route.length > 0 && !routeView) {
+                setRouteView(true);
+                mapRef.current.fitToCoordinates(route, {
+                    edgePadding: {
+                        top: 50,
+                        right: 50,
+                        bottom: 50,
+                        left: 50,
+                    },
+                    animated: true,
+                });
+            }
+            else {
+                setRouteView(false);
+                mapRef.current.animateToRegion({
+                    latitude: userLocation.latitude,
+                    longitude: userLocation.longitude,
+                    latitudeDelta: route && route.length > 0 ? 0.003 : 0.015,
+                    longitudeDelta: route && route.length > 0 ? 0.003 : 0.015,
+                }, 1000);
+            }
         }
     }
 
@@ -267,14 +332,11 @@ const Map = ({ route }) => {
                     onRegionChangeComplete={handleRegionChangeComplete}
                 >
 
-                    {/*Draw polyline*/}
-                    {route && route.length > 0 && (
-                        <Polyline
-                            coordinates={route}
-                            strokeColor="#007bff"
-                            strokeWidth={7}
-                        />
-                    )}
+                    {/* Render driver's route */}
+                    {renderDriverRoute()}
+
+                    {/* Render party member's routes ONLY if routeView is true */}
+                    {renderPartyRoutes()}
 
                     {/* {
                     places.map((place, index) => (
