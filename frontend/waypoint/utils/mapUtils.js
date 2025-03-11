@@ -57,7 +57,7 @@ export const getRoute = async (userLatitude, userLongitude, destLatitude, destLo
 
         //console.log(requestData);
         //console.log("RouteResponse");
-        console.log(JSON.stringify(routeResponse, null, 2));
+        //console.log(JSON.stringify(routeResponse, null, 2));
         //console.log(routeResponse.data.duration
 
         if (routeResponse.error) {
@@ -73,6 +73,44 @@ export const getRoute = async (userLatitude, userLongitude, destLatitude, destLo
         return { error: true, message: "An error occurred while fetching the route." };
     }
 };
+
+export const getETA = async (userLatitude, userLongitude, destLatitude, destLongitude) => {
+    console.log("Whats your eta");
+
+    const destination = {
+        lat: destLatitude,
+        long: destLongitude
+    };
+
+    if (!userLatitude || !userLongitude) {
+        return { error: true, message: "ETA: Origin coordinates must be provided." };
+    }
+
+    const requestData = {
+        origin: {
+            lat: userLatitude.toString(),
+            long: userLongitude.toString()
+        },
+        destination: destination
+    };
+
+    try {
+        //Comment out if testing
+        const etaResponse = await utils.postRequest('routing/eta', requestData);
+
+        //console.log(JSON.stringify(etaResponse, null, 2));
+
+        if (etaResponse.error) {
+            return { error: true, message: "Error obtaining ETA." };
+        }
+
+        return etaResponse.data
+
+    } catch (error) {
+        console.log(error);
+        return { error: true, message: "An error occurred while getting the ETA." };
+    }
+}
 
 export const decodePolyline = (encoded) => {
     let points = [];

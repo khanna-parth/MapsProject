@@ -235,6 +235,7 @@ const getETA = async(origin: Coordinates, destination: Coordinates): Promise<num
         const resp = await axios.post("https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix", data, {headers: headers});
         if (resp.status === 200) {
             const durationVal = resp.data[0].duration.replace(/\D/g, '');
+            console.log('Fullfilled ETA request')
             return Number(durationVal);
         } else {
             console.log("ETA request failed")

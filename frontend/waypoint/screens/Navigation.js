@@ -8,7 +8,7 @@ import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
 import data from '../utils/defaults/assets.js';
 
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { getRoute, getDistance, decodePolyline } from '../utils/mapUtils.js';
+import { getRoute, getDistance, getETA, decodePolyline } from '../utils/mapUtils.js';
 
 import * as Location from 'expo-location';
 import Map from '../components/Map';
@@ -183,7 +183,7 @@ const NavScreen = () => {
             }
     
             // Meters off route - needs fine tuning
-            console.log(closestDistance);
+            //console.log(closestDistance);
             if (closestDistance > 100) {
                 console.log("Recalculating...");
                 setDirections([]);
@@ -254,7 +254,7 @@ const NavScreen = () => {
                 directions[i].point.lat, directions[i].point.long
             );
     
-            console.log(`Distance to Step ${i}:`, distanceToStep);
+            //console.log(`Distance to Step ${i}:`, distanceToStep);
     
             if (distanceToStep < 50) {
                 nextStepIndex = i;
@@ -272,6 +272,32 @@ const NavScreen = () => {
             console.log("Next Direction:", nextStep ? nextStep.description : "No more steps");
         }
     }, [location, directions]);
+
+    useEffect(() => {
+        const updateRemainingTime = async () => {
+            const etaData = await getETA(location.latitude, location.longitude, coordinates.lat, coordinates.long);
+            console.log(etaData)
+
+            const durationInSeconds = etaData;
+            const durationInMinutes = Math.round(durationInSeconds / 60);
+
+            const hours = Math.floor(durationInMinutes / 60);
+            const minutes = durationInMinutes % 60;
+            
+            console.log('Remaining Time Updated');
+            setRemainingTime(`${hours} Hours ${minutes} Minutes`);
+        };
+
+        let interval;
+        if (coordinates.lat && coordinates.long) {
+            console.log("Time Updater Is Running");
+            interval = setInterval(updateRemainingTime, 300000); // milliseconds [default - 5 minutes]
+        }
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, []);
     
     // if (!location || loadingRoute) {
     if (!location) {
