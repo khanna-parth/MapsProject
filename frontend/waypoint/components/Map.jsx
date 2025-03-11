@@ -250,6 +250,13 @@ const Map = ({ route, partyRoutes = []}) => {
 
         }
 
+        if(!routeView && route) {
+            mapRef.current.animateToRegion({
+                latitude: userLocation.latitude,
+                longitude: userLocation.longitude,
+            })
+        }
+
         if (userLocation) {
             fetchPlaces(userLocation.latitude, userLocation.longitude);
         }
