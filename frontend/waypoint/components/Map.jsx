@@ -251,9 +251,12 @@ const Map = ({ route, partyRoutes = []}) => {
         }
 
         if(!routeView && route) {
+            mapRef.current.animateCamera({ heading: 0 }, 500);
             mapRef.current.animateToRegion({
                 latitude: userLocation.latitude,
                 longitude: userLocation.longitude,
+                latitudeDelta: route && route.length > 0 ? 0.003 : 0.015,
+                longitudeDelta: route && route.length > 0 ? 0.003 : 0.015,
             })
         }
 

@@ -57,7 +57,7 @@ export const getRoute = async (userLatitude, userLongitude, destLatitude, destLo
 
         //console.log(requestData);
         //console.log("RouteResponse");
-        //console.log(JSON.stringify(routeResponse, null, 2));
+        console.log(JSON.stringify(routeResponse, null, 2));
         //console.log(routeResponse.data.duration
 
         if (routeResponse.error) {

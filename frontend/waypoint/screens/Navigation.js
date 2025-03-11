@@ -117,10 +117,13 @@ const NavScreen = () => {
         setRouteRequested(false);
     }, [location, routeRequested]);
     
-    // Initial fetch
+    const hasFetchedRoute = useRef(false);
     useEffect(() => {
-        fetchRoute();
-    }, [location]);
+        if (!hasFetchedRoute.current && location) {
+            fetchRoute();
+            hasFetchedRoute.current = true;
+        }
+    }, [location]); 
 
     useEffect(() => {
         if (routeView) {
@@ -180,8 +183,11 @@ const NavScreen = () => {
             }
     
             // Meters off route - needs fine tuning
-            if (closestDistance > 10000) {
+            console.log(closestDistance);
+            if (closestDistance > 100) {
                 console.log("Recalculating...");
+                setDirections([]);
+                setNextDirection(null);
                 setTimeout(() => fetchRoute(true), 3000);
             }
         };
@@ -239,23 +245,34 @@ const NavScreen = () => {
     //Directions
     useEffect(() => {
         if (!location || directions.length === 0) return;
-        
+    
+        let nextStepIndex = -1;
+    
         for (let i = 0; i < directions.length; i++) {
-            const step = directions[i];
             const distanceToStep = getDistance(
-                location.latitude, location.longitude, 
-                step.origin.lat, step.origin.long
+                location.latitude, location.longitude,
+                directions[i].point.lat, directions[i].point.long
             );
     
-            //5 meters thresh
-            if (distanceToStep < 5) {
-                setNextDirection(directions[i + 1] || null);
-                console.log("Next Direction:", directions[i + 1]);
+            console.log(`Distance to Step ${i}:`, distanceToStep);
+    
+            if (distanceToStep < 50) {
+                nextStepIndex = i;
                 break;
             }
         }
-    }, [location, directions]); 
-
+    
+        if (nextStepIndex >= 0) {
+            const nextDirections = directions.slice(nextStepIndex + 1);
+            const nextStep = nextDirections[0] || null;
+            
+            console.log("Setting New Directions");
+            setDirections(nextDirections);
+            setNextDirection(nextStep);
+            console.log("Next Direction:", nextStep ? nextStep.description : "No more steps");
+        }
+    }, [location, directions]);
+    
     // if (!location || loadingRoute) {
     if (!location) {
         return (
