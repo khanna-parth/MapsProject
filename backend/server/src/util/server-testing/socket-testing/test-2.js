@@ -5,6 +5,20 @@ import axios from 'axios';
 
 const args = process.argv.slice(2);
 
+const initData = {
+    "username": "test2"
+}
+
+async function sendMessage(socket, partyID) {
+    try {
+        const randLat = Math.floor(Math.random() * 100) + 1;
+        const randLong = Math.floor(Math.random() * 100) + 1;
+        socket.emit('location', ({lat: randLat, long: randLong}));
+    } catch (error) {
+        console.error('Error sending message:', error);
+    }
+}
+
 const partyIDArg = args[0];
 if (!partyIDArg || partyIDArg.length == 0) {
     console.log(`Invalid partyID argument: '${partyIDArg}'`);
@@ -12,7 +26,7 @@ if (!partyIDArg || partyIDArg.length == 0) {
 }
 
 const data = {
-    "userID": "461f03fa-c407-466c-b0db-069c195e5e62"
+    "userID": "6e3000b4-aeea-4a8e-9305-4953dba54f46"
 }
 
 console.log(`Connecting`)
@@ -30,10 +44,10 @@ console.log(`Tried`)
 socket.on('connect', () => {
     console.log('Connected to the server');
     socket.emit('message', 'Hello, I am testing a message!');
-});
 
-socket.on('connections', (msg) => {
-    console.log(msg);
+    setInterval(() => {
+        sendMessage(socket, partyIDArg);
+    }, 5000)
 });
 
 socket.on('connections', (msg) => {

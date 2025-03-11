@@ -20,6 +20,10 @@ class UserDB {
             where: { userID: userID},
             relations: ['friends'],
         });
+        // if (!user) {
+        //     const users = await this.dbAllUsers()
+        //     console.log(users);
+        // }
         return user
     }
 
