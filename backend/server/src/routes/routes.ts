@@ -10,7 +10,6 @@ const ROUTES = {
     JOIN_PARTY: "/party/join",
     PARTY_STATUS: "/party/status",
     GET_DIRECTIONS: "/routing/fetch",
-    GET_ETA: "/routing/eta",
     SEARCH_PLACES: "/routing/search",
     FEED_PLACES: "/routing/feed",
 

@@ -156,9 +156,8 @@ export function setupSocketIO(server: HttpServer) {
         socket.on('location', async (locationData) => {
             const validLocationData = VerifyLocationData(locationData);
             if (validLocationData) {
-                console.log(`${validUser.username} is now at: ${JSON.stringify(locationData)}`);
-                party.broadcast('location', JSON.stringify(locationData), validUser.username, false, true);
-                validUser.coordinates = locationData;
+            party.broadcast('location', JSON.stringify(locationData), validUser.username, false);
+            validUser.coordinates = locationData;
             // console.log(`[Party] Received location from ${userID}:`, locationData);
             } else {
                 console.log(`[Party -> location] Invalid data ${locationData} from ${userID}`)

@@ -86,7 +86,6 @@ class Party extends BaseEntity {
 
     async addUser(user: User, socketID: string): Promise<void> {
         this.connected = this.connected.set(socketID, user)
-        this.printConnected();
         // this.connected.push(user);
         this.checkUpdateEmpty();
         await this.save();
@@ -95,7 +94,6 @@ class Party extends BaseEntity {
 
     removeUser(socketID: string): void {
         this.connected.delete(socketID)
-        this.printConnected();
         // this.connected = this.connected.filter(user => user.userID !== userID);
         this.checkUpdateEmpty()
     }
@@ -135,16 +133,6 @@ class Party extends BaseEntity {
         }
         // if (this.connected.length == 0) {
         //     this.lastEmpty = Date.now();
-    }
-
-    printConnected(): void {
-        console.log(`Connected within party ${this.partyID}:`)
-        for (const conn of this.connected) {
-            console.log(`Client: ${conn[0]}: ${conn[1].username}`)
-        }
-        if (this.connected.values.length == 0) {
-            console.log('No clients connected.');
-        }
     }
 
     update(): void {

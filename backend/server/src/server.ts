@@ -8,7 +8,7 @@ import { connectDB } from './db/client';
 import { addFriend, getFriends, removeFriend, searchUsers } from './handlers/social';
 import { AccessUserRequest, AddFriendsRequest, CreatePartyRequest, DirectionsRequest, PartyModifcationRequest, SearchNearbyRequest } from './models/connection/requests';
 import { setupSocketIO } from './handlers/socketio-ws';
-import { getDirections, getETA, nearbyPlaces, searchPlaces } from './ext/gmaps';
+import { getDirections, nearbyPlaces, searchPlaces } from './ext/gmaps';
 import { Coordinates} from './models/geolocation';
 import { error } from 'console';
 import { UserDB } from './db/dbuser';
@@ -29,6 +29,7 @@ interface CreateUserReqeust {
 
 app.post(ROUTES.CREATE_USER, async (req: Request, res: Response) => {
     const { firstName, lastName, email, username, password }: CreateUserReqeust = req.body;
+
     const result = await createUser(firstName, lastName, email, username, password);
     if (result.success) {
         res.status(result.code).json(result.user)
@@ -162,27 +163,6 @@ app.post(ROUTES.GET_DIRECTIONS, async (req: Request, res: Response) => {
     }
 })
 
-app.post(ROUTES.GET_ETA, async (req: Request, res: Response) => {
-    const { origin, destination }: { origin: Coordinates, destination: Coordinates } = req.body;
-
-    if (!origin || !destination || !origin.lat || !origin.long || !destination.lat || !destination.long) {
-        res.status(400).json({ error: "Origin and destination coordinates must be provided" });
-        return
-    }
-
-    const { lat: originLat, long: originLong } = origin;
-    const { lat: destLat, long: destLong } = destination;
-
-    const duration = await getETA(new Coordinates(originLat, originLong), new Coordinates(destLat, destLong))
-    if (duration != -1) {
-        res.status(200).json(duration);
-        return;
-    }
-
-    res.status(500);
-    return;
-})
-
 app.post(ROUTES.FEED_PLACES, async (req: Request, res: Response) => {
     const {preferences, lat, long }: SearchNearbyRequest = req.body;
     if (preferences && (!Array.isArray(preferences) || !preferences.every(item => typeof item === 'string'))) {
@@ -268,7 +248,6 @@ if (cluster.isPrimary) {
     cluster.on('exit', (worker, code, signal) => {
         console.log(`Worker ${worker.process.pid} died`);
     });
-
 
 } else {
     const server = app.listen(PORT, () => {

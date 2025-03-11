@@ -88,7 +88,7 @@ const searchPlaces = async (query: string, coords: Coordinates): Promise<PlacesR
         const response = await axios.post("https://places.googleapis.com/v1/places:searchText", data, {headers: headers});
         if (response.status === 200) {
             const placesData = response.data['places']
-            // console.log(placesData);
+            console.log(placesData);
             let places: PlacesResult = {
                 code: 200,
                 data: {places: [],}
@@ -194,66 +194,4 @@ const getDirections = async (directionsReq: DirectionsRequest): Promise<Directio
     }
 }
 
-const getETA = async(origin: Coordinates, destination: Coordinates): Promise<number> => {
-    try {
-        const headers = {
-            "Content-Type": "application/json",
-            "X-Goog-Api-Key": process.env.GMAPS_API,
-            "X-Goog-FieldMask": "duration"
-        }
-
-        const data = {
-            "origins": [
-                {
-                    "waypoint": {
-                        "location": {
-                            "latLng": {
-                                "latitude": origin.lat,
-                                "longitude": origin.long
-                            }
-                        }
-                    },
-                },
-            ],
-            "destinations": [
-                {
-                    "waypoint": {
-                        "location": {
-                        "latLng": {
-                            "latitude": destination.lat,
-                            "longitude": destination.long
-                        }
-                        }
-                    }
-                },
-            ],
-            "travelMode": "DRIVE",
-            "routingPreference": "TRAFFIC_AWARE"
-        }
-
-
-        const resp = await axios.post("https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix", data, {headers: headers});
-        if (resp.status === 200) {
-            const durationVal = resp.data[0].duration.replace(/\D/g, '');
-            return Number(durationVal);
-        } else {
-            console.log("ETA request failed")
-            return -1
-        }
-
-    } catch (error) {
-        if (isAxiosError(error)) {
-            let errMsg: string;
-            // console.log(error.response.data);
-            if (error.response) {
-                errMsg = error.response.data['error'][''];
-                console.log(`Error: ${errMsg}`)
-            }
-        }
-        console.log(error);
-
-        return -1;
-    }
-}
-
-export {getDirections, nearbyPlaces, searchPlaces, getETA }
+export {getDirections, nearbyPlaces, searchPlaces}
