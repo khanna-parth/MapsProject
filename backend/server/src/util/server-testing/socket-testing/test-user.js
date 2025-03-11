@@ -12,8 +12,7 @@ if (!partyIDArg || partyIDArg.length == 0) {
 }
 
 const data = {
-    "userID": "bd4eb8ca-9084-4849-81f4-46063275b7ab",
-    "username": "test3"
+    "userID": "230a7b59-ba46-4972-9a73-eec7baa7b4bc"
 }
 
 console.log(`Connecting`)
@@ -26,29 +25,11 @@ const socket = io('http://localhost:3010', {
     }
 });
 
-async function sendMessage(socket, partyID) {
-    try {
-        const randLat = Math.floor(Math.random() * 100) + 1;
-        const randLong = Math.floor(Math.random() * 100) + 1;
-        socket.emit('location', ({lat: randLat, long: randLong}));
-    } catch (error) {
-        console.error('Error sending message:', error);
-    }
-}
-
 console.log(`Tried`)
 
 socket.on('connect', () => {
     console.log('Connected to the server');
     socket.emit('message', 'Hello, I am testing a message!');
-
-    setInterval(() => {
-        sendMessage(socket, partyIDArg);
-    }, 5000)
-});
-
-socket.on('connections', (msg) => {
-    console.log(msg);
 });
 
 socket.on('connections', (msg) => {
