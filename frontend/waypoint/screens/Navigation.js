@@ -16,6 +16,7 @@ import PartyScreen from './PartyScreen';
 
 const NavScreen = () => {
     const navigation = useNavigation();
+    const [navigating, setNavigating] = useState(true)
     const { setExitNavigation, partyMemberLocation, routeView, setRouteView } = useGlobalState();
 
     const screenRoute = useRoute();
@@ -35,6 +36,10 @@ const NavScreen = () => {
 
     const [eta, setEta] = useState("");
     const [remainingTime, setRemainingTime] = useState("");
+
+    const intervalRef = useRef(null);
+    const lastCheckedTimeRef = useRef(null);
+    const checkInterval = 10000; 
 
     const snapPoints = useMemo(() => ['20%', '20%'], [])
     const bottomSheetRef = useRef<BottomSheet>(null);
@@ -66,6 +71,7 @@ const NavScreen = () => {
         setShowNewButtons(false);
         setRoute(null);
         setExitNavigation(true);
+        setNavigating(false);
         navigation.navigate("Home");
     }
 
@@ -195,6 +201,58 @@ const NavScreen = () => {
         checkIfOffRoute();
     }, [location, route, fetchRoute]);
 
+    const updateRemainingTime = async () => {
+        if (!navigating || !location) return;
+
+        const currentTime = Date.now();
+        const lastCheckedTime = lastCheckedTimeRef.current;
+     
+        const timeSinceLastCheck = currentTime - lastCheckedTime;
+        //console.log('Time since last check:', timeSinceLastCheck);
+    
+        if ((!lastCheckedTime || timeSinceLastCheck >= checkInterval)) {
+            console.log('Running updateRemainingTime...');
+            lastCheckedTimeRef.current = currentTime;
+    
+            const durationInSeconds = await getETA(location.latitude, location.longitude, coordinates.lat, coordinates.long);
+            console.log("DURATION IN SECONDS:", durationInSeconds);
+
+            const durationInMinutes = Math.round(durationInSeconds / 60);
+    
+            const hours = Math.floor(durationInMinutes / 60);
+            const minutes = durationInMinutes % 60;
+    
+            console.log('Remaining Time Updated');
+            setRemainingTime(`${hours} Hours ${minutes} Minutes`);
+        } else {
+            console.log('Not enough time has passed for another update');
+        }
+    };
+
+    useEffect(() => {       
+        if(!navigating) return;
+        
+        if (coordinates.lat && coordinates.long) {
+            console.log("Time Updater Is Running");
+     
+            updateRemainingTime();
+    
+            if (intervalRef.current) {
+                console.log("Clearing previous interval");
+                clearInterval(intervalRef.current);
+            }
+    
+            intervalRef.current = setInterval(updateRemainingTime, checkInterval);
+        }
+    
+        return () => {
+            if (intervalRef.current) {
+                console.log("Clearing interval on cleanup");
+                clearInterval(intervalRef.current);
+            }
+        };
+    }, [location, navigating])
+
     //Location
     useEffect(() => {
         let locationSubscription = null;
@@ -273,31 +331,7 @@ const NavScreen = () => {
         }
     }, [location, directions]);
 
-    useEffect(() => {
-        const updateRemainingTime = async () => {
-            const etaData = await getETA(location.latitude, location.longitude, coordinates.lat, coordinates.long);
-            console.log(etaData)
 
-            const durationInSeconds = etaData;
-            const durationInMinutes = Math.round(durationInSeconds / 60);
-
-            const hours = Math.floor(durationInMinutes / 60);
-            const minutes = durationInMinutes % 60;
-            
-            console.log('Remaining Time Updated');
-            setRemainingTime(`${hours} Hours ${minutes} Minutes`);
-        };
-
-        let interval;
-        if (coordinates.lat && coordinates.long) {
-            console.log("Time Updater Is Running");
-            interval = setInterval(updateRemainingTime, 300000); // milliseconds [default - 5 minutes]
-        }
-
-        return () => {
-            if (interval) clearInterval(interval);
-        };
-    }, []);
     
     // if (!location || loadingRoute) {
     if (!location) {

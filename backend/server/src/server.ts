@@ -27,6 +27,45 @@ interface CreateUserReqeust {
     password: string;
 }
 
+interface APIRequest {
+    uri: string;
+    time: number;
+    limit: number;
+    params: any;
+    obj: any;
+}
+
+class RequestCache {
+    private static instance: RequestCache;
+    private cache: Map<string,APIRequest> = new Map();
+
+    static getInstance(): RequestCache {
+        if (!RequestCache.instance) {
+            RequestCache.instance = new RequestCache();
+        }
+        return RequestCache.instance;
+    }
+
+    setCacheObject(key: string, limit: number, obj: any): void {
+        const block: APIRequest = {uri: key, time: Date.now(), limit: limit, params: null, obj: obj};
+        this.cache.set(key, block);
+    }
+
+    getObj(key: string): any | null {
+        const cached = this.cache.get(key);
+        if (cached && cached.obj ) {
+            if (Date.now() - cached.time > cached.limit) {
+                console.log(`${key} object has expired. Allowing new request`);
+                this.cache.delete(key);
+                return null;
+            }
+            console.log(`Returning cached ${key}: ${cached.obj}`);
+            return cached.obj;
+        }
+        return null;
+    }
+}
+
 app.post(ROUTES.CREATE_USER, async (req: Request, res: Response) => {
     const { firstName, lastName, email, username, password }: CreateUserReqeust = req.body;
 
@@ -153,9 +192,17 @@ app.post(ROUTES.GET_DIRECTIONS, async (req: Request, res: Response) => {
     const directionsReq: DirectionsRequest = req.body;
     const response = await getDirections(directionsReq);
 
+
+    const cachedObj = RequestCache.getInstance().getObj("DIRECTIONS");
+    if (cachedObj) {
+        res.status(200).json(cachedObj);
+        return;
+    }
+
     if (response.data) {
         // console.log(JSON.stringify(response.data, null, 2));
         console.log(`[${response.code}] Directions request successfully processed`)
+        RequestCache.getInstance().setCacheObject("DIRECTIONS", 7000, response.data);
         res.status(200).json(response.data)
     } else {
         console.log(`[${response.code}] Failed processing directions request`)
@@ -174,8 +221,15 @@ app.post(ROUTES.GET_ETA, async (req: Request, res: Response) => {
     const { lat: originLat, long: originLong } = origin;
     const { lat: destLat, long: destLong } = destination;
 
+    const cachedObj = RequestCache.getInstance().getObj("ETA")
+    if (cachedObj) {
+        res.status(200).json(cachedObj);
+        return;
+    }
+
     const duration = await getETA(new Coordinates(originLat, originLong), new Coordinates(destLat, destLong))
     if (duration != -1) {
+        RequestCache.getInstance().setCacheObject("ETA", 3000, duration)
         res.status(200).json(duration);
         return;
     }

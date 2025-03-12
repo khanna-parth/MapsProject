@@ -101,9 +101,11 @@ export const getETA = async (userLatitude, userLongitude, destLatitude, destLong
         //console.log(JSON.stringify(etaResponse, null, 2));
 
         if (etaResponse.error) {
+            console.log(`Error getting ETA data: ${etaResponse.error}`);
             return { error: true, message: "Error obtaining ETA." };
         }
 
+        console.log(`Got ETA data: ${etaResponse.data}`)
         return etaResponse.data
 
     } catch (error) {
