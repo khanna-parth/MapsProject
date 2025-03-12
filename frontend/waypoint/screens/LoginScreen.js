@@ -178,9 +178,11 @@ function LoginScreen() {
                         </TouchableOpacity>
                     </View>
 
+                    {/*
                     <TouchableOpacity onPress={handleForgot}>
                         <Text style={styles.formLink}>Forgot password?</Text>
                     </TouchableOpacity>
+                    */}
                 </View>
                 
             </View>
