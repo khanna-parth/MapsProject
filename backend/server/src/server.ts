@@ -139,8 +139,10 @@ app.post(ROUTES.PARTY_STATUS, async (req: Request, res: Response) => {
     const result = getParty(userID, partyID)
     if (result.party) {
         res.status(200).json(result.party)
+        return
     } else {
         res.status(result.code).json({'error': result.error})
+        return
     }
 })
 

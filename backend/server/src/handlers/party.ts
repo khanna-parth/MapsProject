@@ -5,7 +5,7 @@ import { checkValidString, generateUniqueId, generateUniqueIDNumber } from "../u
 import { User } from "../models/user";
 import { PartyDB } from "../db/dbparty";
 import { UserDB } from "../db/dbuser";
-import { PartyModification, PartyModificationData } from "../models/deps/party-deps";
+import { PartyModification, PartyModificationData, PartyPolicy } from "../models/deps/party-deps";
 import { SharedDestination, SharedDestinationList } from "../models/geolocation";
 
 // interface PartyDisplay {
@@ -19,6 +19,7 @@ import { SharedDestination, SharedDestinationList } from "../models/geolocation"
 interface PartyDisplay {
         partyID: string;
         connected: Partial<User>[];
+        policy: string;
         lastEmpty: number;
         host?: string; 
         participants?: string[];
@@ -97,6 +98,7 @@ const getParty = (userID: string, partyID: string): { party?: PartyDisplay, code
                 partialUser.lastName = user.lastName ?? "";
                 return partialUser;
             }),
+            policy: existingParty.policy.toString(),
             lastEmpty: existingParty.lastEmpty,
             host: existingParty.host?.username,
             participants: existingParty.participants?.map(p => p.username),
@@ -145,6 +147,16 @@ const modifyParty = async (userID: string, partyID: string, change: string, data
                     return { code: 200}
                 } else {
                     return {code: 400, error: `Users not provided for modification type ${change}`}
+                }
+            case PartyModification.POLICY:
+                if (data.policy == "OPEN") {
+                    party.policy = PartyPolicy.OPEN
+                console.log(`Party ${partyID}'s accessibility was changed to OPEN`)
+                    return {code: 200 }
+                } else {
+                    party.policy = PartyPolicy.CLOSED
+                    console.log(`Party ${partyID}'s accessibility was changed to CLOSED`)
+                    return { code: 200 }
                 }
             default:
                 return { code: 400, error: `Invalid modification type '${change}. Supported: ${modifications.join(",")}'`}

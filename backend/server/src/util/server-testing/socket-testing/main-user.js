@@ -2,12 +2,12 @@ import io from 'socket.io-client';
 import axios from 'axios';
 
 let initData = {
-    "userID": "32ba5ef2-c7ce-42fe-b1e9-1cfcf7397f70"
+    "userID": "9b38e01a-1b43-4ad0-9947-12d41b9ee77b"
 };
 
-async function createParty() {
+async function createParty(port) {
     try {
-        const resp = await axios.post("http://localhost:3010/party/create", initData);
+        const resp = await axios.post(`http://localhost:${port}/party/create`, initData);
         
         if (resp.status !== 201) {
             console.log(`Failed to create party to test socket: ${resp.status} ${resp.data} ${resp.error}`);
@@ -22,10 +22,10 @@ async function createParty() {
     }
 }
 
-async function sendMessage(socket, partyID) {
+async function sendMessage(socket, port, partyID) {
     try {
         const params = {userID: String(initData.userID), partyID: String(partyID)}
-        const resp = await axios.post('http://localhost:3010/party/status', params);
+        const resp = await axios.post(`http://localhost:${port}/party/status`, params);
         if (resp.status !== 200) {
             return;
         }
@@ -43,12 +43,12 @@ async function sendMessage(socket, partyID) {
     }
 }
 
-async function startSocketCommunication(partyID) {
-    const socket = io('http://localhost:3010', {
+async function startSocketCommunication(port, partyID) {
+    const socket = io(`http://localhost:${port}`, {
         path: "/party/join",
         transports: ['websocket'],
         query: {
-            userID: '32ba5ef2-c7ce-42fe-b1e9-1cfcf7397f70',
+            userID: '9b38e01a-1b43-4ad0-9947-12d41b9ee77b',
             partyID: partyID
         }
     });
@@ -81,14 +81,15 @@ async function startSocketCommunication(partyID) {
     });
 
     setInterval(() => {
-        sendMessage(socket, partyID);
+        sendMessage(socket, port, partyID);
     }, 5000);
 }
 
 async function main() {
     try {
-        const partyID = await createParty();
-        await startSocketCommunication(partyID);
+        const port = 3010;
+        const partyID = await createParty(port);
+        await startSocketCommunication(port, partyID);
     } catch (error) {
         console.error('Error in main function:', error);
     }

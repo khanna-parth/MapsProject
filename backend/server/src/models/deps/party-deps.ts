@@ -2,7 +2,8 @@ import { User } from "../user";
 
 enum PartyModification {
     INVITE = "invite",
-    DEINVITE = "deinvite"
+    DEINVITE = "deinvite",
+    POLICY = "policy"
 }
 
 enum PartyPolicy {
@@ -12,6 +13,7 @@ enum PartyPolicy {
 
 interface PartyModificationData {
     user: string;
+    policy: string;
 }
 
 export { PartyModification, PartyModificationData, PartyPolicy }

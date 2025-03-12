@@ -12,7 +12,7 @@ if (!partyIDArg || partyIDArg.length == 0) {
 }
 
 const data = {
-    "userID": "230a7b59-ba46-4972-9a73-eec7baa7b4bc"
+    "userID": "56620209-2d39-4f2b-90b6-a9b064d36f34"
 }
 
 console.log(`Connecting`)

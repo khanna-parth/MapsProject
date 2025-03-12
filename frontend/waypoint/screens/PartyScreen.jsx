@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Platform, SafeAreaView, FlatList, Image, TextInput, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { StyleSheet, Text, View, Platform, SafeAreaView, FlatList, Image, TextInput, TouchableWithoutFeedback, Keyboard, Pressable } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -23,6 +23,7 @@ function PartyScreen({viewIndex}) {
 
     const [partyList, setPartyList] = useState([]);
     const [partyID, setPartyID] = useState();
+    const [partyLocked, setPartyLocked] = useState(null);
     
     // Get the party details of the user and update the list
     const getPartyList = async () => {
@@ -47,6 +48,12 @@ function PartyScreen({viewIndex}) {
                 partyMembers.push({username: partyData.data.connected[i].username, userID: i});
             }
 
+            if (partyData.data.policy == "OPEN") {
+                setPartyLocked(false);
+            } else {
+                setPartyLocked(true);
+            }
+
             setPartyID(partyID.data);
             setPartyList(partyMembers);
 
@@ -56,6 +63,20 @@ function PartyScreen({viewIndex}) {
 
             return {error: false, message: "Party members successfully retrieved"};
         }
+    }
+
+    const handlePolicyChange = async (newPolicy) => {
+        const partyID = await getData('partyID');
+        const userID = await getData('userID');
+        const data = await postRequest('party/modify', {userID: userID.data, partyID: partyID.data, modification: "policy", properties: {policy: newPolicy}});
+        const partyData = await postRequest('party/status', {userID: userID.data, partyID: partyID.data});
+        if (!partyData.error) {
+            if (partyData.data.policy == "OPEN") {
+                setPartyLocked(false);
+            } else {
+                setPartyLocked(true);
+            }
+        } 
     }
 
     // Press leave button
@@ -227,13 +248,26 @@ function PartyScreen({viewIndex}) {
                                 <View style={{flex:1}}>
                                     <View style={styles.listHeaderContainer}>
                                         <Text style={styles.listHeaderText}>Your Party</Text>
-                                        <Box 
-                                            style={{ backgroundColor: data.colors.red, width: 70, height: 30, justifyContent: 'center'}} 
-                                            textStyle={{ fontSize: 16, paddingBottom: 0 }} 
-                                            onPress={handleLeave}
-                                        >
-                                            Leave
-                                        </Box>
+                                        <View style = { {display: "flex", flexDirection: "row", paddingHorizontal: 8, gap: 10} }>
+                                            {
+                                                partyLocked ? (
+                                                    <Pressable onPress={() => handlePolicyChange("OPEN")}>
+                                                        <Icon style={{alignSelf: 'center', paddingBottom: 0}} name='lock' size={30} color='#000000'  />
+                                                    </Pressable>
+                                                ) : (
+                                                    <Pressable onPress={() => handlePolicyChange("CLOSED")}>
+                                                        <Icon style={{alignSelf: 'center', paddingBottom: 0}} name='lock-open-variant' size={30} color='#000000' />
+                                                    </Pressable>
+                                                )
+                                            }
+                                            <Box 
+                                                style={{ backgroundColor: data.colors.red, width: 70, height: 30, justifyContent: 'center'}} 
+                                                textStyle={{ fontSize: 16, paddingBottom: 0 }} 
+                                                onPress={handleLeave}
+                                            >
+                                                Leave
+                                            </Box>
+                                        </View>
                                     </View>  
                                     <Text style={styles.partyIDText}>PartyID: {partyID}</Text>
                                 </View> 

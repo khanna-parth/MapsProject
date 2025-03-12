@@ -280,6 +280,7 @@ const Map = ({ route, partyRoutes = []}) => {
     // Update friend location's
     useEffect(() => {
         if (userSentLocation) {
+            console.log(userSentLocation);
             const objectSentLocation = JSON.parse(userSentLocation);
     
             // If sent location is not yourself

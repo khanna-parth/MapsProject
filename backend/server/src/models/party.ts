@@ -12,7 +12,9 @@ class Party extends BaseEntity {
     connected: Map<string, User> = new Map();
 
     lastEmpty: number = Date.now();
-    policy: PartyPolicy = PartyPolicy.OPEN;
+
+    @Column({ default: "CLOSED" })
+    policy: PartyPolicy = PartyPolicy.CLOSED;
 
     @ManyToOne(() => User, user => user.hostedParties)
     host!: User;
