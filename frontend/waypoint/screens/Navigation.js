@@ -39,7 +39,7 @@ const NavScreen = () => {
 
     const intervalRef = useRef(null);
     const lastCheckedTimeRef = useRef(null);
-    const checkInterval = 10000; 
+    const checkInterval = 300000; //5 minutes
 
     const snapPoints = useMemo(() => ['20%', '20%'], [])
     const bottomSheetRef = useRef<BottomSheet>(null);
