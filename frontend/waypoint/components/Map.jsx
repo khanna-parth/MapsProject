@@ -12,8 +12,7 @@ import Button from '../components/Button.jsx'
 
 const Map = ({ route, partyRoutes = []}) => {
     const { currentUser, userLocation, setUserLocation, partySocket, 
-            userSentLocation, setUserSentLocation, partyMemberLocation, 
-            setPartyMemberLocation, isCameraMoving, setIsCameraMoving,
+            partyMemberLocation, isCameraMoving, setIsCameraMoving,
             routeView, setRouteView } = useGlobalState();
     const mapRef = useRef(null);
     const [cameraDirection, setCameraDirection] = useState(0);
