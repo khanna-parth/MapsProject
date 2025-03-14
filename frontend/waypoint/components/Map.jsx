@@ -277,33 +277,6 @@ const Map = ({ route, partyRoutes = []}) => {
 
     }, [userLocation]);
 
-    // Update friend location's
-    useEffect(() => {
-        if (userSentLocation) {
-            console.log(userSentLocation);
-            const objectSentLocation = JSON.parse(userSentLocation);
-    
-            // If sent location is not yourself
-            if (objectSentLocation.username !== currentUser) {
-                setPartyMemberLocation(prevState => {
-                    const existingIndex = prevState.findIndex(member => member.username === objectSentLocation.username);
-    
-                    if (existingIndex !== -1) {
-                        // Update the existing entry
-                        const newState = [...prevState];
-                        newState[existingIndex] = objectSentLocation;
-                        return newState;
-                    } else {
-                        // Add new entry
-                        return [...prevState, objectSentLocation];
-                    }
-                });
-            }
-    
-            setUserSentLocation(false);
-        }
-    }, [userSentLocation]);
-
     // Display loading screen while waiting for location
     // if (!userLocation || !places[0]) {
     if (!userLocation) {

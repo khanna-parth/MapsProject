@@ -13,7 +13,6 @@ export const GlobalStateProvider = ({ children }) => {
     const navigation = useNavigation();
     const [userLocation, setUserLocation] = useState(null);
     const [partySocket, setPartySocket] = useState();
-    const [userSentLocation, setUserSentLocation] = useState();
     const [userPartyChange, setUserPartyChange] = useState(false);
     const [partyMemberLocation, setPartyMemberLocation] = useState([]);
     const [currentUser, setCurrentUser] = useState("");
@@ -55,7 +54,28 @@ export const GlobalStateProvider = ({ children }) => {
                 });
     
                 socket.on("location", (socketData) => {
-                    setUserSentLocation(socketData);
+                    if (socketData) {
+                        console.log("Recieved party location: ", socketData);
+                        const objectSentLocation = JSON.parse(socketData);
+                
+                        // If sent location is not yourself
+                        if (objectSentLocation.username !== currentUser) {
+                            setPartyMemberLocation(prevState => {
+                                const existingIndex = prevState.findIndex(member => member.username === objectSentLocation.username);
+                
+                                if (existingIndex !== -1) {
+                                    // Update the existing entry
+                                    const newState = [...prevState];
+                                    newState[existingIndex] = objectSentLocation;
+                                    return newState;
+                                } else {
+                                    // Add new entry
+                                    return [...prevState, objectSentLocation];
+                                }
+                            });
+                        }
+        
+                    }
                 });
 
                 socket.on("shared-destinations", (socketData) => {
@@ -83,7 +103,6 @@ export const GlobalStateProvider = ({ children }) => {
         <GlobalStateContext.Provider value={{ 
             userLocation, setUserLocation, 
             partySocket, setPartySocket,
-            userSentLocation, setUserSentLocation,
             userPartyChange, setUserPartyChange,
             partyMemberLocation, setPartyMemberLocation,
             currentUser, setCurrentUser,
