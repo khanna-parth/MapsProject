@@ -104,14 +104,14 @@ const ProfileDropdown = () => {
                 <Text style={styles.dropdownLabel}>Hey, {currentUser}</Text>
                 <View style={styles.separator} />
                 
-                {/* <TouchableOpacity 
+                <TouchableOpacity 
                   style={styles.dropdownItem} 
                   onPress={() => handleNavigation('profile')}
                   activeOpacity={0.7}
                 >
                   <Text style={styles.dropdownItemText}>Profile</Text>
                 </TouchableOpacity>
-                
+                {/*
                 <TouchableOpacity 
                   style={styles.dropdownItem} 
                   onPress={() => handleNavigation('settings')}

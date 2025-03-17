@@ -4,7 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import Box from '../components/Box';
-import UserSearchScreen from './UserSearch';
+import UserSearchScreen, { UserAvatar } from './UserSearch';
 import UserInviteScreen from './UserInvite';
 
 import data from '../utils/defaults/assets.js'
@@ -196,7 +196,8 @@ function PartyScreen({viewIndex}) {
                             return (
                                 <View style={styles.card} key={item.userID}>
                                     <View style={styles.cardImage}>
-                                        <Image source={data.images.defaultAvatar} style={styles.cardImage}/>
+                                        <UserAvatar username={item.username} />
+                                        {/* <Image source={data.images.defaultAvatar} style={styles.cardImage}/> */}
                                     </View>
                                     
                                     <View style={styles.cardTextArea} key={item.userID}>

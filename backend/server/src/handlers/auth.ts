@@ -13,6 +13,7 @@ interface AccessUserResult {
     user?: User
     users?: User[]
     usernames?: string[]
+    avatars?: Map<string,string>
     code: number;
     error?: string;
 }
@@ -74,6 +75,18 @@ const loginUser = async (username: string, password: string): Promise<AccessUser
         console.log(`Unsuccessful sign in attempt from user account: ${username}`)
         return { success: false, code: 400, error: "invalid user credentials provided"}
     }
+}
+
+const modifyPFP = async(username: string): Promise<void> => {
+    if (!checkValidString(username)) {
+        // Invalid username
+    }
+    
+    const exists = await UserDB.dbFindUsername(username)
+    if (!exists) {
+        // Nonexistent user
+    }
+
 }
 
 export { createUser, loginUser, AccessUserResult }

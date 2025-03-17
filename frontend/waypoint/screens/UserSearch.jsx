@@ -1,11 +1,58 @@
 import { StyleSheet, View, Text, Image, TextInput, FlatList, Modal, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Icon from 'react-native-vector-icons/Ionicons'
 import Icon2 from 'react-native-vector-icons/AntDesign'
 
 import data from '../utils/defaults/assets.js'
-import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
+import { storeData, getData, removeData, postRequest, getRequest } from '../utils/utils.js';
 import { getUserFriends, getUsers } from '../utils/userUtils.js';
+
+function UserAvatar({ style, username, reload, reloadComplete }) {
+    const [imageData, setImageData] = useState("");
+
+    const getImage = async() => {
+        if (username == "" || username == undefined) return;
+        try {
+            const imageData = await getRequest(`user/avatar?username=${username}`);
+            if (!imageData.error) {
+                setImageData(imageData.data.image);
+            } else {
+                // console.log(imageData.error);
+                // console.error('Error fetching image:', imageData.message);
+            }
+        } catch (error) {
+            // console.error('Error during image fetch:', error);
+        }
+
+        if (reloadComplete) {
+            reloadComplete();
+        }
+    }
+
+    useEffect(() => {
+        if (reload) {
+            console.log('profile image reload triggered')
+            getImage();
+        }
+    }, [reload])
+
+    useEffect(() => {
+        getImage();
+    }, [])
+
+    return (
+        <View>
+            {
+                imageData.length == 0 ? (
+                    <Image source={data.images.defaultAvatar} style={[styles.cardImage, style]}/>
+                ) : (
+                    <Image source={{uri: imageData}} style={[styles.avatarImage, style]}/>
+                    // <Image source={{uri: imageData}} style={styles.cardImage} />
+                )
+            }
+        </View>
+    )
+};
 
 function SearchScreen({ visible, onRequestClose }) {
     const [username, setUsername] = useState("");
@@ -89,7 +136,8 @@ function SearchScreen({ visible, onRequestClose }) {
                             renderItem={({ item }) => {
                                 return (
                                     <View style={styles.card} key={item.cardID}>
-                                        <Image source={data.images.defaultAvatar} style={styles.cardImage}/>
+                                        {/* <Image source={data.images.defaultAvatar} style={styles.cardImage}/> */}
+                                        <UserAvatar username={item.username} fetchOnLoad={true}></UserAvatar>
                                         <View style={styles.cardTextArea} key={item.cardID}>
                                             <Text style={styles.cardText}>{item.username}</Text>
                                             {!item.isFriend && (
@@ -190,6 +238,12 @@ const styles = StyleSheet.create({
         marginRight: 10,
         borderRadius: 100,
     },
+    avatarImage: {
+        width: 50,
+        height: 50,
+        marginRight: 10,
+        borderRadius: 100,
+    },
     cardText: {
         fontSize: 20
     },
@@ -212,3 +266,4 @@ const styles = StyleSheet.create({
 });
 
 export default SearchScreen;
+export { UserAvatar };

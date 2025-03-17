@@ -4,6 +4,7 @@ import { UserDB } from "../db/dbuser"
 import { User } from "../models/user"
 import { checkValidString } from "../util/util"
 import { AccessUserResult } from "./auth"
+import { getAvatarBase64 } from "../storage/storer"
 
 const addFriend = async (userName: string, friendUsername: string): Promise<{added: boolean, code: number, error?: string}> => {
     if (!checkValidString(userName)) {
@@ -65,6 +66,8 @@ const searchUsers = async (username: string): Promise<AccessUserResult> => {
         return { success: false, code: 404, error: "no users found" };
     }
 
+    let userImages: Map<string,string> = new Map();
+
     try {
         const usernames = await UserDB.dbFindUserWithUsername(username);
         
@@ -72,8 +75,14 @@ const searchUsers = async (username: string): Promise<AccessUserResult> => {
             return { success: false, code: 404, error: "no users found" };
         }
 
+        usernames.forEach((username) => {
+            const image = getAvatarBase64(username)
+            userImages.set(username, image || "");
+        })
+
         console.log(`Search request completed for username: ${username}`);
-        return { success: true, usernames: usernames, code: 200 };
+
+        return { success: true, usernames: usernames, avatars: userImages, code: 200 };
     } catch (error) {
         console.error("Search error:", error);
         return { success: false, code: 500, error: "Internal server error" };

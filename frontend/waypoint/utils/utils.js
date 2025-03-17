@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Keychain from 'react-native-keychain';
+import axios from 'axios';
 
 import { LOCAL_HOST } from '@env';
 
@@ -94,6 +95,32 @@ export const postRequest = async (address, data={}) => {
         
     } catch (error) {
         return {error: true, message: `Returned with error: ${error}`};
+    }
+};
+
+export const uploadImage = async (address, image, params) => {
+    let formData = new FormData();
+    formData.append("avatar", {
+        uri: image.uri,
+        name: image.fileName,
+        type: image.type
+    });
+
+    try {
+        const response = await axios.post(`http://${LOCAL_HOST}/${address}`,
+            formData,
+            {
+                params: params,
+            },
+        );
+
+        if (response.status === 200) {
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.log(error);
+        return false;
     }
 };
 

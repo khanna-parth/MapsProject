@@ -9,6 +9,7 @@ import data from '../utils/defaults/assets.js'
 import { useGlobalState } from '../components/global/GlobalStateContext.jsx';
 import { storeData, getData, removeData, postRequest } from '../utils/utils.js';
 import { getUserFriends } from '../utils/userUtils.js';
+import { UserAvatar } from './UserSearch.jsx';
 
 function InviteScreen({ visible, onRequestClose }) {
     const { joinParty } = useGlobalState();
@@ -92,7 +93,8 @@ function InviteScreen({ visible, onRequestClose }) {
                         renderItem={({ item }) => {
                             return (
                                 <View style={styles.card} key={item.cardID}>
-                                    <Image source={defaultImage} style={styles.cardImage}/>
+                                    <UserAvatar username={item.username} />
+                                    {/* <Image source={defaultImage} style={styles.cardImage}/> */}
                                     <View style={styles.cardTextArea} key={item.cardID}>
                                         <Text style={styles.cardText}>{item.username}</Text>
                                         <TouchableOpacity onPress={() => inviteButtonPressed(item.username)}>

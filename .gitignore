@@ -9,3 +9,6 @@ dist
 bun-server
 .DS_Store
 socket-testing/*.js
+uploads/**/*.jpg
+uploads/**/*.png
+uploads/**/*.PNG

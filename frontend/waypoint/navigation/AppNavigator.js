@@ -11,6 +11,7 @@ import HomeScreen from '../screens/HomeScreen';
 import NavScreen from '../screens/Navigation';
 import MapSearchScreen from '../screens/MapSearchScreen'
 import { useState, useEffect } from 'react';
+import Profile from '../screens/Profile';
 
 
 const Tab = createBottomTabNavigator();
@@ -81,7 +82,8 @@ const MapSearchStack = ({ route }) => {
 const AppNavigator = () => {
     return (
         <Tab.Navigator
-            initialRouteName="Welcome"
+            // initialRouteName="Welcome"
+            initialRouteName='Profile'
             screenOptions={{ headerShown: false, }}
         >
             <Tab.Screen
@@ -118,6 +120,7 @@ const RootNavigator = () => {
             <Stack.Screen name="Home" component={HomeStack} options={{ gestureEnabled: false, tabBarStyle: { display: 'flex' } }}/>
             <Stack.Screen name="Navigation" component={NavigationStack}options={{ tabBarStyle: { display: 'flex' } }}/>
             <Stack.Screen name="MapSearch" component={MapSearchStack} options={{ cardStyleInterpolator: forFade }}/>
+            <Stack.Screen name="Profile" component={Profile} />
         </Stack.Navigator>
     );
 };

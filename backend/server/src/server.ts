@@ -12,10 +12,17 @@ import { getDirections, getETA, nearbyPlaces, searchPlaces } from './ext/gmaps';
 import { Coordinates} from './models/geolocation';
 import { error } from 'console';
 import { UserDB } from './db/dbuser';
+import { getAvatarBase64, uploadAvatar, uploadFile } from './storage/storer';
+import path from 'path';
+import { checkValidString } from './util/util';
+import fs from 'fs';
 
 const app = express();
 
-app.use(express.json());
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 const PORT = process.env.SERVER_PORT || 3010;
 
@@ -87,6 +94,42 @@ app.post(ROUTES.LOGIN_USER, async (req: Request, res: Response) => {
         res.status(result.code).json({'error': result.error})
     }
 })
+
+
+app.get("/user/avatar", async (req: Request, res: Response) => {
+    const username = req.query.username as string;
+    
+    if (!username || username.length == 0) {
+        res.status(400).json({"error": "user query cannot be empty"})
+        return
+    }
+
+    const imgData = getAvatarBase64(username)
+    
+    if (!imgData || imgData == "") {
+        res.status(400).json({"error": "No matches"});
+        return;
+    }
+    res.status(200).json({"image": imgData});
+})
+
+app.post("/user/edit/avatar", (req: Request, res: Response) => {
+    const username = req.query.username as string;
+    console.log(`User picture upload triggered for ${username}`);
+    const upload = uploadAvatar(username);
+  
+    upload.single("avatar")(req, res, (err) => {
+      if (err) {
+        console.log(err);
+        return res.status(500).send(err.message);
+      }
+  
+      res.status(200).send({
+        message: 'Avatar uploaded successfully!',
+        // filePath: `src/storage/uploads/avatars/${userID}_avatar${path.extname(req.file?.originalname || "")}`,
+      });
+    });
+  });
 
 app.post(ROUTES.CREATE_PARTY, async (req: Request, res: Response) => {
     const { userID }: CreatePartyRequest = req.body;
@@ -184,6 +227,8 @@ app.get(ROUTES.SEARCH_USERS, async (req: Request, res: Response) => {
     console.log("Search requested for query", query)
     const result = await searchUsers(query);
     if (result.success) {
+        // const data = result.avatars ? Object.fromEntries(result.avatars) : {};
+
         res.status(result.code).json(result.usernames);
     } else {
         res.status(result.code).json({ error: result.error });

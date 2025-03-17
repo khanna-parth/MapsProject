@@ -23,6 +23,14 @@
       },
       "package": "com.anonymous.waypoint"
     },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you pick an avatar."
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }

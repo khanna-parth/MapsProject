@@ -9,6 +9,7 @@ import { getNearbyPlaces, getDistance } from '../utils/mapUtils.js';
 import { getData } from '../utils/utils.js';
 
 import Button from '../components/Button.jsx'
+import { UserAvatar } from '../screens/UserSearch.jsx';
 
 const Map = ({ route, partyRoutes = []}) => {
     const { currentUser, userLocation, setUserLocation, partySocket, 
@@ -334,7 +335,8 @@ const Map = ({ route, partyRoutes = []}) => {
                             title={member.username}  // Show username as marker title
                         >
                             <View style={styles.partyMemberLocation} >
-                                <Image style={{ width: '100%', height: '100%', borderRadius: 15 }} source={data.images.defaultAvatar}/>
+                                {/* <Image style={{ width: '100%', height: '100%', borderRadius: 15 }} source={data.images.defaultAvatar}/> */}
+                                <UserAvatar username={member.username} />
                             </View>
                         </Marker>
                     ))}
